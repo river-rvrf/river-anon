@@ -1,0 +1,103 @@
+{
+  "best_bits": 116.216,
+  "blockers": [
+    "delta_MLWE = 1.0020 is not reproducible; the two readings of the paper's own Gaussian convention differ by about 18 bits",
+    "[KLSS23] Thm 1 loses (d+m) 2 eps ~ 2^-94.91, below the 128-bit target, before any union bound over queries",
+    "recovery-hint leakage and extraction analysis are still this implementation's, not the paper's"
+  ],
+  "hint_mlwe_statistical_loss_log2": -94.91253715874966,
+  "instances": {
+    "mlwe": {
+      "Xe": "DiscreteGaussian(sigma)",
+      "Xs": "DiscreteGaussian(sigma)",
+      "m": 3328,
+      "n": 1024,
+      "note": "sigma from the [KLSS23] hint reduction with B_H = w_hat^2, a worst-case l1 bound on the challenge operator; the true spectral norm is smaller, so sigma is a lower bound and the reported security a lower bound with it",
+      "q": 67107713
+    },
+    "msis": {
+      "length_bound": "B_MSIS = 8 w_hat beta'",
+      "m": 4352,
+      "n": 1024,
+      "q": 67107713
+    }
+  },
+  "mlwe": [
+    {
+      "bits": 116.216,
+      "by_attack": {
+        "dual_hybrid": 118.55200037051358,
+        "usvp": 116.216
+      },
+      "conservative": true,
+      "delta": 1.0039959885516858,
+      "name": "standard-deviation",
+      "sigma": 2.76678942318031,
+      "why": "s_0 read as a standard deviation, which is what the paper's own sentence says `s` is.  This is the reading the verdict is taken from."
+    },
+    {
+      "bits": 134.32,
+      "by_attack": {
+        "dual_hybrid": 138.7000000623073,
+        "usvp": 134.32
+      },
+      "conservative": false,
+      "delta": 1.003611261724709,
+      "name": "gaussian-parameter-as-stddev",
+      "sigma": 6.935312598093762,
+      "why": "sigma_0 = s_0 sqrt(2 pi), the [KLSS23] Gaussian parameter, handed to the estimator as though it were a standard deviation.  Recorded as a live possibility for how 1.0020 might have been produced, not endorsed."
+    }
+  ],
+  "msis": {
+    "derived": {
+      "bits": 128.188,
+      "by_attack": {
+        "lattice": 128.188
+      },
+      "length_bound": 15991561
+    },
+    "published": {
+      "bits": 128.188,
+      "by_attack": {
+        "lattice": 128.188
+      },
+      "length_bound": 15991562
+    }
+  },
+  "parameters": {
+    "B_MSIS_derived": "15991561.7451824826921161023461938787121515276134079965128786",
+    "beta_prime": "45430.5731397229621935116543925962463413395670835454446388596",
+    "s_0": "2.76678942318031018032083094023838607992129627804522362139683",
+    "s_1": "5.53357884636062036064166188047677215984259255609044724279366",
+    "s_2": "243.477469239867295868233122740977975033074072467979678682921",
+    "s_response": "344.329139131298399165281801112205523867846664733979477480215",
+    "source": "paper -- closed form, nothing selected here"
+  },
+  "published_delta": {
+    "mlwe": {
+      "how": "not reproducible from the manuscript: the two readings of its own notation bracket the printed value without hitting it",
+      "reproduced": false,
+      "under_each_reading": {
+        "gaussian-parameter-as-stddev": 1.003611261724709,
+        "standard-deviation": 1.0039959885516858
+      },
+      "value": 1.002
+    },
+    "msis": {
+      "how": "closed form log2 delta = (log2 B)^2 / (4 n log2 q); lanes_params.DELTA_MSIS",
+      "ours": 1.0037343664586467,
+      "reproduced": true,
+      "value": 1.0037
+    }
+  },
+  "target_bits": 128,
+  "tool": {
+    "command": "sage -python estimate_lanes.py --estimator <checkout> --write",
+    "commit": "53da5982597709ba0fdf94ea37a84d822310fd84",
+    "committed": "Wed Aug 19 09:11:23 2026 +0100",
+    "cost_model": "estimate.rough (core-SVP style)",
+    "name": "lattice-estimator",
+    "url": "https://github.com/malb/lattice-estimator"
+  },
+  "verdict": "below-target"
+}

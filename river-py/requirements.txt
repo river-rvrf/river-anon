@@ -1,0 +1,9 @@
+# river-py has no third-party dependencies.
+#
+# Everything it needs is in the Python standard library:
+#   hashlib  -- SHAKE-256, used in counter mode for every XOF
+#   decimal  -- correctly-rounded exp() for the fixed-point acceptance tests
+#              (math.exp can differ in the last ulp across platforms, which
+#               would silently fork a test vector)
+#
+# Python 3.8 or newer.

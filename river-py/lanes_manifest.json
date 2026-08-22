@@ -1,0 +1,669 @@
+{
+ "constants": {
+  "RECOVERY_BUCKETS": {
+   "provenance": "Repair",
+   "value": 16
+  },
+  "RECOVERY_ERROR_BOUND": {
+   "provenance": "Repair",
+   "value": 2886972
+  },
+  "SIGMA_R": {
+   "how": "s_1 = 2 s_0, rounded once to 2^-20",
+   "provenance": "Derived",
+   "value": "2901189/524288"
+  },
+  "SIGMA_Y": {
+   "how": "s_2 = 2 w_hat s_0, rounded once to 2^-20",
+   "provenance": "Derived",
+   "value": "255304631/1048576"
+  },
+  "Z_INF_BOUND": {
+   "how": "the paper states no infinity bound",
+   "provenance": "Repair",
+   "value": 3448
+  },
+  "Z_NORM2_BOUND": {
+   "how": "(2 s)^2 * response_rank * d~",
+   "provenance": "Derived",
+   "value": 1578304756
+  }
+ },
+ "dimensions": {
+  "D": {
+   "provenance": "Paper",
+   "value": 17
+  },
+  "N_ex": {
+   "provenance": "Paper",
+   "value": 6
+  },
+  "alpha": {
+   "how": "maximum degree in the exact relation",
+   "provenance": "Paper",
+   "value": 3
+  },
+  "block_payload": {
+   "how": "outer d; the rest of each block is zero padding, constrained by the linear system",
+   "provenance": "Derived",
+   "value": 32
+  },
+  "block_slots": {
+   "provenance": "Paper",
+   "value": 64
+  },
+  "d_tilde": {
+   "provenance": "Paper",
+   "value": 256
+  },
+  "delta_stride": {
+   "how": "= sub_degree; challenge partition",
+   "provenance": "Derived",
+   "value": 4
+  },
+  "ell_tilde": {
+   "provenance": "Paper",
+   "value": 4
+  },
+  "l_split": {
+   "provenance": "Paper",
+   "value": 64
+  },
+  "m_lwe": {
+   "how": "(l~ + N_ex + alpha) d~ = 3328, printed",
+   "provenance": "Paper",
+   "value": 3328
+  },
+  "message_blocks": {
+   "provenance": "Paper",
+   "value": 6
+  },
+  "n_lwe": {
+   "how": "n~ d~ = 1024, printed at 7.suppl.tex",
+   "provenance": "Paper",
+   "value": 1024
+  },
+  "n_tilde": {
+   "provenance": "Paper",
+   "value": 4
+  },
+  "q_tilde": {
+   "provenance": "Paper",
+   "value": 67107713
+  },
+  "q_tilde_bits": {
+   "provenance": "Derived",
+   "value": 26
+  },
+  "sub_degree": {
+   "how": "d_tilde / l_split",
+   "provenance": "Derived",
+   "value": 4
+  },
+  "w_hat": {
+   "provenance": "Paper",
+   "value": 44
+  },
+  "w_tilde": {
+   "how": "w_hat / delta_stride, per residue class",
+   "provenance": "Derived",
+   "value": 11
+  }
+ },
+ "estimator": {
+  "challenge": {
+   "provenance": "Paper",
+   "value": {
+    "paper_lanes_noninvertibility": "2^-93.5",
+    "paper_outer": "2^-91.5",
+    "status": "NOT REPRODUCED -- neither figure is derived here, and both are below the 128-bit benchmark the paper selects against"
+   }
+  },
+  "hint_mlwe_inputs": {
+   "provenance": "Derived",
+   "value": {
+    "identity": "equals s_0^2: the widths are chosen so the hint reduction returns the smoothing parameter",
+    "m": 3328,
+    "n": 1024,
+    "q": 67107713,
+    "reduction": "1/sigma_MLWE^2 = 2(1/s_1^2 + w_hat^2/s_2^2)  [KLSS23]",
+    "sigma_mlwe_sq": "548617212868547486114556975081/71666668028181948762926612480"
+   }
+  },
+  "hint_mlwe_outputs": {
+   "provenance": "Repair",
+   "value": {
+    "bits_by_reading": {
+     "gaussian-parameter-as-stddev": 134.32,
+     "standard-deviation": 116.216
+    },
+    "delta_by_reading": {
+     "gaussian-parameter-as-stddev": 1.003611261724709,
+     "standard-deviation": 1.0039959885516858
+    },
+    "paper_reports": "delta_MLWE = 1.0020",
+    "status": "NOT REPRODUCED.  The two defensible readings of the paper's own Gaussian convention bracket 1.0020 without hitting it, and differ by about 18 bits.  See lanes_security.json"
+   }
+  },
+  "hint_mlwe_statistical_loss": {
+   "how": "log2((d+m) 2 eps) from [KLSS23] Thm 1, with d+m = kappa module ranks and eps = 2^-100.  No estimator call reports this; it is below the 128-bit target on its own",
+   "provenance": "Derived",
+   "value": -94.91253715874966
+  },
+  "msis_inputs": {
+   "provenance": "Paper",
+   "value": {
+    "length_bound": "B_MSIS = 8 w_hat beta'",
+    "m": 4352,
+    "q": 67107713,
+    "rank": 1024
+   }
+  },
+  "msis_outputs": {
+   "provenance": "Paper",
+   "value": {
+    "B_MSIS": "15991561.7451824826921161023461938787121515276134079965128786",
+    "bits": 128.188,
+    "delta_closed_form": 1.0037343664586467,
+    "paper_reports": "delta_MSIS = 1.0037",
+    "published_B_MSIS_bits": 128.188,
+    "status": "REPRODUCED, both by the closed form and by the estimator run"
+   }
+  }
+ },
+ "note": "The parameterization is the paper's and reproduces every figure it prints (beta' = 45430.6, B_MSIS = 15991562, q~/B = 4.2, delta_MSIS = 1.0037, D = 17).  What is not the paper's: the recovery-hint rules, the wire layout, and the response infinity bound, each labelled Repair.  The security evidence does not reach the paper's own target -- see `security` -- so the backend stays gated.",
+ "rank_roles": {
+  "identity_rank": {
+   "how": "l~; rows of t_0 and B_0's I block",
+   "provenance": "Derived",
+   "value": 4
+  },
+  "kappa": {
+   "how": "n~ + l~ + N_ex + alpha",
+   "provenance": "Derived",
+   "value": 17
+  },
+  "response_rank": {
+   "how": "kappa - l~; transmitted rows of z under Bai-Galbraith compression",
+   "provenance": "Derived",
+   "value": 13
+  },
+  "roles_are_distinguishable": {
+   "how": "n~ == l~ == 4 at these parameters, so a port that swapped them would agree numerically; exact.lanes_rank_roles is the single definition and test_exact.py drives it at (7, 8) where they differ",
+   "provenance": "Derived",
+   "value": false
+  },
+  "tail_rank": {
+   "how": "n~; width of the shared random tail, and the MLWE secret rank",
+   "provenance": "Derived",
+   "value": 4
+  }
+ },
+ "recovery": {
+  "bucket_bits": {
+   "provenance": "Derived",
+   "value": 4
+  },
+  "buckets": {
+   "how": "largest power of two with error_bound < q~ / buckets; the doubling loop stops one step past that, so the returned value satisfies the unbracketed form, not the /(2 buckets) one",
+   "provenance": "Repair",
+   "value": 16
+  },
+  "d_drop": {
+   "provenance": "Paper",
+   "value": 17
+  },
+  "encoding": {
+   "provenance": "Repair",
+   "value": "signed 2-bit per coefficient, n~ d~ coefficients, byte-aligned once with the whole layout"
+  },
+  "error_bound": {
+   "how": "w_hat (T0_LOW_BOUND + R_INF_SUPPORT), where R_INF_SUPPORT is the sampler's own support floor(GAUSSIAN_TAILCUT sigma_r) -- 14 sigma_r, not 6",
+   "provenance": "Repair",
+   "value": 2886972
+  },
+  "failure_rule": {
+   "provenance": "Repair",
+   "value": "none: the bound is unconditional over the sampler's support, so recovery cannot fail for an honest prover"
+  },
+  "hint_alphabet": {
+   "provenance": "Repair",
+   "value": "{-1, 0, 1}, one per t_0 coefficient"
+  },
+  "hint_rows": {
+   "provenance": "Derived",
+   "value": 4
+  },
+  "limit": {
+   "provenance": "Repair",
+   "value": "error_bound < q~ / buckets, asserted at import in lanes_params"
+  },
+  "omitted_coordinates": {
+   "how": "retained name; the response coefficients omitted under Bai-Galbraith compression.  It read 0 while the transmitted rank was 13 against kappa = 17",
+   "provenance": "Derived",
+   "value": 1024
+  },
+  "omitted_response_coefficients": {
+   "how": "omitted_response_rows * d~",
+   "provenance": "Derived",
+   "value": 1024
+  },
+  "omitted_response_rows": {
+   "how": "kappa - response_rank; B_0's identity block, recovered rather than transmitted",
+   "provenance": "Derived",
+   "value": 4
+  },
+  "omitted_t0_low_bits": {
+   "how": "l~ d~ D; the low part of every t_0 coefficient",
+   "provenance": "Derived",
+   "value": 17408
+  },
+  "recovery_carries": {
+   "how": "one ternary carry per t_0 coefficient, which is what the two omissions above are replaced by",
+   "provenance": "Derived",
+   "value": 1024
+  },
+  "rounding": {
+   "provenance": "Repair",
+   "value": "power2round with a centred low part in (-2^(D-1), 2^(D-1)]"
+  },
+  "scale": {
+   "how": "2^D",
+   "provenance": "Derived",
+   "value": 131072
+  },
+  "security_argument": {
+   "provenance": "Repair",
+   "value": "NONE.  The fixed-hint composition is this repository's and has no leakage or extraction analysis; see LANES_SECURITY_EVIDENCE"
+  },
+  "ties": {
+   "provenance": "Repair",
+   "value": "a tie at exactly 2^(D-1) goes to the low part, so high is not incremented"
+  },
+  "verification_rule": {
+   "provenance": "Repair",
+   "value": "apply the carry, then require the recovered w to match the challenge equation exactly"
+  }
+ },
+ "response_bounds": {
+  "b_msis": {
+   "how": "8 w_hat beta'; printed 15991562",
+   "provenance": "Paper",
+   "value": "15991561.7451824826921161023461938787121515276134079965128786"
+  },
+  "beta_prime_bdlop": {
+   "how": "2 s sqrt(N_z_paper); printed 45430.6",
+   "provenance": "Paper",
+   "value": "45430.5731397229621935116543925962463413395670835454446388596"
+  },
+  "comparison": {
+   "how": "the Euclidean test: ||z||_2^2 < l2, strict, so equality is rejected",
+   "provenance": "Derived",
+   "value": "<"
+  },
+  "comparison_note": {
+   "provenance": "Derived",
+   "value": "squared, over integers, on the centred representative: max|z_i| <= inf, and ||z||_2^2 < l2 -- the Euclidean test is STRICT, so equality is rejected"
+  },
+  "inf": {
+   "how": "ceil(Z_TAILCUT sqrt(Var[z])) on the exact rational; the paper states no infinity bound",
+   "provenance": "Repair",
+   "value": 3448
+  },
+  "l2": {
+   "how": "(2 s)^2 * population: the paper's per-coordinate rule at the transmitted rank",
+   "provenance": "Derived",
+   "value": 1578304756
+  },
+  "l2_honest_requirement": {
+   "how": "Laurent-Massart on Sigma = sigma_y^2 I + sigma_r^2 M M^T at 2^-128: the smallest bound an honest response can be held to.  The enforced l2 is above it, which is what makes the paper's rule usable",
+   "provenance": "Derived",
+   "value": 289395805
+  },
+  "l2_vs_paper": {
+   "how": "beta'^2, the paper's bound at its own dimension 4352.  Ours is over 3328 and is strictly smaller, so the published B_MSIS remains an upper bound on what an extractor obtains here",
+   "provenance": "Derived",
+   "value": 2063936976
+  },
+  "n_z_paper": {
+   "how": "(n~ + l~ + N_ex + alpha) d~ = 4352, the full rank-kappa opening",
+   "provenance": "Paper",
+   "value": 4352
+  },
+  "population": {
+   "how": "response_rank * d~ = 3328",
+   "provenance": "Derived",
+   "value": 3328
+  },
+  "shared_by_prover_and_verifier": {
+   "how": "one definition; Prove returns bottom rather than a proof Verify would reject",
+   "provenance": "Derived",
+   "value": "lanes_proof.response_within_bounds"
+  },
+  "tail_cut": {
+   "how": "statistical_tailcut(N_Z) at 2^-128",
+   "provenance": "Repair",
+   "value": 14
+  },
+  "var_z": {
+   "how": "sigma_y^2 + w_hat sigma_r^2",
+   "provenance": "Derived",
+   "value": "66661828590061057/1099511627776"
+  }
+ },
+ "sampler": {
+  "convention": {
+   "how": "the paper's `s` is the standard deviation and its `sigma` the [KLSS23] Gaussian parameter, sigma = s sqrt(2 pi); it pins this by printing both",
+   "provenance": "Paper",
+   "value": "standard deviation"
+  },
+  "epsilon_exponent": {
+   "how": "eps = 2^-100",
+   "provenance": "Paper",
+   "value": -100
+  },
+  "internal_rejection": {
+   "provenance": "Paper",
+   "value": "none -- LANES uses no internal rejection sampling"
+  },
+  "prob_bits": {
+   "how": "acceptance-threshold precision",
+   "provenance": "Repair",
+   "value": 192
+  },
+  "proposal": {
+   "provenance": "Repair",
+   "value": "uniform-proposal rejection, not CDT"
+  },
+  "s_0": {
+   "how": "sqrt(ln(2 d~ (1 + 1/eps))) / pi; printed 2.7668",
+   "provenance": "Paper",
+   "value": "2.76678942318031018032083094023838607992129627804522362139683"
+  },
+  "s_1": {
+   "how": "2 s_0; printed 5.5336",
+   "provenance": "Paper",
+   "value": "5.53357884636062036064166188047677215984259255609044724279366"
+  },
+  "s_2": {
+   "how": "2 w_hat s_0; printed 243.4775",
+   "provenance": "Paper",
+   "value": "243.477469239867295868233122740977975033074072467979678682921"
+  },
+  "s_response": {
+   "how": "2 sqrt(2) w_hat s_0; printed 344.3291.  Equals sqrt(s_2^2 + w_hat^2 s_1^2): the worst-case l1 challenge bound",
+   "provenance": "Paper",
+   "value": "344.329139131298399165281801112205523867846664733979477480215"
+  },
+  "sigma_denominator": {
+   "how": "2^20; one rounding, where the sampler consumes it",
+   "provenance": "Derived",
+   "value": 1048576
+  },
+  "sigma_mlwe": {
+   "how": "squared; 1/sigma^2 = 2(1/s_1^2 + w_hat^2/s_2^2) per [KLSS23].  Equals s_0^2 by construction",
+   "provenance": "Derived",
+   "value": "548617212868547486114556975081/71666668028181948762926612480"
+  },
+  "sigma_r": {
+   "how": "s_1 rounded once to denominator 2^20, where the sampler consumes it",
+   "provenance": "Derived",
+   "value": "2901189/524288"
+  },
+  "sigma_y": {
+   "how": "s_2 rounded once to denominator 2^20",
+   "provenance": "Derived",
+   "value": "255304631/1048576"
+  },
+  "tail_cut_r": {
+   "how": "statistical_tailcut over the transcript",
+   "provenance": "Repair",
+   "value": 14
+  },
+  "tail_cut_y": {
+   "how": "the same cut; both are gaussian_int",
+   "provenance": "Repair",
+   "value": 14
+  }
+ },
+ "security": {
+  "best_bits": 116.216,
+  "delta_mlwe_reproduced": false,
+  "delta_msis_reproduced": true,
+  "estimator": "53da5982597709ba0fdf94ea37a84d822310fd84",
+  "evidence": "lanes_security.json",
+  "hint_mlwe_statistical_loss_log2": -94.91253715874966,
+  "mlwe_bits_by_reading": {
+   "gaussian-parameter-as-stddev": 134.32,
+   "standard-deviation": 116.216
+  },
+  "msis_bits": 128.188,
+  "still_missing": [
+   "delta_MLWE = 1.0020 is not reproducible; the two readings of the paper's own Gaussian convention differ by about 18 bits",
+   "[KLSS23] Thm 1 loses (d+m) 2 eps ~ 2^-94.91, below the 128-bit target, before any union bound over queries",
+   "recovery-hint leakage and extraction analysis are still this implementation's, not the paper's"
+  ],
+  "target_bits": 128,
+  "verdict": "below-target"
+ },
+ "selected_by": "the paper: a closed form with no free constant.  Nothing in this table is searched",
+ "status": "final",
+ "transcript": {
+  "absorbed_fields": {
+   "how": "the rounds flattened, in hash order",
+   "provenance": "Derived",
+   "value": [
+    "statement",
+    "t0",
+    "t",
+    "w_high",
+    "t_g",
+    "t_mp1",
+    "t_mp2",
+    "v",
+    "h",
+    "v_prime"
+   ]
+  },
+  "derived_not_absorbed": {
+   "how": "challenge outputs; hashing one of these in would be a different protocol",
+   "provenance": "Derived",
+   "value": [
+    "alpha",
+    "gamma",
+    "c"
+   ]
+  },
+  "domain_separators": {
+   "provenance": "Repair",
+   "value": {
+    "alpha": ".alpha",
+    "challenge": ".c",
+    "exact": "RiVeR.Exact",
+    "gamma": ".gamma",
+    "lanes": "RiVeR.Exact.lanes.fs"
+   }
+  },
+  "hashed_form": {
+   "provenance": "Repair",
+   "value": "canonical centred encodings, absorbed as byte strings in field order"
+  },
+  "order": {
+   "provenance": "Derived",
+   "value": "protocol order: each challenge is hashed over the messages that precede it and no others"
+  },
+  "packing": {
+   "provenance": "Derived",
+   "value": "grouped absorbs are one byte string: (t_mp1, t_mp2, v) and (h, v_prime) are each concatenated before hashing"
+  },
+  "reconstructed_not_transmitted": {
+   "how": "absorbed into the transcript but recovered by the verifier rather than carried on the wire",
+   "provenance": "Derived",
+   "value": [
+    "w_high",
+    "v",
+    "v_prime"
+   ]
+  },
+  "rounds": {
+   "how": "lanes_proof.Challenges.ROUNDS",
+   "provenance": "Derived",
+   "value": [
+    {
+     "absorbs": [
+      "statement",
+      "t0",
+      "t",
+      "w_high",
+      "t_g"
+     ],
+     "challenge": "alpha"
+    },
+    {
+     "absorbs": [
+      "t_mp1",
+      "t_mp2",
+      "v"
+     ],
+     "challenge": "gamma"
+    },
+    {
+     "absorbs": [
+      "h",
+      "v_prime"
+     ],
+     "challenge": "c"
+    }
+   ]
+  },
+  "statement_binding": {
+   "provenance": "Derived",
+   "value": "H(W_encode(W) || x_centered || z_eval_centered)"
+  }
+ },
+ "wire": {
+  "byte_alignment": {
+   "provenance": "Repair",
+   "value": "once, for the whole layout"
+  },
+  "discrepancy": {
+   "provenance": "Repair",
+   "value": "the paper states 13.5 KB with no field list, so the figure is not reproducible from what it publishes; what this implementation reports is measured, field by field, by LanesBackend.field_sizes()."
+  },
+  "fields": {
+   "provenance": "Repair",
+   "value": [
+    {
+     "bits": 10240,
+     "coder": "Uniform",
+     "cols": 256,
+     "modulus": 513,
+     "name": "t0",
+     "rows": 4,
+     "width_bits": 10
+    },
+    {
+     "bits": 39936,
+     "coder": "Uniform",
+     "cols": 256,
+     "modulus": 67107713,
+     "name": "t",
+     "rows": 6,
+     "width_bits": 26
+    },
+    {
+     "bits": 6656,
+     "coder": "Uniform",
+     "cols": 256,
+     "modulus": 67107713,
+     "name": "t_g",
+     "rows": 1,
+     "width_bits": 26
+    },
+    {
+     "bits": 6656,
+     "coder": "Uniform",
+     "cols": 256,
+     "modulus": 67107713,
+     "name": "t_mp1",
+     "rows": 1,
+     "width_bits": 26
+    },
+    {
+     "bits": 6656,
+     "coder": "Uniform",
+     "cols": 256,
+     "modulus": 67107713,
+     "name": "t_mp2",
+     "rows": 1,
+     "width_bits": 26
+    },
+    {
+     "bits": 6656,
+     "coder": "Uniform",
+     "cols": 256,
+     "modulus": 67107713,
+     "name": "h",
+     "rows": 1,
+     "width_bits": 26
+    },
+    {
+     "bits": 512,
+     "bound": 1,
+     "coder": "Signed",
+     "cols": 256,
+     "name": "c",
+     "rows": 1,
+     "width_bits": 2
+    },
+    {
+     "bits": 2048,
+     "bound": 1,
+     "coder": "Signed",
+     "cols": 256,
+     "name": "hint",
+     "rows": 4,
+     "width_bits": 2
+    },
+    {
+     "bits": null,
+     "bound": 3448,
+     "coder": "Rice",
+     "cols": 256,
+     "max_high": 14,
+     "name": "z",
+     "rice_k": 8,
+     "rows": 13
+    }
+   ]
+  },
+  "fixed_bits": {
+   "how": "sum over the fixed-width fields; the Rice-coded z is what makes the total variable",
+   "provenance": "Repair",
+   "value": 79360
+  },
+  "kb_convention": {
+   "provenance": "Derived",
+   "value": "1 KB = 8192 bits"
+  },
+  "order": {
+   "provenance": "Repair",
+   "value": [
+    "t0",
+    "t",
+    "t_g",
+    "t_mp1",
+    "t_mp2",
+    "h",
+    "c",
+    "hint",
+    "z"
+   ]
+  },
+  "total_bits": {
+   "how": "Rice-coded: sample-dependent, so measured per proof by field_sizes(), not fixed",
+   "provenance": "Repair",
+   "value": null
+  }
+ }
+}

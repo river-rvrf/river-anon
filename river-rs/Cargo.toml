@@ -1,0 +1,43 @@
+[package]
+name = "river"
+version = "0.1.0"
+edition = "2021"
+description = "RiVeR — Compact Ring Verifiable Random Functions from Lattices"
+license = "MIT OR Apache-2.0"
+# `Cargo.lock` pins the dependency graph but says nothing about the
+# compiler, and this is meant to be a reproducibility artifact.  Declaring
+# the MSRV is also what makes clippy check it: the first value here was
+# 1.77, chosen for `f64::round_ties_even` (which pins the Gaussian width,
+# and so the transcript), and clippy immediately pointed at
+# `u64::is_multiple_of`, stable only since 1.87.  See README.md for the
+# toolchain the committed results came from.
+rust-version = "1.87"
+build = "build.rs"
+
+[[bin]]
+name = "river-bench"
+path = "src/bin/bench.rs"
+
+[lib]
+name = "river"
+path = "src/lib.rs"
+
+[dependencies]
+sha3 = "0.10"                                # SHAKE-256, the only randomness source
+# `rayon` and `zeroize` were declared ahead of the layers that will use
+# them — parallel `G'` rows, and wiping `s` in KeyGen.  Nothing in the
+# tree imports either yet, and an unused dependency in a reproducibility
+# artifact is audit surface with no cover, so they come back when the
+# code that needs them does.
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.bench]
+inherits = "release"

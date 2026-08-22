@@ -1,0 +1,418 @@
+"""
+lanes_ring.py -- Arithmetic in the LANES proof ring R_q~ = Z_q~[X]/(X^d~ + 1).
+
+Optional component.  Nothing in core RiVeR (`ring.py`, `oom.py`, `river.py`)
+imports this; it exists so the exact layer can be instantiated with a real
+LANES prover instead of the opening mock.  See `lanes_backend.py`.
+
+The incomplete-NTT ring of [ENS20] Section 2, at the parameters the paper
+fixes for LANES.  Written with plain Python integers; this is
+the specification and the KAT oracle, not a performance implementation --
+see `../river-rs/src/lanes/ring.rs`, which exploits the modulus's
+pseudo-Mersenne form and is where the constant-time properties are enforced.
+
+The ring
+--------
+`d~ = 256`, `q~ = 67107713` (26 bits).  Since `q~ - 1 = 2^7 * 7 * 74897`
+with the cofactor odd, there is a primitive 128th root of unity but no
+256th, so `X^256 + 1` factors into **64 irreducible blocks of degree 4**:
+
+    X^256 + 1 = prod_{i<64} (X^4 - psi^{e_i}),   e_i odd, psi^64 = -1
+
+Equivalently `q~ = 385 mod 512`, and 385 has multiplicative order four
+modulo 512 -- which is the same statement about how far `X^256 + 1` splits,
+read off the modulus rather than off its factorisation.
+
+That is exactly the `l = 64` splitting factor the paper quotes, and it is
+why each of the exact layer's six message elements gets its own 64-slot
+block: one slot per NTT block, with the element's `d = 32` coefficients in
+the first 32 and explicit zero padding in the rest.
+
+The transform is therefore *incomplete* -- 6 butterfly levels, stopping at
+degree-4 residues, which are then multiplied directly.  Same shape as
+Kyber's incomplete NTT at the same dimension, one level shallower: Kyber
+takes 256 coefficients down to 128 degree-2 blocks in seven levels, this
+takes them to 64 degree-4 blocks in six.
+"""
+
+#: One source of truth.  `q~` lived here *and* in `exact.ExactParams`, with
+#: nothing tying them together, so editing one left the other defining a
+#: different ring -- and the LANES backend commits over this one while
+#: `ExactParams.check()` validates that one.  `exact` imports nothing from
+#: `lanes_*`, so this direction is the acyclic one.
+from exact import ExactParams as _ExactParams
+
+QTILDE = _ExactParams.q_tilde
+
+#: Alias so this module satisfies the same duck-type as `ring.Ring` --
+#: `.q`, `.centered`, `.from_centered` -- which is what `codec.Field(ring=...)`
+#: expects.  Without it the canonicality check there raises `AttributeError`
+#: and every LANES proof silently fails to verify.
+q = QTILDE
+#: Derived, for the same reason `QTILDE` is.  These were literals that
+#: happened to agree with `ExactParams`; nothing tied them together, and
+#: `gen_kat.py` reads *these*, so a divergence would have produced vectors
+#: that disagreed with the parameters they claim to come from.
+DTILDE = _ExactParams.d_tilde
+LSPLIT = _ExactParams.l_split       # NTT blocks == message slots
+SUBDEG = DTILDE // LSPLIT           # 4
+LEVELS = LSPLIT.bit_length() - 1    # log2(LSPLIT); `check()` pins l a power of 2
+
+
+def _primitive_root(modulus):
+    """Smallest primitive root modulo a prime."""
+    factors, n, x, f = set(), modulus - 1, modulus - 1, 2
+    while f * f <= x:
+        while x % f == 0:
+            factors.add(f)
+            x //= f
+        f += 1
+    if x > 1:
+        factors.add(x)
+    for g in range(2, 1000):
+        if all(pow(g, n // p, modulus) != 1 for p in factors):
+            return g
+    raise RuntimeError("no primitive root found")
+
+
+def negacyclic_modulus():
+    """`X^{d~} + 1` as a coefficient list of length `d~ + 1`."""
+    out = [0] * (DTILDE + 1)
+    out[0] = 1
+    out[DTILDE] = 1
+    return out
+
+
+def leaf_product():
+    """`prod_j (X^{SUBDEG} - zeta_j)`, expanded over `Z_q~`.
+
+    The identity `prod_j (X^SUBDEG - zeta_j) == X^{d~} + 1` is what makes
+    the incomplete NTT a ring isomorphism.  Checking it is stronger than
+    checking the leaf exponents are odd, and it is the property a wrong
+    tree actually violates: an inverse transform that repeats the same
+    mistake still round-trips, so `intt(ntt(a)) == a` proves nothing about
+    whether the slots correspond to `R_q~` at all.
+    """
+    acc = [1]
+    for zeta in LEAF_ZETA:
+        factor = [0] * (SUBDEG + 1)
+        factor[0] = (-zeta) % QTILDE
+        factor[SUBDEG] = 1
+        out = [0] * (len(acc) + SUBDEG)
+        for i, x in enumerate(acc):
+            if x:
+                for j, y in enumerate(factor):
+                    out[i + j] = (out[i + j] + x * y) % QTILDE
+        acc = out
+    return acc
+
+
+def _build_tree():
+    """Twiddle exponents per level, and the `LSPLIT` leaf exponents.
+
+    `psi` has order `2 LSPLIT`, so `psi^LSPLIT = -1` and the whole ring is
+    the single block `X^{d~} - psi^{LSPLIT}`.  A block `X^{2m} - psi^e`
+    splits as
+
+        X^{2m} - psi^e = (X^m - psi^{e/2})(X^m + psi^{e/2})
+                       = (X^m - psi^{e/2})(X^m - psi^{e/2 + LSPLIT}),
+
+    so the tree is generated by halving exponents and offsetting by
+    `LSPLIT`.  After `LEVELS = log2(LSPLIT)` levels the `LSPLIT` leaves
+    carry the **odd** exponents, which is exactly the condition for
+    `prod_j (X^{SUBDEG} - psi^{e_j})` to be `X^{d~} + 1`.
+
+    Both constants used to be written out as `32` and `64 // 2` -- the
+    values `LSPLIT` and `PSI_ORDER // 2` happened to take at `d~ = 128`.
+    At `d~ = 256`, `LSPLIT = 64`, that produced the exponents `0..63`,
+    evens included: a transform whose leaves multiply to something that is
+    not `X^256 + 1`.  It round-tripped, because the inverse repeated the
+    same error, and it disagreed with schoolbook on every coefficient.
+    Derived from `LSPLIT` now, so the next dimension change cannot
+    reintroduce it, and `__main__` below checks the factorisation itself
+    rather than only the parity of the exponents.
+    """
+    exps = [LSPLIT]
+    levels = []
+    for _ in range(LEVELS):
+        levels.append([e // 2 for e in exps])
+        exps = [x for e in exps for x in (e // 2, e // 2 + LSPLIT)]
+    return levels, exps
+
+
+_G = _primitive_root(QTILDE)
+#: `X^{d~} + 1` needs a primitive `2l`-th root and no `4l`-th one, which
+#: is exactly the `q~ = 2l + 1 mod 4l` condition.
+PSI_ORDER = 2 * LSPLIT
+PSI = pow(_G, (QTILDE - 1) // PSI_ORDER, QTILDE)         # primitive 2l-th root
+assert pow(PSI, LSPLIT, QTILDE) == QTILDE - 1, "psi^l must be -1"
+
+_PSI_POW = [pow(PSI, i, QTILDE) for i in range(PSI_ORDER)]
+_LEVELS, LEAF_EXPS = _build_tree()
+LEAF_ZETA = [_PSI_POW[e] for e in LEAF_EXPS]
+_INV_SPLIT = pow(LSPLIT, QTILDE - 2, QTILDE)
+
+
+def ntt(a):
+    """Forward incomplete NTT: coefficients -> `l` blocks of degree `d~/l`.
+
+    64 blocks of degree 4 at the shipped parameters; both come from
+    `LSPLIT`, so a dimension change moves them together.
+    """
+    q = QTILDE
+    a = list(a)
+    m = DTILDE
+    for level in range(LEVELS):
+        half = m >> 1
+        for blk, exp in enumerate(_LEVELS[level]):
+            z = _PSI_POW[exp]
+            base = blk * m
+            for j in range(base, base + half):
+                u = a[j]
+                v = a[j + half] * z % q
+                a[j] = (u + v) % q
+                a[j + half] = (u - v) % q
+        m = half
+    return a
+
+
+def intt(a):
+    """Inverse of `ntt`."""
+    q = QTILDE
+    a = list(a)
+    m = SUBDEG
+    for level in reversed(range(LEVELS)):
+        for blk, exp in enumerate(_LEVELS[level]):
+            z_inv = pow(_PSI_POW[exp], q - 2, q)
+            base = blk * (m << 1)
+            for j in range(base, base + m):
+                u, v = a[j], a[j + m]
+                a[j] = (u + v) % q
+                a[j + m] = (u - v) * z_inv % q
+        m <<= 1
+    return [x * _INV_SPLIT % q for x in a]
+
+
+def ntt_mul(a_hat, b_hat):
+    """Blockwise product in the NTT domain: 32 multiplications mod X^4 - zeta."""
+    q = QTILDE
+    out = [0] * DTILDE
+    for blk in range(LSPLIT):
+        z = LEAF_ZETA[blk]
+        base = blk * SUBDEG
+        x = a_hat[base:base + SUBDEG]
+        y = b_hat[base:base + SUBDEG]
+        acc = [0] * (2 * SUBDEG - 1)
+        for i in range(SUBDEG):
+            xi = x[i]
+            if xi:
+                for j in range(SUBDEG):
+                    acc[i + j] += xi * y[j]
+        for k in range(SUBDEG):
+            v = acc[k]
+            if k + SUBDEG < len(acc):
+                v += z * acc[k + SUBDEG]        # X^4 = zeta
+            out[base + k] = v % q
+    return out
+
+
+# ---- coefficient-domain helpers -----------------------------------------
+
+def zero():
+    return [0] * DTILDE
+
+
+def add(a, b):
+    q = QTILDE
+    return [(a[i] + b[i]) % q for i in range(DTILDE)]
+
+
+def sub(a, b):
+    q = QTILDE
+    return [(a[i] - b[i]) % q for i in range(DTILDE)]
+
+
+def neg(a):
+    q = QTILDE
+    return [(-c) % q for c in a]
+
+
+def scale(c, a):
+    q = QTILDE
+    c %= q
+    return [c * x % q for x in a]
+
+
+def reduce(a):
+    return [int(c) % QTILDE for c in a]
+
+
+def centered(a):
+    h, q = QTILDE // 2, QTILDE
+    return [c - q if c > h else c for c in a]
+
+
+def from_centered(a):
+    return [c % QTILDE for c in a]
+
+
+def inf_norm(a):
+    return max(abs(c) for c in centered(a))
+
+
+def l2_norm_sq(a):
+    return sum(c * c for c in centered(a))
+
+
+def mul(a, b):
+    """Coefficient-domain product, via the NTT."""
+    return intt(ntt_mul(ntt(a), ntt(b)))
+
+
+def mul_schoolbook(a, b):
+    """Negacyclic convolution from the definition.  Correctness reference."""
+    q = QTILDE
+    out = [0] * DTILDE
+    for i in range(DTILDE):
+        ai = a[i]
+        if not ai:
+            continue
+        for j in range(DTILDE):
+            k = i + j
+            if k < DTILDE:
+                out[k] += ai * b[j]
+            else:
+                out[k - DTILDE] -= ai * b[j]
+    return [c % q for c in out]
+
+
+def inner_ntt(u_hat, v_hat):
+    """`sum_i u_i v_i` with both operands already in the NTT domain."""
+    acc = [0] * DTILDE
+    for i in range(len(u_hat)):
+        t = ntt_mul(u_hat[i], v_hat[i])
+        for j in range(DTILDE):
+            acc[j] += t[j]
+    return [c % QTILDE for c in acc]
+
+
+# ---- slot access ---------------------------------------------------------
+# The message occupies one scalar per NTT block, in the **NTT domain**:
+# slot `j` sits at index `j * SUBDEG` of the transformed array, i.e. at the
+# constant term of the degree-4 residue modulo `X^4 - zeta_j`.  This is what
+# makes the slots independent under multiplication, which is the property
+# [ENS20] relies on throughout.  Placing slots in the coefficient domain
+# instead would silently commit to a different message.
+
+def slots_to_ntt(values):
+    """NTT-domain element carrying `values[j]` in slot `j`, zero elsewhere."""
+    if len(values) != LSPLIT:
+        raise ValueError(f"expected {LSPLIT} slot values, got {len(values)}")
+    out = [0] * DTILDE
+    for j, v in enumerate(values):
+        out[j * SUBDEG] = v % QTILDE
+    return out
+
+
+def ntt_to_slots(hat):
+    """Read slot values out of an NTT-domain element."""
+    return [hat[j * SUBDEG] % QTILDE for j in range(LSPLIT)]
+
+
+def add_slots_inplace(hat, values):
+    """Add `values[j]` into slot `j` of an NTT-domain element."""
+    for j, v in enumerate(values):
+        hat[j * SUBDEG] = (hat[j * SUBDEG] + v) % QTILDE
+    return hat
+
+
+def scale_blocks(hat, scalars):
+    """Multiply NTT block `j` by the scalar `scalars[j]`.
+
+    In the NTT domain this is multiplication by a slot-diagonal element,
+    which is how the linear-proof coefficients `phi` are applied.
+    """
+    q = QTILDE
+    out = [0] * DTILDE
+    for j in range(LSPLIT):
+        s = scalars[j] % q
+        if not s:
+            continue
+        base = j * SUBDEG
+        for k in range(SUBDEG):
+            out[base + k] = s * hat[base + k] % q
+    return out
+
+
+def constant_coefficient(hat):
+    """Coefficient-domain constant term of an NTT-domain element.
+
+    The linear proof forces this to zero; `lanes_ver` computes it with an
+    inverse transform and tests index 0.
+    """
+    return intt(hat)[0] % QTILDE
+
+
+# --------------------------------------------------------------------------
+if __name__ == "__main__":
+    # **Deliberately NOT gated**, unlike the other `lanes_*` modules.
+    #
+    # Everything here is algebra over `(q~, d~, l)`, all three of which the
+    # paper supplies; none of it needs the sampler widths, response bounds
+    # or hint rules the paper withholds.  Gating it anyway is
+    # what let a broken twiddle tree survive: the `mul == mul_schoolbook`
+    # assertion below would have caught it on the first run, and instead
+    # the check was skipped along with the ones that genuinely are
+    # blocked.  A gate that turns off more than it has to is a gate that
+    # hides things.  `test_lanes_ring.py` runs the same algebra in the
+    # test suite, so it cannot be skipped by a future gate either.
+    import random
+
+    assert len(LEAF_EXPS) == LSPLIT
+    assert all(e % 2 == 1 for e in LEAF_EXPS), "leaf exponents must be odd"
+    assert len(set(LEAF_EXPS)) == LSPLIT, "leaf exponents must be distinct"
+    assert leaf_product() == negacyclic_modulus(), \
+        "prod(X^SUBDEG - zeta_j) != X^d~ + 1"
+
+    rng = random.Random(0)
+
+    # X^{d~} = -1
+    x = [0] * DTILDE
+    x[1] = 1
+    prod = x
+    for _ in range(DTILDE - 1):
+        prod = mul(prod, x)
+    expect = [0] * DTILDE
+    expect[0] = QTILDE - 1
+    assert prod == expect, "X^d~ != -1"
+
+    for _ in range(30):
+        a = [rng.randrange(QTILDE) for _ in range(DTILDE)]
+        b = [rng.randrange(QTILDE) for _ in range(DTILDE)]
+        assert intt(ntt(a)) == a, "NTT round trip"
+        assert mul(a, b) == mul_schoolbook(a, b), "NTT product != schoolbook"
+        assert mul(a, b) == mul(b, a)
+
+    a = [rng.randrange(QTILDE) for _ in range(DTILDE)]
+    b = [rng.randrange(QTILDE) for _ in range(DTILDE)]
+    c = [rng.randrange(QTILDE) for _ in range(DTILDE)]
+    assert mul(mul(a, b), c) == mul(a, mul(b, c)), "associativity"
+    assert mul(a, add(b, c)) == add(mul(a, b), mul(a, c)), "distributivity"
+
+    vals = [rng.randrange(QTILDE) for _ in range(LSPLIT)]
+    assert ntt_to_slots(slots_to_ntt(vals)) == vals
+    base = [rng.randrange(QTILDE) for _ in range(DTILDE)]
+    bumped = add_slots_inplace(list(base), vals)
+    assert ntt_to_slots(bumped) == [(base[j * SUBDEG] + vals[j]) % QTILDE
+                                    for j in range(LSPLIT)]
+
+    # inner_ntt agrees with the coefficient-domain sum
+    u = [[rng.randrange(QTILDE) for _ in range(DTILDE)] for _ in range(4)]
+    v = [[rng.randrange(QTILDE) for _ in range(DTILDE)] for _ in range(4)]
+    manual = zero()
+    for i in range(4):
+        manual = add(manual, mul(u[i], v[i]))
+    assert intt(inner_ntt([ntt(p) for p in u], [ntt(p) for p in v])) == manual
+
+    print(f"lanes_ring.py: all self-tests passed "
+          f"(psi = {PSI}, {LSPLIT} blocks of degree {SUBDEG})")

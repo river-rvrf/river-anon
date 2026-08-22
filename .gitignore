@@ -1,0 +1,98 @@
+# RiVeR development repository
+#
+# Deliberately NOT ignored, because they are deliverables rather than build
+# products:
+#
+#   river-py/vectors.json          the shipped test vectors
+#   river-py/manifest.json         the frozen wire-visible numeric manifest
+#   river-rs/Cargo.lock            pinned dependency graph, once it exists
+#
+# `make clean` follows the same rule.  It is recursive: each component's own
+# Makefile removes what that component creates.  If you add a generated
+# artifact, add it both here and to the owning component's `clean`.
+
+# ---- project specific ----------------------------------------------------
+xtest
+xkat
+testvec.tmp
+*.rsp *.req
+scratch/
+*.tmp
+
+# ---- Python --------------------------------------------------------------
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ty_cache/
+*.so
+
+# ---- Rust (river-rs, planned) -------------------------------------------
+# Cargo.lock is deliberately NOT ignored.  river-rs is destined to be a
+# reproducibility artifact, and pinning the resolved dependency graph is part
+# of that; the "libraries do not commit their lockfile" convention applies to
+# published crates, not to something a reviewer has to rebuild byte-for-byte.
+river-rs/target/
+**/target/
+**/*.rs.bk
+*.profraw
+*.profdata
+
+# ---- LaTeX ---------------------------------------------------------------
+# Intermediates only.  `*.pdf` is *not* ignored: the compiled paper is
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.brf
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex
+*.synctex.gz
+*.toc
+*.vrb
+*.xdv
+*-blx.bib
+_minted*/
+
+# ---- SageMath / parameter estimation ------------------------------------
+# Sage preparses `foo.sage` into `foo.sage.py`; neither that nor a pickled
+# session belongs in the repository.
+*.sage.py
+*.sage.pyc
+.sage/
+*.sobj
+*.spyx.c
+sage_log*
+estimator/*.log
+estimator/__pycache__/
+
+# ---- Editor / OS ---------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+gmon.out
