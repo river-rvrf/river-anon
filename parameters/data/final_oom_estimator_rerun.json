@@ -1,0 +1,307 @@
+{
+  "arora_gb_rerun": true,
+  "estimator_path": "external/lattice-estimator",
+  "failures": [],
+  "msis_security_path": "external/msis-security",
+  "red_cost_model": "RC.ADPS16",
+  "rhf_target": 1.00469,
+  "rows": [
+    {
+      "N": 8,
+      "failures": [],
+      "results": {
+        "outer_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 338,
+          "delta": 1.0044695784127526,
+          "pinned_blocksize": 338,
+          "pinned_delta": 1.0044695784127526
+        },
+        "outer_mlwr_as_mlwe": {
+          "algorithm": "LWE.primal_usvp",
+          "arora_gb_bits": 3253.508200535606,
+          "arora_gb_samples_used": 10889035741470030830827987437816582768000,
+          "blocksize": 319,
+          "delta": 1.004647519882841,
+          "lattice_bits": 93.148,
+          "pinned_arora_gb_bits": 3253.508200535606,
+          "pinned_blocksize": 319,
+          "pinned_delta": 1.004647519882841
+        },
+        "selector_binding_asis_msis": {
+          "acceptance_metric": "root_hermite_factor_delta",
+          "algorithm": "MSIS_security.MSIS_summarize_attacks",
+          "attack_variant": 2,
+          "blocksize": 317,
+          "cost_bits": 84.0865825967566,
+          "cost_bits_diagnostic_only": true,
+          "cost_evaluator": "fast exact equivalent of MSIS_security.SIS_linf_cost for attack_variant=2",
+          "delta": 1.0046671909922382,
+          "delta_target": 1.00469,
+          "normalized_bounds": [
+            8055755192839,
+            1473345581220,
+            549755813888,
+            482764209,
+            352354304
+          ],
+          "normalized_widths": [
+            1,
+            7,
+            42,
+            46,
+            8
+          ],
+          "passes_delta_target": true,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0046671909922382
+        },
+        "selector_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 315,
+          "delta": 1.0046870515700201,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0046870515700201
+        }
+      }
+    },
+    {
+      "N": 16,
+      "failures": [],
+      "results": {
+        "outer_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 350,
+          "delta": 1.0043648906208422,
+          "pinned_blocksize": 350,
+          "pinned_delta": 1.0043648906208422
+        },
+        "outer_mlwr_as_mlwe": {
+          "algorithm": "LWE.primal_usvp",
+          "arora_gb_bits": 3542.377770741416,
+          "arora_gb_samples_used": 10889035741470030830827987437816582767904,
+          "blocksize": 322,
+          "delta": 1.0046183623349951,
+          "lattice_bits": 94.02400000000002,
+          "pinned_arora_gb_bits": 3542.377770741416,
+          "pinned_blocksize": 322,
+          "pinned_delta": 1.0046183623349951
+        },
+        "selector_binding_asis_msis": {
+          "acceptance_metric": "root_hermite_factor_delta",
+          "algorithm": "MSIS_security.MSIS_summarize_attacks",
+          "attack_variant": 2,
+          "blocksize": 316,
+          "cost_bits": 83.82132523840721,
+          "cost_bits_diagnostic_only": true,
+          "cost_evaluator": "fast exact equivalent of MSIS_security.SIS_linf_cost for attack_variant=2",
+          "delta": 1.004677097419558,
+          "delta_target": 1.00469,
+          "normalized_bounds": [
+            26542897889280,
+            2645699854336,
+            549755813888,
+            943751168,
+            498257895
+          ],
+          "normalized_widths": [
+            1,
+            15,
+            43,
+            16,
+            49
+          ],
+          "passes_delta_target": true,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.004677097419558
+        },
+        "selector_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 323,
+          "delta": 1.0046087348754058,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0046087348754058
+        }
+      }
+    },
+    {
+      "N": 64,
+      "failures": [],
+      "results": {
+        "outer_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 338,
+          "delta": 1.0044695784127526,
+          "pinned_blocksize": 338,
+          "pinned_delta": 1.0044695784127526
+        },
+        "outer_mlwr_as_mlwe": {
+          "algorithm": "LWE.primal_usvp",
+          "arora_gb_bits": 3253.508200535606,
+          "arora_gb_samples_used": 10889035741470030830827987437816582768000,
+          "blocksize": 319,
+          "delta": 1.004647519882841,
+          "lattice_bits": 93.148,
+          "pinned_arora_gb_bits": 3253.508200535606,
+          "pinned_blocksize": 319,
+          "pinned_delta": 1.004647519882841
+        },
+        "selector_binding_asis_msis": {
+          "acceptance_metric": "root_hermite_factor_delta",
+          "algorithm": "MSIS_security.MSIS_summarize_attacks",
+          "attack_variant": 2,
+          "blocksize": 321,
+          "cost_bits": 85.14761203015416,
+          "cost_bits_diagnostic_only": true,
+          "cost_evaluator": "fast exact equivalent of MSIS_security.SIS_linf_cost for attack_variant=2",
+          "delta": 1.0046280354292965,
+          "delta_target": 1.00469,
+          "normalized_bounds": [
+            79501777384244,
+            2066673838326,
+            549755813888,
+            3369107456,
+            508324728
+          ],
+          "normalized_widths": [
+            1,
+            63,
+            50,
+            64,
+            51
+          ],
+          "passes_delta_target": true,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0046280354292965
+        },
+        "selector_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 318,
+          "delta": 1.0046573319311118,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0046573319311118
+        }
+      }
+    },
+    {
+      "N": 128,
+      "failures": [],
+      "results": {
+        "outer_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 336,
+          "delta": 1.004487582246496,
+          "pinned_blocksize": 336,
+          "pinned_delta": 1.004487582246496
+        },
+        "outer_mlwr_as_mlwe": {
+          "algorithm": "LWE.primal_usvp",
+          "arora_gb_bits": 3253.508200535606,
+          "arora_gb_samples_used": 10889035741470030830827987437816582768032,
+          "blocksize": 319,
+          "delta": 1.004647519882841,
+          "lattice_bits": 93.148,
+          "pinned_arora_gb_bits": 3253.508200535606,
+          "pinned_blocksize": 319,
+          "pinned_delta": 1.004647519882841
+        },
+        "selector_binding_asis_msis": {
+          "acceptance_metric": "root_hermite_factor_delta",
+          "algorithm": "MSIS_security.MSIS_summarize_attacks",
+          "attack_variant": 2,
+          "blocksize": 324,
+          "cost_bits": 85.94338410520234,
+          "cost_bits_diagnostic_only": true,
+          "cost_evaluator": "fast exact equivalent of MSIS_security.SIS_linf_cost for attack_variant=2",
+          "delta": 1.0045991527145743,
+          "delta_target": 1.00469,
+          "normalized_bounds": [
+            80902752766526,
+            1107070770217,
+            549755813888,
+            4794122240,
+            508324728
+          ],
+          "normalized_widths": [
+            1,
+            127,
+            50,
+            128,
+            51
+          ],
+          "passes_delta_target": true,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0045991527145743
+        },
+        "selector_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 318,
+          "delta": 1.0046573319311118,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0046573319311118
+        }
+      }
+    },
+    {
+      "N": 256,
+      "failures": [],
+      "results": {
+        "outer_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 348,
+          "delta": 1.004381952541052,
+          "pinned_blocksize": 348,
+          "pinned_delta": 1.004381952541052
+        },
+        "outer_mlwr_as_mlwe": {
+          "algorithm": "LWE.primal_usvp",
+          "arora_gb_bits": 3542.377770741416,
+          "arora_gb_samples_used": 10889035741470030830827987437816582767936,
+          "blocksize": 322,
+          "delta": 1.0046183623349951,
+          "lattice_bits": 94.02400000000002,
+          "pinned_arora_gb_bits": 3542.377770741416,
+          "pinned_blocksize": 322,
+          "pinned_delta": 1.0046183623349951
+        },
+        "selector_binding_asis_msis": {
+          "acceptance_metric": "root_hermite_factor_delta",
+          "algorithm": "MSIS_security.MSIS_summarize_attacks",
+          "attack_variant": 2,
+          "blocksize": 328,
+          "cost_bits": 87.0044135385999,
+          "cost_bits_diagnostic_only": true,
+          "cost_evaluator": "fast exact equivalent of MSIS_security.SIS_linf_cost for attack_variant=2",
+          "delta": 1.0045612704560136,
+          "delta_target": 1.00469,
+          "normalized_bounds": [
+            135171640236442,
+            997806802207,
+            549755813888,
+            8823799808,
+            513284111
+          ],
+          "normalized_widths": [
+            1,
+            255,
+            49,
+            256,
+            52
+          ],
+          "passes_delta_target": true,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0045612704560136
+        },
+        "selector_hiding_mlwe": {
+          "algorithm": "LWE.dual",
+          "blocksize": 317,
+          "delta": 1.0046671909922382,
+          "pinned_blocksize": null,
+          "pinned_delta": 1.0046671909922382
+        }
+      }
+    }
+  ],
+  "selector_asis_msis_rerun": true,
+  "status": "PASS"
+}

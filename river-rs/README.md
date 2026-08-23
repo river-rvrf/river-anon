@@ -324,67 +324,38 @@ backend is in use and this module does not need to know which.
 
 ## Measured
 
-`make bench`.  Single-threaded, `--release`, one machine — indicative, and
+`make bench`. Single-threaded, `--release`, one machine — indicative, and
 the run prints its own CPU, target triple and compiler so the numbers stay
-attributable.  `make bench-lanes` is the short reproducible run for the
+attributable. `make bench-lanes` is the short reproducible run for the
 incomplete NTT over `R_q~`, the two reduction strategies, and the exact
 backend itself, which runs under the `lanes-experimental` name.
 `make bench-sizes` generates one deterministic proof per published profile
-under **both** backends and prints actual framed bytes beside the paper's
-model.  Read the `opening` exact half as the cost of revealing the witness;
-the `lanes-experimental` half is the one comparable to the paper's
-13.5 KB.
+under both backends and prints actual framed bytes beside the paper's model.
+Read the `opening` exact half as the cost of revealing the witness; the
+`lanes-experimental` half is the one comparable to the paper's 13.5 KiB.
 
-| | |
-|---|---|
-| SHAKE-256 block (136 B) | 930 ns — 6.8 ns/byte |
-| acceptance test (`fastexp`) | **10 ns** (was 40 000 ns through `fixed`) |
-| Gaussian sample, any published σ | ~3.3–3.7 µs |
-| `R_q` schoolbook multiply, `d = 32` | 1.36 µs |
-| `R_q` product inside a pre-transformed matrix-vector | **486 ns** |
-| `R_q` product, same shape, schoolbook | 1.39 µs |
-| LANES incomplete NTT / inverse, `d~ = 256` | 2.26 / 2.55 µs |
-| LANES NTT-domain product / full product | 1.22 / 8.30 µs |
-| LANES schoolbook product, same operands | 73.0 µs |
-| `R_q~` reduction, pseudo-Mersenne / Barrett | 1.14 / 1.87 ns |
-| `OM.Com`, toy profile | 2.51 ms |
-| `OM.Prove`, toy profile, accepting attempt | 0.30 ms |
-| `OM.Ver`, toy profile | 0.14 ms |
-| `OM.Com`, `RiVeR-N8` | 27.1 ms |
-| `OM.Prove`, `RiVeR-N8`, accepting attempt | 3.96 ms |
-| `OM.Ver`, `RiVeR-N8` | 7.32 ms |
-| `Pi_ex.Com` (opening backend, any profile) | 0.41 ms |
-| `Pi_ex.Ver` | 0.31 ms |
-| `pi_ex` encode, 9.56 KB | 56 µs |
-| `Eval`, toy profile | 3.0 ms per attempt |
-| `Verify`, toy profile | 0.65 ms |
-| `Eval`, `RiVeR-N8` | 29.3 ms per attempt |
-| `Verify`, `RiVeR-N8` | 8.55 ms |
-| `proof_decode`, 28.5 KB | 148 µs |
+The headline end-to-end measurements below use `lanes-experimental` on an
+AMD Ryzen AI 9 HX 370. `Eval` is aggregated over five independent seeds as
+total time divided by total attempts; `Verify` and decode are medians of
+repeated batches.
 
-Against the reference it has to agree with byte for byte, on the same
-machine and the same seeds:
+| profile | Eval/attempt | attempts sampled | Verify | decode |
+|---|---:|---:|---:|---:|
+| `RiVeR-N8` | 24.6 ms | 26 | 4.52 ms | 130 µs |
+| `RiVeR-N16` | 29.1 ms | 11 | 5.56 ms | 134 µs |
+| `RiVeR-N64` | 38.7 ms | 35 | 12.0 ms | 154 µs |
+| `RiVeR-N128` | 62.9 ms | 77 | 20.5 ms | 177 µs |
+| `RiVeR-N256` | 110.9 ms | 67 | 36.2 ms | 232 µs |
 
-| | `river-py` | `river-rs` | |
-|---|---|---|---|
-| `Eval`, toy profile | 160 ms/attempt | 3.0 ms | **53×** |
-| `Eval`, `RiVeR-N8` | 1188 ms/attempt | 29.3 ms | **41×** |
-| `Verify`, toy profile | 59.3 ms | 0.65 ms | 91× |
-| `Verify`, `RiVeR-N8` | 244 ms | 8.55 ms | 29× |
-| `OM.Com`, `RiVeR-N8` | 1104 ms | 27.1 ms | 41× |
-| `Pi_ex.Com`, `RiVeR-N8` | 49.7 ms | 0.41 ms | 121× |
-| `Pi_ex.Ver`, `RiVeR-N8` | 47.6 ms | 0.31 ms | 154× |
+These are performance observations, not interoperability evidence.
+Byte-for-byte agreement is established separately by `make check-vectors`,
+which pins the attempt count and complete proof encoding.
 
-Per *attempt*, because the two runs draw different attempt counts from
-different messages; the byte-for-byte agreement is established by
-`make check-vectors`, which pins the attempt count as well as the proof.
+The profile trend is dominated by drawing Gaussian polynomials, so the
+`Eval` column is substantially the sampler's number rather than the proof
+system's, and the sampler is XOF-bound.
 
-That speedup is the point of the crate and also the least interesting thing
-about it: `Eval` is dominated by drawing Gaussian polynomials, so it is the
-sampler's number rather than the proof system's, and the sampler is
-XOF-bound.
-
-Two things that changes about the picture.
+Two things shape that picture.
 
 **The sampler is now XOF-bound, and by specification rather than by
 implementation.**  Each proposal consumes a `PROB_BITS = 192` uniform

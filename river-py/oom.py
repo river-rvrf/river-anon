@@ -116,9 +116,8 @@ class OOM:
         #: The outer response is split in two.  The paper puts
         #: `r_0 = (s, e_key)` -- `ell + n` ring elements -- at width
         #: `sigma_s = phi_s B_s`, and `r_1 = e_eval`, a single ring element,
-        #: at `sigma_m = phi_m eta_m`.  (The paper split it after
-        #: `s` instead, so `e_key` sat at `sigma_m`.)  They are two
-        #: different Gaussians drawn from one XOF stream, in this order.
+        #: at `sigma_m = phi_m eta_m`. They are two different Gaussians
+        #: drawn from one XOF stream, in this order.
         self.sigma_s = rational_sigma(par.sigma_s)
         self.sigma_m = rational_sigma(par.sigma_m)
         #: `[[.]]_K` on the *centred* representative leaves high bits in

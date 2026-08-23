@@ -1,0 +1,1403 @@
+{
+  "cache_sizes": {
+    "outer_hiding": 74,
+    "outer_mlwr": 15,
+    "selector_binding_asis": 526,
+    "selector_hiding": 105
+  },
+  "claim_tested": "Within the finite search grid recorded in this file, no strictly smaller OOM row passes all deterministic and estimator checks.",
+  "estimator_path": "external/lattice-estimator",
+  "scope_note": "This is a finite-grid diagnostic, not a theorem over all integer parameter tuples.",
+  "msis_security_path": "external/msis-security",
+  "repeat_target": 10.0,
+  "search_grid": {
+    "8": {
+      "ell": [
+        52,
+        54,
+        56
+      ],
+      "hat_k": [
+        44,
+        45,
+        46,
+        48,
+        50,
+        52
+      ],
+      "hat_n": [
+        40,
+        41,
+        42,
+        46,
+        48,
+        50,
+        52
+      ],
+      "hat_q_bits": [
+        44,
+        48
+      ],
+      "n": [
+        41,
+        42,
+        43,
+        44
+      ],
+      "p_bits": [
+        44,
+        48
+      ],
+      "profiles": [
+        "m3_pa28_ps28_pb2",
+        "m3_pa30_ps28_pb2",
+        "m3_pa32_ps26_pb2",
+        "m3_pa34_ps24_pb2",
+        "m3_pa36_ps24_pb2",
+        "m3_pa40_ps22_pb2"
+      ]
+    },
+    "16": {
+      "ell": [
+        56,
+        58,
+        59,
+        60
+      ],
+      "hat_k": [
+        47,
+        48,
+        49,
+        50,
+        52
+      ],
+      "hat_n": [
+        41,
+        42,
+        43,
+        46,
+        48,
+        49,
+        50,
+        52
+      ],
+      "hat_q_bits": [
+        46,
+        48
+      ],
+      "n": [
+        37,
+        38,
+        39,
+        40,
+        41
+      ],
+      "p_bits": [
+        44,
+        48
+      ],
+      "profiles": [
+        "m3_pa28_ps28_pb2",
+        "m3_pa30_ps28_pb2",
+        "m3_pa32_ps26_pb2",
+        "m3_pa34_ps24_pb2",
+        "m3_pa36_ps24_pb2",
+        "m3_pa40_ps22_pb2"
+      ]
+    },
+    "64": {
+      "ell": [
+        52,
+        54,
+        56
+      ],
+      "hat_k": [
+        49,
+        50,
+        51,
+        52
+      ],
+      "hat_n": [
+        48,
+        49,
+        50,
+        51,
+        52
+      ],
+      "hat_q_bits": [
+        48
+      ],
+      "n": [
+        41,
+        42,
+        43,
+        44
+      ],
+      "p_bits": [
+        44,
+        48
+      ],
+      "profiles": [
+        "m3_pa28_ps28_pb2",
+        "m3_pa30_ps28_pb2",
+        "m3_pa32_ps26_pb2",
+        "m3_pa34_ps24_pb2",
+        "m3_pa36_ps24_pb2",
+        "m3_pa40_ps22_pb2"
+      ]
+    },
+    "128": {
+      "ell": [
+        54,
+        56,
+        58,
+        59,
+        60,
+        62,
+        64
+      ],
+      "hat_k": [
+        49,
+        50,
+        51
+      ],
+      "hat_n": [
+        48,
+        49,
+        50
+      ],
+      "hat_q_bits": [
+        48
+      ],
+      "n": [
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "p_bits": [
+        44,
+        48,
+        52
+      ],
+      "profiles": [
+        "m3_pa28_ps28_pb2",
+        "m3_pa28_ps30_pb2",
+        "m3_pa26_ps32_pb2",
+        "m3_pa24_ps34_pb2",
+        "m3_pa24_ps36_pb2",
+        "m3_pa22_ps40_pb2"
+      ]
+    },
+    "256": {
+      "ell": [
+        56,
+        58,
+        59,
+        60
+      ],
+      "hat_k": [
+        50,
+        51,
+        52,
+        56
+      ],
+      "hat_n": [
+        47,
+        48,
+        49,
+        50,
+        52,
+        56
+      ],
+      "hat_q_bits": [
+        49,
+        52
+      ],
+      "n": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "p_bits": [
+        48,
+        52
+      ],
+      "profiles": [
+        "m3_pa28_ps28_pb2",
+        "m3_pa28_ps30_pb2",
+        "m3_pa26_ps32_pb2",
+        "m3_pa24_ps34_pb2",
+        "m3_pa24_ps36_pb2",
+        "m3_pa22_ps40_pb2"
+      ]
+    }
+  },
+  "selected_rows_in_grid": true,
+  "smaller_full_pass_rows": [
+    {
+      "current_oom_kb": 29.12017786190496,
+      "deltas": {
+        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046870515700201,
+        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
+        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.004487582246496,
+        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
+        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.002553212746112
+      },
+      "oom_kb": 28.95220911190496,
+      "row": {
+        "N": 128,
+        "ell": 54,
+        "hat_k": 51,
+        "hat_n": 49,
+        "hat_q_bits": 48,
+        "n": 45,
+        "p_bits": 44,
+        "profile": "m3_pa24_ps34_pb2"
+      },
+      "saving_kib": 0.16796875
+    },
+    {
+      "current_oom_kb": 29.12017786190496,
+      "deltas": {
+        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046870515700201,
+        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
+        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.004487582246496,
+        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
+        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025660482626622
+      },
+      "oom_kb": 28.984098775416697,
+      "row": {
+        "N": 128,
+        "ell": 54,
+        "hat_k": 51,
+        "hat_n": 49,
+        "hat_q_bits": 48,
+        "n": 45,
+        "p_bits": 44,
+        "profile": "m3_pa24_ps36_pb2"
+      },
+      "saving_kib": 0.1360790864882624
+    },
+    {
+      "current_oom_kb": 29.12017786190496,
+      "deltas": {
+        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046870515700201,
+        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
+        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0044966458489966,
+        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
+        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025010277235953
+      },
+      "oom_kb": 29.05994408070691,
+      "row": {
+        "N": 128,
+        "ell": 54,
+        "hat_k": 51,
+        "hat_n": 49,
+        "hat_q_bits": 48,
+        "n": 46,
+        "p_bits": 44,
+        "profile": "m3_pa24_ps34_pb2"
+      },
+      "saving_kib": 0.06023378119805045
+    },
+    {
+      "current_oom_kb": 29.12017786190496,
+      "deltas": {
+        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046377544976532,
+        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
+        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0044966458489966,
+        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
+        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025368436047148
+      },
+      "oom_kb": 29.08925698437508,
+      "row": {
+        "N": 128,
+        "ell": 54,
+        "hat_k": 51,
+        "hat_n": 49,
+        "hat_q_bits": 48,
+        "n": 46,
+        "p_bits": 44,
+        "profile": "m3_pa22_ps40_pb2"
+      },
+      "saving_kib": 0.03092087752987993
+    },
+    {
+      "current_oom_kb": 29.12017786190496,
+      "deltas": {
+        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046870515700201,
+        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
+        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0044966458489966,
+        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
+        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025135950408226
+      },
+      "oom_kb": 29.0921558620319,
+      "row": {
+        "N": 128,
+        "ell": 54,
+        "hat_k": 51,
+        "hat_n": 49,
+        "hat_q_bits": 48,
+        "n": 46,
+        "p_bits": 44,
+        "profile": "m3_pa24_ps36_pb2"
+      },
+      "saving_kib": 0.02802199987306153
+    },
+    {
+      "current_oom_kb": 36.21287399348253,
+      "deltas": {
+        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046573319311118,
+        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046671909922382,
+        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.004381952541052,
+        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0046183623349951,
+        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025694369835352
+      },
+      "oom_kb": 36.04099899348253,
+      "row": {
+        "N": 256,
+        "ell": 59,
+        "hat_k": 52,
+        "hat_n": 48,
+        "hat_q_bits": 49,
+        "n": 42,
+        "p_bits": 48,
+        "profile": "m3_pa22_ps40_pb2"
+      },
+      "saving_kib": 0.171875
+    },
+    {
+      "current_oom_kb": 36.21287399348253,
+      "deltas": {
+        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046573319311118,
+        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046671909922382,
+        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0042981174701786,
+        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0045425926265679,
+        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025716435585956
+      },
+      "oom_kb": 36.1497059193955,
+      "row": {
+        "N": 256,
+        "ell": 60,
+        "hat_k": 52,
+        "hat_n": 48,
+        "hat_q_bits": 49,
+        "n": 42,
+        "p_bits": 48,
+        "profile": "m3_pa22_ps40_pb2"
+      },
+      "saving_kib": 0.06316807408703085
+    }
+  ],
+  "status": "FAIL",
+  "summaries": [
+    {
+      "N": 8,
+      "deterministic_fail_smaller_rows": 1566,
+      "deterministic_failure_reasons": {
+        "('hat_q_exceeds_beta_sel_inf', 'outer_msis_mr09_pass')": 418,
+        "('hat_q_exceeds_beta_sel_inf',)": 620,
+        "('outer_msis_mr09_pass',)": 528
+      },
+      "deterministic_pass_smaller_rows": 664,
+      "estimator_fail_smaller_rows": 664,
+      "estimator_failure_reasons": {
+        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 6,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 8,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 2,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 59,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 27,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 58,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}')": 53,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 164,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 182,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 96,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}',)": 9
+      },
+      "failure_examples": [
+        {
+          "failed_checks": [
+            "hat_q_exceeds_beta_sel_inf",
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 19.078505046287926,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 44,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 44,
+            "profile": "m3_pa40_ps22_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "hat_q_exceeds_beta_sel_inf"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 19.078505046287926,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 44,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa40_ps22_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "hat_q_exceeds_beta_sel_inf",
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 19.117696902765818,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 44,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 44,
+            "profile": "m3_pa34_ps24_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "hat_q_exceeds_beta_sel_inf"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 19.117696902765818,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 44,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa34_ps24_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "hat_q_exceeds_beta_sel_inf",
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 19.119951727458567,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 44,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 44,
+            "profile": "m3_pa36_ps24_pb2"
+          }
+        }
+      ],
+      "first_deterministic_pass_examples": [
+        {
+          "oom_kb": 19.157256048591215,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 44,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa32_ps26_pb2"
+          }
+        },
+        {
+          "oom_kb": 19.190828698664024,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 44,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        },
+        {
+          "oom_kb": 19.19355037723768,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 44,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa30_ps28_pb2"
+          }
+        },
+        {
+          "oom_kb": 19.227589411243724,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 45,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa32_ps26_pb2"
+          }
+        },
+        {
+          "oom_kb": 19.26116206131653,
+          "row": {
+            "N": 8,
+            "ell": 52,
+            "hat_k": 45,
+            "hat_n": 40,
+            "hat_q_bits": 44,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        }
+      ],
+      "full_pass_smaller_rows": 0,
+      "search_grid_size": 12096,
+      "selected_oom_kb": 20.133209060562596,
+      "selected_row": {
+        "N": 8,
+        "ell": 54,
+        "hat_k": 46,
+        "hat_n": 42,
+        "hat_q_bits": 44,
+        "n": 44,
+        "p_bits": 44,
+        "profile": "m3_pa32_ps26_pb2"
+      },
+      "strictly_smaller_rows": 2230
+    },
+    {
+      "N": 16,
+      "deterministic_fail_smaller_rows": 5126,
+      "deterministic_failure_reasons": {
+        "('outer_msis_mr09_pass',)": 5126
+      },
+      "deterministic_pass_smaller_rows": 358,
+      "estimator_fail_smaller_rows": 358,
+      "estimator_failure_reasons": {
+        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 43,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 48,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 20,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 69,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 102,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 48,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}',)": 28
+      },
+      "failure_examples": [
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 20.21135007270041,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 37,
+            "p_bits": 44,
+            "profile": "m3_pa40_ps22_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 20.21135007270041,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 37,
+            "p_bits": 48,
+            "profile": "m3_pa40_ps22_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 20.24321489000214,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 37,
+            "p_bits": 44,
+            "profile": "m3_pa34_ps24_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 20.24321489000214,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 37,
+            "p_bits": 48,
+            "profile": "m3_pa34_ps24_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 20.24804665720089,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 37,
+            "p_bits": 44,
+            "profile": "m3_pa36_ps24_pb2"
+          }
+        }
+      ],
+      "first_deterministic_pass_examples": [
+        {
+          "oom_kb": 20.63195454189226,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa40_ps22_pb2"
+          }
+        },
+        {
+          "oom_kb": 20.665780779226555,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa34_ps24_pb2"
+          }
+        },
+        {
+          "oom_kb": 20.6706125464253,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa36_ps24_pb2"
+          }
+        },
+        {
+          "oom_kb": 20.702471744175572,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 48,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa40_ps22_pb2"
+          }
+        },
+        {
+          "oom_kb": 20.704411042785065,
+          "row": {
+            "N": 16,
+            "ell": 56,
+            "hat_k": 47,
+            "hat_n": 41,
+            "hat_q_bits": 46,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa32_ps26_pb2"
+          }
+        }
+      ],
+      "full_pass_smaller_rows": 0,
+      "search_grid_size": 19200,
+      "selected_oom_kb": 21.409119640954838,
+      "selected_row": {
+        "N": 16,
+        "ell": 59,
+        "hat_k": 49,
+        "hat_n": 43,
+        "hat_q_bits": 46,
+        "n": 41,
+        "p_bits": 48,
+        "profile": "m3_pa40_ps22_pb2"
+      },
+      "strictly_smaller_rows": 5484
+    },
+    {
+      "N": 64,
+      "deterministic_fail_smaller_rows": 840,
+      "deterministic_failure_reasons": {
+        "('outer_msis_mr09_pass',)": 840
+      },
+      "deterministic_pass_smaller_rows": 1154,
+      "estimator_fail_smaller_rows": 1154,
+      "estimator_failure_reasons": {
+        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 24,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 32,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 8,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 88,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 82,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 100,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}')": 196,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 160,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 261,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 160,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}',)": 43
+      },
+      "failure_examples": [
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 24.530452619020306,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 44,
+            "profile": "m3_pa34_ps24_pb2"
+          }
+        },
+        {
+          "deltas": {
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0048209676131528,
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0048423449405628,
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.004998227728687,
+            "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0052162601544221,
+            "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0024964351511152
+          },
+          "failed_instances": [
+            "MLWR_{p,q,ell,n,U_beta,U_Be}",
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}",
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}",
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}"
+          ],
+          "failure_type": "estimator_delta",
+          "oom_kb": 24.530452619020306,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa34_ps24_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 24.5423108075951,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 44,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        },
+        {
+          "deltas": {
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.004747799114835,
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0048423449405628,
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.004998227728687,
+            "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0052162601544221,
+            "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.002530974196319
+          },
+          "failed_instances": [
+            "MLWR_{p,q,ell,n,U_beta,U_Be}",
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}",
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}",
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}"
+          ],
+          "failure_type": "estimator_delta",
+          "oom_kb": 24.5423108075951,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 24.542550036775513,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 44,
+            "profile": "m3_pa40_ps22_pb2"
+          }
+        }
+      ],
+      "first_deterministic_pass_examples": [
+        {
+          "oom_kb": 24.530452619020306,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa34_ps24_pb2"
+          }
+        },
+        {
+          "oom_kb": 24.5423108075951,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        },
+        {
+          "oom_kb": 24.542550036775513,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa40_ps22_pb2"
+          }
+        },
+        {
+          "oom_kb": 24.55074604125505,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa36_ps24_pb2"
+          }
+        },
+        {
+          "oom_kb": 24.55087926832219,
+          "row": {
+            "N": 64,
+            "ell": 52,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 41,
+            "p_bits": 48,
+            "profile": "m3_pa32_ps26_pb2"
+          }
+        }
+      ],
+      "full_pass_smaller_rows": 0,
+      "search_grid_size": 2880,
+      "selected_oom_kb": 25.535994066823953,
+      "selected_row": {
+        "N": 64,
+        "ell": 54,
+        "hat_k": 51,
+        "hat_n": 50,
+        "hat_q_bits": 48,
+        "n": 44,
+        "p_bits": 44,
+        "profile": "m3_pa34_ps24_pb2"
+      },
+      "strictly_smaller_rows": 1994
+    },
+    {
+      "N": 128,
+      "deterministic_fail_smaller_rows": 128,
+      "deterministic_failure_reasons": {
+        "('outer_msis_mr09_pass',)": 128
+      },
+      "deterministic_pass_smaller_rows": 784,
+      "estimator_fail_smaller_rows": 779,
+      "estimator_failure_reasons": {
+        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 32,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 113,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 32,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 19,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 15,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 65,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}')": 33,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 89,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 117,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 261,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}',)": 3
+      },
+      "failure_examples": [
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 28.535210658180194,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 44,
+            "profile": "m3_pa24_ps34_pb2"
+          }
+        },
+        {
+          "deltas": {
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0047788472108798,
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0048423449405628,
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0048423449405628,
+            "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0050331263020147,
+            "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0024140535177029
+          },
+          "failed_instances": [
+            "MLWR_{p,q,ell,n,U_beta,U_Be}",
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}",
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}",
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}"
+          ],
+          "failure_type": "estimator_delta",
+          "oom_kb": 28.535210658180194,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 48,
+            "profile": "m3_pa24_ps34_pb2"
+          }
+        },
+        {
+          "deltas": {
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0047788472108798,
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0048423449405628,
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0052162601544221,
+            "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0054152210010607,
+            "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0022471808741644
+          },
+          "failed_instances": [
+            "MLWR_{p,q,ell,n,U_beta,U_Be}",
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}",
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}",
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}"
+          ],
+          "failure_type": "estimator_delta",
+          "oom_kb": 28.535210658180194,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 52,
+            "profile": "m3_pa24_ps34_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 28.5383093356366,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 44,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        },
+        {
+          "deltas": {
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0048423449405628,
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0048423449405628,
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0048423449405628,
+            "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0050331263020147,
+            "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.002373043917369
+          },
+          "failed_instances": [
+            "MLWR_{p,q,ell,n,U_beta,U_Be}",
+            "MLWE_{q,ell+rprime,n,U_Be,U_beta}",
+            "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}",
+            "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}"
+          ],
+          "failure_type": "estimator_delta",
+          "oom_kb": 28.5383093356366,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 48,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        }
+      ],
+      "first_deterministic_pass_examples": [
+        {
+          "oom_kb": 28.535210658180194,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 48,
+            "profile": "m3_pa24_ps34_pb2"
+          }
+        },
+        {
+          "oom_kb": 28.535210658180194,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 52,
+            "profile": "m3_pa24_ps34_pb2"
+          }
+        },
+        {
+          "oom_kb": 28.5383093356366,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 48,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        },
+        {
+          "oom_kb": 28.5383093356366,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 52,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        },
+        {
+          "oom_kb": 28.559016315093466,
+          "row": {
+            "N": 128,
+            "ell": 54,
+            "hat_k": 49,
+            "hat_n": 48,
+            "hat_q_bits": 48,
+            "n": 44,
+            "p_bits": 48,
+            "profile": "m3_pa26_ps32_pb2"
+          }
+        }
+      ],
+      "full_pass_smaller_rows": 5,
+      "search_grid_size": 7938,
+      "selected_oom_kb": 29.12017786190496,
+      "selected_row": {
+        "N": 128,
+        "ell": 54,
+        "hat_k": 51,
+        "hat_n": 50,
+        "hat_q_bits": 48,
+        "n": 45,
+        "p_bits": 44,
+        "profile": "m3_pa24_ps34_pb2"
+      },
+      "strictly_smaller_rows": 912
+    },
+    {
+      "N": 256,
+      "deterministic_fail_smaller_rows": 2121,
+      "deterministic_failure_reasons": {
+        "('outer_msis_mr09_pass',)": 2121
+      },
+      "deterministic_pass_smaller_rows": 1817,
+      "estimator_fail_smaller_rows": 1815,
+      "estimator_failure_reasons": {
+        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 24,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 52,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 13,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 169,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 211,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 232,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}')": 133,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 225,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 434,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 266,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}',)": 56
+      },
+      "failure_examples": [
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 34.9675379050228,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 38,
+            "p_bits": 48,
+            "profile": "m3_pa22_ps40_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 34.9675379050228,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 38,
+            "p_bits": 52,
+            "profile": "m3_pa22_ps40_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 35.006485721778674,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 38,
+            "p_bits": 48,
+            "profile": "m3_pa24_ps34_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 35.006485721778674,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 38,
+            "p_bits": 52,
+            "profile": "m3_pa24_ps34_pb2"
+          }
+        },
+        {
+          "failed_checks": [
+            "outer_msis_mr09_pass"
+          ],
+          "failure_type": "deterministic",
+          "oom_kb": 35.03676479622416,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 38,
+            "p_bits": 48,
+            "profile": "m3_pa24_ps36_pb2"
+          }
+        }
+      ],
+      "first_deterministic_pass_examples": [
+        {
+          "oom_kb": 35.07604347470644,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 39,
+            "p_bits": 52,
+            "profile": "m3_pa22_ps40_pb2"
+          }
+        },
+        {
+          "oom_kb": 35.114075411565295,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 39,
+            "p_bits": 52,
+            "profile": "m3_pa24_ps34_pb2"
+          }
+        },
+        {
+          "oom_kb": 35.12515729614069,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 38,
+            "p_bits": 52,
+            "profile": "m3_pa28_ps28_pb2"
+          }
+        },
+        {
+          "oom_kb": 35.14467660382403,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 50,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 39,
+            "p_bits": 52,
+            "profile": "m3_pa24_ps36_pb2"
+          }
+        },
+        {
+          "oom_kb": 35.14673325305625,
+          "row": {
+            "N": 256,
+            "ell": 56,
+            "hat_k": 51,
+            "hat_n": 47,
+            "hat_q_bits": 49,
+            "n": 39,
+            "p_bits": 52,
+            "profile": "m3_pa22_ps40_pb2"
+          }
+        }
+      ],
+      "full_pass_smaller_rows": 2,
+      "search_grid_size": 11520,
+      "selected_oom_kb": 36.21287399348253,
+      "selected_row": {
+        "N": 256,
+        "ell": 59,
+        "hat_k": 52,
+        "hat_n": 49,
+        "hat_q_bits": 49,
+        "n": 42,
+        "p_bits": 48,
+        "profile": "m3_pa22_ps40_pb2"
+      },
+      "strictly_smaller_rows": 3938
+    }
+  ],
+  "target_delta": 1.00469
+}

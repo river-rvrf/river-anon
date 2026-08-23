@@ -1,0 +1,6 @@
+# Artifact-local ignore rules.
+.DS_Store
+__pycache__/
+*.pyc
+external/lattice-estimator/*.sage.py
+!scripts/*.sage.py

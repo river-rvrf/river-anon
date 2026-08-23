@@ -1,0 +1,19 @@
+Current LANES challenge-difference invertibility postcompute
+
+Command:
+  sage d256_precompute.sage
+  sage d256_postcompute.sage
+
+Parameters:
+  d = 256
+  q = 67107713
+  q mod 256 = 129
+  L = 64
+  tl = 1
+  w = 11
+  total weight = 44
+
+Result:
+  lgM2 = -24.1
+  logp = -90.5
+  challenge set size = 201.7 bits

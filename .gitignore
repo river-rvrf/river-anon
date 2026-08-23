@@ -6,6 +6,7 @@
 #   river-py/vectors.json          the shipped test vectors
 #   river-py/manifest.json         the frozen wire-visible numeric manifest
 #   river-rs/Cargo.lock            pinned dependency graph, once it exists
+#   parameters/data/, parameters/report/  parameter tables and generated reports
 #
 # `make clean` follows the same rule.  It is recursive: each component's own
 # Makefile removes what that component creates.  If you add a generated
@@ -78,6 +79,10 @@ _minted*/
 # ---- SageMath / parameter estimation ------------------------------------
 # Sage preparses `foo.sage` into `foo.sage.py`; neither that nor a pickled
 # session belongs in the repository.
+#
+# `parameters/scripts/*.sage.py` are authored sources, not preparse output;
+# `parameters/.gitignore` explicitly re-includes that directory after this
+# repository-wide rule.
 *.sage.py
 *.sage.pyc
 .sage/

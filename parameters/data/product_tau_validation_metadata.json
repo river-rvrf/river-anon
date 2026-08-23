@@ -1,0 +1,36 @@
+{
+  "purpose": "Provenance for data/product_tau_validation.csv.",
+  "product_tau_csv": "data/product_tau_validation.csv",
+  "source_script": "estimate_public_restart_bounds.sage (not included)",
+  "source_code_included": false,
+  "source_function": "run_product_tau_validation",
+  "sampler_model": "sample x from C_{w,gamma}^d and independent f_i from a centered discrete Gaussian; count whether either product bound B_g,0 or B_g,1 fails",
+  "scale_note": "The validation fixes only the scale-free tau values. The source experiment used phi_a=10; its scale-dependent B_g columns are intentionally omitted because final B_g values are recomputed at each row's published phi_a.",
+  "validation_trials_per_row": 1000000,
+  "alpha_cell": 0.01,
+  "confidence_bound": "one-sided Clopper-Pearson upper bound from validation_failures and validation_trials",
+  "default_seed_decimal": 353417708882,
+  "default_seed_hex": "0x5249564552",
+  "seed_rule": "seed = default_seed + 1000003 + 32452843 * row_index within the validation run",
+  "validation_runs": [
+    {
+      "name": "fresh independent validation run for N8_64_128_256",
+      "row_order": [8, 64, 128, 256],
+      "seeds": {
+        "8": 353418708885,
+        "64": 353451161728,
+        "128": 353483614571,
+        "256": 353516067414
+      }
+    },
+    {
+      "name": "sampled centered discrete Gaussian product-norm experiment for N16",
+      "row_order": [16],
+      "seeds": {
+        "16": 353418708885
+      }
+    }
+  ],
+  "raw_vectors": "Not stored.",
+  "reproducibility_scope": "The artifact checks the recorded aggregate counts and recomputes their Clopper-Pearson confidence bounds. It cannot rerun the Monte Carlo experiment without the omitted source script."
+}

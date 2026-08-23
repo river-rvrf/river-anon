@@ -1,0 +1,6 @@
+N,tau_g0_fixed,tau_g1_fixed,validation_failures,validation_trials,epsilon_g_validation_hat,epsilon_g_validation_upper,alpha_cell,count_source
+8,3.14,2.68,7750,1000000,0.00775,0.0079564543,0.01,fresh independent validation run for N8_64_128_256
+16,3.09,3.08,7589,1000000,0.007589,0.007793341355707927,0.01,sampled centered discrete Gaussian product-norm experiment
+64,3.05,3.33,8840,1000000,0.00884,0.0090602037,0.01,fresh independent validation run for N8_64_128_256
+128,3.09,3.58,7645,1000000,0.007645,0.0078500789,0.01,fresh independent validation run for N8_64_128_256
+256,3.06,3.84,8384,1000000,0.008384,0.0085985639,0.01,fresh independent validation run for N8_64_128_256

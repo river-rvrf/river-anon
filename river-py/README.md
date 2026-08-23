@@ -259,24 +259,24 @@ vector generator; a timing taken from it would measure CPython rather than
 the protocol, so benchmarking belongs to `river-rs` alone
 (`make -C ../river-rs bench`, and `bench-sizes` for the per-profile table).
 
-The sizes below are still `river-py`'s to state, because they are a property
-of the wire and not of the language: both implementations produce
-byte-identical proofs, which `make check-vectors` enforces.  They are one
-measured run rather than a restatement of the paper's formula.
+The sizes below are properties of the shared wire format: both
+implementations produce byte-identical proofs, which `make check-vectors`
+enforces. They are one deterministic measurement, not a restatement of the
+paper's formula.
 
 The paper's size model charges an *ideal* entropy cost of
 `h(sigma) = log2(4.13 sigma)` bits per Gaussian coefficient without naming a
 coder.  Golomb-Rice is this repository's concrete approximation to that, and
-lands about half a bit per coefficient above it.  Measured `|pi_OOM|` against
-the reported figures:
+lands about half a bit per coefficient above it. Measured candidate-LANES
+proofs against the current ideal model:
 
-| profile | `|pi_OOM|` | paper | over | `|pi_ex|` mock | paper `|pi_ex|` |
-|---|---|---|---|---|---|
-| `RiVeR-N8` | 18.534 KB | 18.399 KB | +0.7% | 9.335 KB | 13.5 KB |
-| `RiVeR-N16` | 19.730 KB | 19.562 KB | +0.9% | 9.335 KB | 13.5 KB |
-| `RiVeR-N64` | 24.026 KB | 23.822 KB | +0.9% | 9.336 KB | 13.5 KB |
-| `RiVeR-N128` | 27.593 KB | 27.263 KB | +1.2% | 9.334 KB | 13.5 KB |
-| `RiVeR-N256` | 34.561 KB | 34.376 KB | +0.5% | 9.335 KB | 13.5 KB |
+| profile | measured OOM | ideal OOM | measured exact | paper exact | framed proof |
+|---|---:|---:|---:|---:|---:|
+| `RiVeR-N8` | 20.245 KiB | 20.133 KiB | 13.890 KiB | 13.5 KiB | 34.143 KiB |
+| `RiVeR-N16` | 21.548 KiB | 21.409 KiB | 13.883 KiB | 13.5 KiB | 35.438 KiB |
+| `RiVeR-N64` | 25.729 KiB | 25.536 KiB | 13.887 KiB | 13.5 KiB | 39.623 KiB |
+| `RiVeR-N128` | 29.366 KiB | 29.120 KiB | 13.893 KiB | 13.5 KiB | 43.267 KiB |
+| `RiVeR-N256` | 36.487 KiB | 36.213 KiB | 13.888 KiB | 13.5 KiB | 50.383 KiB |
 
 Those are single measurements, and Rice makes length data-dependent, so the
 last digit moves between proofs — the comparison is good to about 0.1%, not to
@@ -284,25 +284,12 @@ the three decimals shown.  The residue is the gap between Rice and true
 entropy, about half a bit per coefficient, so this is an independent check on
 the paper's `|pi_OOM|` accounting rather than a restatement of its formula.
 
-`|pi_ex|` is **not** comparable in the same way.  The 13.5 KB column is the
-paper's LANES figure; the 9.33 KB is what *this* opening mock costs, and it is
-smaller only because it transmits the witness — mostly ternary commitment
-randomness at 2 bits a coefficient, cheap to send precisely because it is the
-secret.  A zero-knowledge proof sends masked Gaussians instead.  Read the mock
-column as evidence of the leak, never as evidence about 13.5 KB.  It also grew
-with the new dimensions, from about 6.8 KB, because `d~` doubled to 256 and
-the randomness rank is 17 blocks of it.
-
-Full framed proofs therefore measure 29.6 KB (`N8`) to 45.9 KB (`N256`)
-under `opening`, against the paper's 33.1 to 49.1, the difference being
-entirely the exact component.
-
-With the **real LANES exact layer** the comparison is meaningful, because
-the widths are the paper's:
+The exact-layer comparison uses the witness-hiding candidate LANES backend,
+not the opening test backend that transmits its witness:
 
     make -C ../river-rs bench      # backend `lanes-experimental`
 
-measures `|pi_ex|` at **13.88 KB** against the stated 13.5, a 2.9% excess
+measures `|pi_ex|` at **13.88 KiB** against the stated 13.5, a 2.9% excess
 that is the recovery hint (2048 bits) and the transmitted challenge — for
 neither of which the paper's figure has any accounting.
 
@@ -438,9 +425,6 @@ resolution is labelled **Repair** where it is not derivable from the paper.
   coordinate and `p_nonunit ~ 2^-93.82`.
 * The embedded-key assumption preamble uses a `beta = 1` bound while the
   concrete section samples `U_{B_e}`.
-* The communication display charges a response split the protocol no longer
-  uses, so the published sizes under-count by 0.4–0.6 KB.  `test_params.py`
-  pins both the printed figure and the measured one.
 * `|pi_ex| = 13.5 KB` is stated with no field-by-field derivation, so it
   cannot be reproduced; a measured proof is 13.88 KB.
 * Statistical accounting is asymptotic: `eps_1 <= 2^-100` per `Rej_1` call

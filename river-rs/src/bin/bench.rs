@@ -499,7 +499,7 @@ fn communication_sizes() {
         }
         println!(
             "  {:<12} {:>8} {:>8} {:>8} {:>10} {:>10} {:>5}",
-            "profile", "OOM KB", "ex KB", "wire KB", "ideal OOM", "ideal tot", "tries"
+            "profile", "OOM KiB", "ex KiB", "wire KiB", "ideal OOM", "ideal tot", "tries"
         );
         for par in PROFILES.into_iter().filter(|p| !p.insecure_toy) {
             let Ok(scheme) = RiVeR::build(par, kind) else {
@@ -546,18 +546,9 @@ fn communication_sizes() {
         RiVeRParams::EXACT_PROOF_KB
     );
     println!(
-        "  The paper's own display formula charges a different response split\n  \
-         and so under-counts OOM by a further 0.4-0.6 KB:"
+        "  The final table uses this same response split, so `ideal OOM` is\n  \
+         the manuscript's displayed model directly."
     );
-    println!(
-        "  {:<12} {:>10} {:>10} {:>10}",
-        "profile", "ideal OOM", "display", "delta KB"
-    );
-    for par in PROFILES.into_iter().filter(|p| !p.insecure_toy) {
-        let m = par.proof_size_oom_kb();
-        let d = par.proof_size_oom_kb_paper();
-        println!("  {:<12} {:>10.3} {:>10.3} {:>10.3}", par.name, m, d, m - d);
-    }
     println!("  every proof length is data-dependent: Rice coding moves the last few bytes");
 }
 
@@ -570,7 +561,7 @@ fn bit_width(modulus: u64) -> usize {
 /// comparing against the pre-optimisation 11.9 KB format again.
 fn lanes_model_bits() -> f64 {
     // The paper charges the declared fixed coefficient width
-    // ceil(log2(q~)) = 29, not the entropy log2(q~).
+    // ceil(log2(q~)) = 26, not the entropy log2(q~).
     let log_q = bit_width(QTILDE) as f64;
     let sigma_y = SIGMA_Y.0 as f64 / SIGMA_Y.1 as f64;
     let h_y = (4.13 * sigma_y).log2();

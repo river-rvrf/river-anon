@@ -12,6 +12,9 @@ than taken on trust.
 * **`river-rs`** — a Rust **port** of the same protocol, byte-for-byte
   identical on the wire.  It is what the performance figures are measured
   from.
+* **`parameters`** — the self-contained parameter-setting artifact. It
+  reproduces the selected rows, derived bounds, repetition accounting, and
+  the bundled estimator checks without referring to private documentation.
 
 These are not independent reimplementations: the Rust port was written
 against the Python reference and consumes manifests and known-answer tests
@@ -29,6 +32,7 @@ Nothing here is claimed to be constant-time-hardened production code, albeit the
 |---|---|
 | `river-py` | Python 3.9+, no packages, no network |
 | `river-rs` | Rust 1.87+ (`cargo`); see below |
+| `parameters` | SageMath and Python 3; bundled estimators, no network |
 
 `river-py` needs nothing but a Python interpreter: no packages, no network,
 no external test data. Everything it checks is in this tree.
@@ -62,7 +66,15 @@ make test            # both implementations (Python ~8 min, Rust ~1 min)
 make kat             # primitive known-answer tests only, ~1 s
 make check-vectors   # re-derive the shipped vectors in both languages and diff
 make bench           # all measurements below
+make -C parameters table-check  # deterministic parameter/table checks
 ```
+
+For the complete parameter-artifact run, including the bundled estimators
+and expanded finite-grid diagnostic, use `make -C parameters check`. The
+diagnostic currently finds seven smaller passing rows and therefore returns
+nonzero; [parameters/README.md](parameters/README.md) explains the scope and
+the author decision still required. Generated tables under `parameters/data/`
+and `parameters/report/` are shipped outputs and are preserved by `make clean`.
 
 ## Reproducing the paper's claims
 
@@ -72,7 +84,7 @@ statement in the paper.
 
 | claim in the paper | how to check it | what happens |
 |---|---|---|
-| the parameter table | `make -C river-py test` | `test_params.py` re-derives every computed column of all five profiles from the paper's own formulas |
+| the parameter table | `make -C parameters table-check` | re-derives the selected rows, bounds, repetition accounting, and generated tables |
 | public-key and proof sizes | `make bench-sizes` | measured against the paper's size model, both shown side by side |
 | exact-proof size `\|pi_ex\| = 13.5 KB` | `make bench-sizes` | the candidate LANES exact layer measures **13.88–13.89 KB** at every profile |
 | the two implementations agree | `make check-vectors` | all four shipped cases re-derived from seeds in both languages and diffed |
@@ -90,9 +102,9 @@ never conflated:
   parameters.
 * **measured** columns are the bytes this encoder actually emits.
 
-`make bench-sizes` prints both, plus the gap between the paper's *display*
-formula and its own model — the display charges a different response split and
-so under-counts the one-out-of-many proof by 0.4–0.6 KB at every profile.
+`make bench-sizes` prints both. The final manuscript table uses the same
+response split as the implementation, so its displayed OOM column is the
+ideal-model column directly.
 
 Key sizes are measured the same way. A ring is `N` public keys verbatim: no
 padding, no compression, so ring size is exactly `N × pk`.
@@ -101,7 +113,7 @@ padding, no compression, so ring size is exactly `N × pk`.
 
 Public keys and one deterministic proof per profile:
 
-| profile | `N` | pk B | sk B | OOM KB | exact KB | wire KB |
+| profile | `N` | pk B | sk B | OOM KiB | exact KiB | wire KiB |
 |---|---:|---:|---:|---:|---:|---:|
 | RiVeR-N8 | 8 | 8448 | 1728 | 20.245 | 13.890 | 34.143 |
 | RiVeR-N16 | 16 | 7872 | 1888 | 21.548 | 13.883 | 35.438 |
@@ -155,7 +167,7 @@ Or directly, which is the same thing:
 
 ```bash
 cd river-rs
-cargo run --release --bin river-bench             # full run, ~25 s
+cargo run --release --bin river-bench             # full run, ~42 s
 cargo run --release --bin river-bench -- --sizes  # sizes only, ~15 s
 cargo run --release --bin river-bench -- --lanes  # exact layer only
 ```
@@ -211,12 +223,14 @@ settling it.
 ```
 river-py/    Python reference; owns vectors.json and the frozen manifests
 river-rs/    Rust implementation and the benchmark binary
-Makefile     dispatches to both
+parameters/  Self-contained parameter-setting and estimator artifact
+Makefile     dispatches to implementations and recursively cleans components
 ```
 
 Each component has its own README with the detail: `river-py/README.md` for
 the algorithms and where the paper is open, `river-rs/README.md` for the
-performance work and what byte compatibility costs.
+performance work and what byte compatibility costs, and
+`parameters/README.md` for parameter reproduction and its documented limits.
 
 ## Tests
 
@@ -227,7 +241,8 @@ make kat             # primitives only, ~1 s
 make check-vectors   # cross-language byte equality
 ```
 
-`river-py` carries 369 tests, `river-rs` 281. They include the negative
+`river-py` carries 369 tests, `river-rs` 290 (260 library, 26 primitive KAT,
+and 4 vector tests). They include the negative
 cases: every malformed public input must be rejected rather than crash —
 truncation, non-canonical residues, runaway unary runs, nonzero padding,
 trailing bytes, hostile length prefixes.

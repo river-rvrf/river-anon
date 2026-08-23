@@ -1,0 +1,14 @@
+Bundled lattice-estimator source provenance
+
+Repository: https://github.com/malb/lattice-estimator.git
+Commit: 66771ec3d331e2021eccf17331a5ed1ff71f3ddb
+Commit date: Mon Jan 12 19:24:22 2026 +0000
+Commit subject: Merge pull request #184 from TabOg/edit_beta_range
+
+The bundled files README.rst, requirements.txt, and estimator/ were compared
+against the upstream tree at this commit and matched byte-for-byte.  The
+reviewer-facing LANES.sage file in this directory is RiVeR-specific glue code
+and is not part of upstream lattice-estimator.
+
+The upstream README.rst states that lattice-estimator is licensed under
+LGPLv3+.  A copy of the LGPLv3 text is included as COPYING.LESSER-3.0.txt.

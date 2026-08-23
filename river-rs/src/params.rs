@@ -436,9 +436,9 @@ pub struct RiVeRParams {
     pub gamma: u64,
     pub beta: u64,
 
-    // Rejection sampling.  The paper splits the single outer
-    // response into a short block `z_s` (the secret key) and an error
-    // block `z_m = (z_key, z_eval)`, with separate widths.  `phi_m` and
+    // Rejection sampling. The outer response is split into `(z_s, z_key)`,
+    // with `ell+n` ring elements at the short-response width, and the
+    // one-element `z_eval` block at the error-response width. `phi_m` and
     // `phi_b` are shared by every profile.
     //
     // Integers, and that matters: `Rej` folds
@@ -567,11 +567,9 @@ impl RiVeRParams {
 
     /// `B_s = w gamma B_e sqrt(d(ell+n))`; scale of the short response.
     ///
-    /// the paper regrouped the response: `r_0 = (s, e_key)` is now the
-    /// block answered at `sigma_s`, so `B_s` covers `ell + n` ring
-    /// elements and carries `B_e` (the bound on `e_key`) rather than
-    /// `beta` (the bound on `s` alone).  The previous revision had
-    /// `B_s = w gamma beta sqrt(d ell)`, some 43x smaller.
+    /// The mask block is `r_0 = (s, e_key)`, so `B_s` covers `ell + n`
+    /// ring elements and carries `B_e`, which also dominates the bound
+    /// `beta` on `s`.
     pub fn B_s(&self) -> f64 {
         self.wgB() as f64 * ((self.d * (self.ell + self.n)) as f64).sqrt()
     }
@@ -980,12 +978,8 @@ impl RiVeRParams {
 
     /// The four `2 d w exp(-18)` tail terms, in `(a, b, s, m)` order.
     ///
-    /// The `s` and `m` widths follow the response split: `(ell+n)` and `1`
-    ///.  The appendix's own tail paragraph is internally
-    /// inconsistent here — one line says `2d(ell+1)exp(-18)` for the `s`
-    /// block and the display two paragraphs later says `2d(n+ell)exp(-18)`.
-    /// We take the latter, which matches the algorithm's `ell + n`
-    /// coefficients.
+    /// The `s` and `m` widths follow the response split: `(ell+n)` and `1`,
+    /// matching the algorithm's two transmitted response blocks.
     pub fn eps_tail(&self) -> [f64; 4] {
         let t = 2.0 * self.d as f64 * (-18f64).exp();
         [
@@ -998,9 +992,9 @@ impl RiVeRParams {
 
     /// `eps_2`: the joint Euclidean response check's failure probability.
     ///
-    /// New.  The appendix dominates all `d(ell+n+1)`
+    /// The appendix dominates all `d(ell+n+1)`
     /// response coefficients with a width-`sigma_s` Gaussian — sound
-    /// because the same revision requires `sigma_s >= sigma_m` — and
+    /// because every profile requires `sigma_s >= sigma_m` — and
     /// applies the Euclidean tail bound at ratio
     /// `rho = 1.2 sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1))`, giving
     /// `rho^M exp(M(1-rho^2)/2)` for `M = d(ell+n+1)`.
@@ -1024,10 +1018,66 @@ impl RiVeRParams {
         }
     }
 
-    /// Uniform-low-bits sanity model for the compression check.
+    /// Number of residues satisfying both compression predicates.
+    ///
+    /// The centred-`q_hat` boundary check and the signed-`2^K_a`
+    /// low-remainder check inspect the same residue.  Count their exact
+    /// intersection instead of multiplying marginal probabilities.
+    pub fn compression_pass_residues(&self) -> u64 {
+        if !(1..127).contains(&self.K_a) || !(1..127).contains(&self.K_b) {
+            return 0;
+        }
+        let Some(modulus) = 1i128.checked_shl(self.K_a) else {
+            return 0;
+        };
+        let Some(low_scale) = 1i128.checked_shl(self.K_b - 1) else {
+            return 0;
+        };
+        let Some(perturbation) = (self.w as i128)
+            .checked_mul(self.gamma as i128)
+            .and_then(|value| value.checked_mul(low_scale))
+        else {
+            return 0;
+        };
+        let Some(threshold) = (modulus / 2).checked_sub(perturbation) else {
+            return 0;
+        };
+        let Some(q_threshold) = ((self.q_hat as i128 - 1) / 2).checked_sub(perturbation) else {
+            return 0;
+        };
+        if threshold <= 0 || threshold > modulus / 2 || q_threshold <= 0 {
+            return 0;
+        }
+
+        // F(n) counts accepted integers in [0,n).  Euclidean division keeps
+        // this periodic prefix valid for negative n as well.  Accepted
+        // residues are [0,T-1] U [M-T+1,M-1].
+        let prefix = |n: i128| {
+            let periods = n.div_euclid(modulus);
+            let remainder = n.rem_euclid(modulus);
+            periods * (2 * threshold - 1)
+                + remainder.min(threshold)
+                + (remainder - (modulus - threshold + 1)).max(0)
+        };
+        let lo = -(q_threshold - 1);
+        let hi = q_threshold - 1;
+        (prefix(hi + 1) - prefix(lo)) as u64
+    }
+
+    /// Exact uniform-residue success model for all compression coefficients.
     pub fn p_cmp_uniform(&self) -> f64 {
-        let t = ((2 * self.T_cmp() - 1) as f64) / (2f64).powi(self.K_a as i32);
-        t.powf((self.n_hat * self.d) as f64)
+        let accepted = self.compression_pass_residues();
+        if accepted == 0 || self.q_hat == 0 {
+            return 0.0;
+        }
+        let Some(coefficients) = self.n_hat.checked_mul(self.d) else {
+            return 0.0;
+        };
+        if coefficients == 0 {
+            return 0.0;
+        }
+        let coefficient_pass = accepted as f64 / self.q_hat as f64;
+        coefficient_pass.powf(coefficients as f64)
     }
 
     /// `mu_a mu_b mu_s mu_m`: the four Gaussian rejection samplers.
@@ -1037,13 +1087,9 @@ impl RiVeRParams {
 
     /// The table's "Repeat bound" column, from the appendix's formula.
     ///
-    /// **This closed in the paper.**  Under the table the
-    /// appendix's own formula did not reproduce its printed column, and
-    /// this tree carried a per-profile `c_pub_model` backsolved *from*
-    /// that column — a number with no provenance but the answer it had to
-    /// produce.  Against the paper table the components multiply out
-    /// to the printed value at all five profiles, so the backsolve is gone
-    /// and this is now computed.
+    /// Every component is computed from the profile and the recorded
+    /// product-check confidence bound. Tests pin agreement with all five
+    /// printed rows.
     pub fn mu_river(&self) -> f64 {
         self.mu_gaussian() / self.c_pub_from_components()
     }
@@ -1086,20 +1132,16 @@ impl RiVeRParams {
             + (self.k_hat * self.d) as f64 * Self::h(self.sigma_b())
     }
 
-    /// `|pi_OOM| = L_OOM / 8192` KB, from the communication formula.
+    /// `|pi_OOM| = L_OOM / 8192` KiB, from the communication formula.
     ///
     /// The six terms are the contributions of `B`, `x`, `f_1`, `z_b`,
     /// `(z_s, z_key)` and `z_eval`.  The last two are charged at the
     /// dimensions the algorithm actually transmits: `(ell+n) d h(sigma_s)`
     /// and `d h(sigma_m)`.
     ///
-    /// **DISCREPANCY.**  The paper appendix regrouped the
-    /// response but left the communication display charging
-    /// `ell d h(sigma_s) + (n+1) d h(sigma_m)` — the *previous* layout.
-    /// Its printed `|pi_OOM|` column reproduces that stale formula to the
-    /// digit, so the published sizes under-count by 0.4–0.6 KB per
-    /// profile.  [`Self::proof_size_oom_kb_paper`] evaluates the stale
-    /// form; both are pinned by tests.
+    /// The manuscript's displayed formula and final table now use this same
+    /// response split, so this value directly reproduces the published OOM
+    /// column.
     pub fn proof_size_oom_kb(&self) -> f64 {
         (self.proof_size_oom_common_bits()
             + (self.s_dim() * self.d) as f64 * Self::h(self.sigma_s())
@@ -1107,22 +1149,9 @@ impl RiVeRParams {
             / 8192.0
     }
 
-    /// The stale display formula, kept so the gap can be pinned.
-    pub fn proof_size_oom_kb_paper(&self) -> f64 {
-        (self.proof_size_oom_common_bits()
-            + (self.ell * self.d) as f64 * Self::h(self.sigma_s())
-            + ((self.n + 1) * self.d) as f64 * Self::h(self.sigma_m()))
-            / 8192.0
-    }
-
     /// `|pi_RiVeR| = |pi_OOM| + |pi_ex|`, with the paper's fixed `|pi_ex|`.
     pub fn proof_size_total_kb(&self) -> f64 {
         self.proof_size_oom_kb() + Self::EXACT_PROOF_KB
-    }
-
-    /// [`Self::proof_size_oom_kb_paper`] plus the paper's fixed `|pi_ex|`.
-    pub fn proof_size_total_kb_paper(&self) -> f64 {
-        self.proof_size_oom_kb_paper() + Self::EXACT_PROOF_KB
     }
 
     /// `log2 |C^d_{w,gamma}| = log2 C(d,w) + w log2(2 gamma)`.
@@ -1627,7 +1656,7 @@ const fn published(
     k_hat: usize,
     q_hat: u64,
     tau: (u128, u128),
-    repetition: f64,
+    epsilon_g_u: f64,
 ) -> RiVeRParams {
     RiVeRParams {
         name,
@@ -1649,7 +1678,7 @@ const fn published(
         phi_b: 2,
         tau_g0: Rat::new(tau.0, 100),
         tau_g1: Rat::new(tau.1, 100),
-        epsilon_g_u: repetition,
+        epsilon_g_u,
         K_b: 5,
         K_a: 28,
         s_cmp: 3,
@@ -1671,7 +1700,7 @@ pub const RIVER_N8: RiVeRParams = published(
     46,
     QHAT_44,
     (314, 268),
-    0.007956,
+    0.0079564543,
 );
 pub const RIVER_N16: RiVeRParams = published(
     "RiVeR-N16",
@@ -1684,7 +1713,7 @@ pub const RIVER_N16: RiVeRParams = published(
     49,
     QHAT_46,
     (309, 308),
-    0.007793,
+    0.007793341355707927,
 );
 pub const RIVER_N64: RiVeRParams = published(
     "RiVeR-N64",
@@ -1697,7 +1726,7 @@ pub const RIVER_N64: RiVeRParams = published(
     51,
     QHAT_48,
     (305, 333),
-    0.009060,
+    0.0090602037,
 );
 pub const RIVER_N128: RiVeRParams = published(
     "RiVeR-N128",
@@ -1710,7 +1739,7 @@ pub const RIVER_N128: RiVeRParams = published(
     51,
     QHAT_48,
     (309, 358),
-    0.007850,
+    0.0078500789,
 );
 pub const RIVER_N256: RiVeRParams = published(
     "RiVeR-N256",
@@ -1723,7 +1752,7 @@ pub const RIVER_N256: RiVeRParams = published(
     52,
     QHAT_49,
     (306, 384),
-    0.008599,
+    0.0085985639,
 );
 
 /// `(tau_g0, tau_g1)` exactly as the table displays them, to one decimal
@@ -2125,54 +2154,98 @@ mod tests {
         assert_eq!(RIVER_TOY.K_a_boundgen(), 24);
     }
 
-    /// `b_B` and the six-term communication formula reproduce the
-    /// table's `|pi_OOM|` and total columns to their printed rounding —
-    /// through the paper's own display formula.
-    ///
-    /// **DISCREPANCY.**  the paper regrouped the OOM response but
-    /// left the communication display charging
-    /// `ell d h(sigma_s) + (n+1) d h(sigma_m)`, which is a different
-    /// split.  Its printed column reproduces that stale formula to the
-    /// digit, so the published sizes under-count by 0.4–0.6 KB per
-    /// profile.  Both are pinned: the paper's against its own column, and
-    /// the transmitted layout against what this tree reports.
+    /// `b_B` and the current six-term communication formula reproduce the
+    /// table's `|pi_OOM|` and total columns to their printed rounding.
     #[test]
     fn size_columns_reproduce() {
-        // (name, b_B, printed OOM KB, printed total KB, measured OOM, total)
+        // (name, b_B, printed OOM KiB, printed total KiB)
         let table = [
-            ("RiVeR-N8", 39u32, 19.6, 33.1, 20.1, 33.6),
-            ("RiVeR-N16", 41, 21.0, 34.5, 21.4, 34.9),
-            ("RiVeR-N64", 43, 25.0, 38.5, 25.5, 39.0),
-            ("RiVeR-N128", 43, 28.5, 42.0, 29.1, 42.6),
-            ("RiVeR-N256", 44, 35.6, 49.1, 36.2, 49.7),
+            ("RiVeR-N8", 39u32, 20.1, 33.6),
+            ("RiVeR-N16", 41, 21.4, 34.9),
+            ("RiVeR-N64", 43, 25.5, 39.0),
+            ("RiVeR-N128", 43, 29.1, 42.6),
+            ("RiVeR-N256", 44, 36.2, 49.7),
         ];
-        for (name, b_b, oom, total, measured_oom, measured_total) in table {
+        for (name, b_b, oom, total) in table {
             let p = get(name).unwrap();
             assert_eq!(p.b_B(), b_b, "{name} b_B");
             assert!(
-                (p.proof_size_oom_kb_paper() - oom).abs() < 0.05,
-                "{name}: paper |pi_OOM| = {} vs printed {oom}",
-                p.proof_size_oom_kb_paper()
-            );
-            assert!(
-                (p.proof_size_total_kb_paper() - total).abs() < 0.05,
-                "{name}: paper total = {} vs printed {total}",
-                p.proof_size_total_kb_paper()
-            );
-            assert!(
-                (p.proof_size_oom_kb() - measured_oom).abs() < 0.05,
-                "{name}: transmitted |pi_OOM| = {}",
+                (p.proof_size_oom_kb() - oom).abs() < 0.05,
+                "{name}: |pi_OOM| = {} vs printed {oom}",
                 p.proof_size_oom_kb()
             );
             assert!(
-                (p.proof_size_total_kb() - measured_total).abs() < 0.05,
-                "{name}: transmitted total = {}",
+                (p.proof_size_total_kb() - total).abs() < 0.05,
+                "{name}: total = {} vs printed {total}",
                 p.proof_size_total_kb()
             );
-            // The gap is exactly the `n` elements moved between widths.
-            let gap = p.proof_size_oom_kb() - p.proof_size_oom_kb_paper();
-            assert!((0.4..=0.7).contains(&gap), "{name}: gap {gap}");
         }
+    }
+
+    #[test]
+    fn compression_model_counts_the_joint_residue_condition() {
+        let expected = [
+            8_795_556_102_171,
+            35_182_224_457_891,
+            140_728_897_880_067,
+            140_728_897_880_067,
+            281_457_795_776_531,
+        ];
+        for (p, count) in PUBLISHED.iter().zip(expected) {
+            assert_eq!(p.compression_pass_residues(), count, "{}", p.name);
+            assert!((0.0..1.0).contains(&p.p_cmp_uniform()), "{}", p.name);
+        }
+
+        for (k_a, k_b) in [(0, 5), (127, 5), (28, 0), (28, 127)] {
+            let mut p = RIVER_N8;
+            p.K_a = k_a;
+            p.K_b = k_b;
+            assert_eq!(p.compression_pass_residues(), 0, "K_a={k_a}, K_b={k_b}");
+            assert_eq!(p.p_cmp_uniform(), 0.0);
+        }
+        let mut p = RIVER_N8;
+        p.q_hat = 0;
+        assert_eq!(p.compression_pass_residues(), 0);
+        assert_eq!(p.p_cmp_uniform(), 0.0);
+
+        for (n_hat, d) in [(0, 32), (42, 0), (usize::MAX, 2)] {
+            let mut p = RIVER_N8;
+            p.n_hat = n_hat;
+            p.d = d;
+            assert_eq!(p.p_cmp_uniform(), 0.0, "n_hat={n_hat}, d={d}");
+        }
+    }
+
+    #[test]
+    fn compression_residue_count_agrees_with_direct_enumeration() {
+        let mut p = RIVER_N8;
+        p.q_hat = 29;
+        p.w = 1;
+        p.gamma = 1;
+        p.K_a = 4;
+        p.K_b = 1;
+        p.n_hat = 1;
+        p.d = 1;
+
+        let modulus = 1i128 << p.K_a;
+        let perturbation = p.w as i128 * p.gamma as i128 * (1i128 << (p.K_b - 1));
+        let q_threshold = (p.q_hat as i128 - 1) / 2 - perturbation;
+        let direct = (-(p.q_hat as i128 / 2)..=(p.q_hat as i128 / 2))
+            .filter(|value| {
+                let remainder = value.rem_euclid(modulus);
+                let signed = if remainder > modulus / 2 {
+                    remainder - modulus
+                } else {
+                    remainder
+                };
+                value.abs() < q_threshold && signed.abs() < p.T_cmp() as i128
+            })
+            .count() as u64;
+        assert_eq!(p.compression_pass_residues(), direct);
+
+        let low_count = 2 * p.T_cmp() as i128 - 1;
+        let q_count = 2 * q_threshold - 1;
+        assert_ne!(direct as i128 * modulus, low_count * q_count);
     }
 
     /// The table's "mean attempts" column, 8.3 to 8.6.

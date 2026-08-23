@@ -3,8 +3,7 @@ test_params.py -- Check the parameter profiles against the paper.
 
 The reference values below are transcribed from Table
 `tab:river-final-all-params` (Appendix "Detailed Parameter Setting") and
-Table `tab:river-d32-concrete` (Section "Parameter Setting") of the
-The paper revision.
+Table `tab:river-d32-concrete` (Section "Parameter Setting").
 
 Scope, precisely.  The *input* columns -- `(phi_a, phi_s)`, `(n, ell)`,
 `(n_hat, k_hat)`, `(tau_g0, tau_g1)`, the moduli bit lengths -- are profile
@@ -24,7 +23,7 @@ Not reproduced: the root-Hermite-factor figures (they need a lattice
 estimator), the Groebner-basis estimates, and the empirical non-abort data
 behind `epsilon_g^U`.
 
-Some tests pin *disagreements* on purpose -- places where the draft
+Some tests pin *disagreements* on purpose -- places where the manuscript
 contradicts itself.  They are named `test_paper_*_is_*` and are not defects
 in this implementation; normalising them away would hide the finding.
 """
@@ -51,28 +50,13 @@ PAPER_BOUNDS = {
     256: (2.1e4, 8.7e5, (6.6e10, 4.9e8), 4.8e9, 4.8e9, 9.8e12, 1.4e14),
 }
 
-#: N -> (repeat bound, |pi_OOM| KB, total KB), to one decimal place.
-#:
-#: The two size columns are the paper's, and the paper's are computed with a
-#: communication formula that charges a *different* response split; see
-#: `test_the_published_proof_sizes_use_a_different_response_split`.  They
-#: are therefore compared against `proof_size_oom_kb_paper`, not against what
-#: this implementation transmits.
+#: N -> (repeat bound, |pi_OOM| KiB, total KiB), to one decimal place.
 PAPER_SIZES = {
-    8:   (8.3, 19.6, 33.1),
-    16:  (8.4, 21.0, 34.5),
-    64:  (8.6, 25.0, 38.5),
-    128: (8.6, 28.5, 42.0),
-    256: (8.5, 35.6, 49.1),
-}
-
-#: What the transmitted layout actually costs, `(|pi_OOM| KB, total KB)`.
-MEASURED_SIZES = {
-    8:   (20.1, 33.6),
-    16:  (21.4, 34.9),
-    64:  (25.5, 39.0),
-    128: (29.1, 42.6),
-    256: (36.2, 49.7),
+    8:   (8.3, 20.1, 33.6),
+    16:  (8.4, 21.4, 34.9),
+    64:  (8.6, 25.5, 39.0),
+    128: (8.6, 29.1, 42.6),
+    256: (8.5, 36.2, 49.7),
 }
 
 #: The main table's per-profile module ranks and modulus bit lengths.
@@ -285,55 +269,69 @@ def test_beta_sel_inf_is_the_g0_entry():
 
 
 def test_size_columns_reproduce():
-    """The repeat bound reproduces outright; the two size columns reproduce
-    through the paper's own display formula."""
+    """The current communication formula reproduces all printed columns."""
     for N, par in published():
         repeat, oom, total = PAPER_SIZES[N]
         assert round(par.mu_river, 1) == repeat, (N, par.mu_river)
-        assert round(par.proof_size_oom_kb_paper, 1) == oom, \
-            (N, par.proof_size_oom_kb_paper)
-        assert round(par.proof_size_total_kb_paper, 1) == total, \
-            (N, par.proof_size_total_kb_paper)
-
-
-def test_the_transmitted_layout_costs_what_this_tree_reports():
-    for N, par in published():
-        oom, total = MEASURED_SIZES[N]
-        assert round(par.proof_size_oom_kb, 1) == oom, (N, par.proof_size_oom_kb)
+        assert round(par.proof_size_oom_kb, 1) == oom, \
+            (N, par.proof_size_oom_kb)
         assert round(par.proof_size_total_kb, 1) == total, \
             (N, par.proof_size_total_kb)
 
 
-def test_the_published_proof_sizes_use_a_different_response_split():
-    """DISCREPANCY, medium.  The paper regroups the OOM response but
-    leaves the communication display charging the previous grouping.
-
-    The algorithm transmits `ell + n` ring elements at `sigma_s` and one at
-    `sigma_m`.  The display (`7.suppl.tex`, the `|pi_OOM|` align block)
-    charges `ell d h(sigma_s) + (n+1) d h(sigma_m)`, which is a different
-     split.  Since `sigma_s > sigma_m` at every profile now -- the revision
-    requires it -- moving `n` elements to the cheaper width under-counts.
-
-    Pinned three ways, so this cannot be mistaken for a rounding gap:
-      * the paper's printed column is reproduced by the *stale* formula;
-      * it is not reproduced by the transmitted one;
-      * the gap is 0.4-0.6 KB, always in the same direction.
-
-    The appendix describes the LANES parameter search as minimising
-    communication, so the objective was evaluated on the wrong layout.
-    Question 8 to the authors.
-    """
+def test_compression_model_counts_the_joint_residue_condition():
+    """Both compression predicates inspect the same uniform residue."""
+    expected = {
+        8: 8795556102171,
+        16: 35182224457891,
+        64: 140728897880067,
+        128: 140728897880067,
+        256: 281457795776531,
+    }
     for N, par in published():
-        printed = PAPER_SIZES[N][1]
-        assert round(par.proof_size_oom_kb_paper, 1) == printed
-        assert round(par.proof_size_oom_kb, 1) != printed
-        gap = par.proof_size_oom_kb - par.proof_size_oom_kb_paper
-        assert 0.4 <= gap <= 0.7, (N, gap)
+        assert par.compression_pass_residues == expected[N]
+        assert 0 < par.p_cmp_uniform < 1
 
-        # It is exactly the `n` elements moved between the two widths.
-        expect = (par.n * par.d
-                  * (par._h(par.sigma_s) - par._h(par.sigma_m)) / 8192)
-        assert abs(gap - expect) < 1e-9, (N, gap, expect)
+    # This is a reporting model on a public parameter object, so malformed
+    # shift counts must fail closed rather than allocate or raise.
+    par = get("RiVeR-N8")
+    for changes in (
+        {"K_a": 0}, {"K_a": 127}, {"K_b": 0}, {"K_b": 127},
+        {"q_hat": 0}, {"q_hat": "29"}, {"w": True}, {"gamma": 0},
+        {"n_hat": 0}, {"d": 0},
+    ):
+        bad = dataclasses.replace(par, **changes)
+        if "n_hat" not in changes and "d" not in changes:
+            assert bad.compression_pass_residues == 0
+        assert bad.p_cmp_uniform == 0.0
+
+
+def test_compression_residue_count_agrees_with_direct_enumeration():
+    """Check the interval arithmetic independently on a small complete ring."""
+    par = dataclasses.replace(
+        get("RiVeR-N8"), q_hat=29, w=1, gamma=1,
+        K_a=4, K_b=1, n_hat=1, d=1,
+    )
+    modulus = 1 << par.K_a
+    perturbation = par.w * par.gamma * (1 << (par.K_b - 1))
+    q_threshold = (par.q_hat - 1) // 2 - perturbation
+
+    def signed_remainder(value):
+        remainder = value % modulus
+        return remainder - modulus if remainder > modulus // 2 else remainder
+
+    direct = sum(
+        abs(value) < q_threshold
+        and abs(signed_remainder(value)) < par.T_cmp
+        for value in range(-(par.q_hat // 2), par.q_hat // 2 + 1)
+    )
+    assert par.compression_pass_residues == direct
+
+    # The two events are correlated: multiplying their marginal counts is
+    # close here, but is not the exact joint probability.
+    low_count = 2 * par.T_cmp - 1
+    q_count = 2 * q_threshold - 1
+    assert direct * modulus != low_count * q_count
 
 
 def test_repeat_bound_is_below_the_design_target():
@@ -652,21 +650,12 @@ def test_named_fields_make_the_boundgen_order_unreachable():
 
 
 def test_the_abstract_and_the_tables_now_agree():
-    """**closed in the paper**.  The abstract said 35.5 KB and
-    roughly 30x at `N = 64` while its own tables said 37.3 KB and 28.5x.
-    The revision states 38.5 KB and 28x in both places.
-
-    What this pins is the paper's *internal* consistency, so it uses the
-    paper's own (stale-formula) size.  That the stale formula is itself
-    wrong is a separate, still-open item -- see
-    `test_the_published_proof_sizes_use_a_different_response_split`.
-    """
+    """The abstract and final table use the current response layout."""
     par = get("RiVeR-N64")
-    assert round(par.proof_size_total_kb_paper, 1) == 38.5
+    assert round(par.proof_size_total_kb, 1) == 39.0
     baseline_kb = 1.04 * 1024
-    # The abstract now says "roughly 28x"; the intro table says 27.6x.
-    assert round(baseline_kb / par.proof_size_total_kb_paper, 1) == 27.6
-    assert round(baseline_kb / par.proof_size_total_kb_paper) == 28
+    assert round(baseline_kb / par.proof_size_total_kb, 1) == 27.3
+    assert round(baseline_kb / par.proof_size_total_kb) == 27
 
 
 def test_paper_embedded_key_noise_bound_is_stated_twice():

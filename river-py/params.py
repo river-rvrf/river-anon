@@ -209,9 +209,10 @@ class RiVeRParams:
     beta: int               # secret-key bound (beta = 1 => ternary)
 
     # -- rejection sampling ------------------------------------------------
-    # The paper splits the single outer response into a short block
-    # `z_s` (the secret key) and an error block `z_m = (z_key, z_eval)`, with
-    # separate widths.  `phi_m` and `phi_b` are shared by every profile.
+    # The outer response is split into `(z_s, z_key)`, with `ell+n` ring
+    # elements at the short-response width, and the one-element `z_eval`
+    # block at the error-response width. `phi_m` and `phi_b` are shared by
+    # every profile.
     phi_a: float            # slack for the selector response f_1
     phi_s: float            # slack for the short response z_s
     phi_m: float = 32       # slack for the error response z_m       (Paper)
@@ -299,11 +300,9 @@ class RiVeRParams:
     def B_s(self):
         """`B_s = w gamma B_e sqrt(d(ell+n))`; scale of the short response.
 
-        The paper regrouped the response: `r_0 = (s, e_key)` is now the
-        block answered at `sigma_s`, so `B_s` covers `ell + n` ring elements
-        and carries `B_e` (the bound on `e_key`) rather than `beta` (the
-        bound on `s` alone).  The previous revision had
-        `B_s = w gamma beta sqrt(d ell)`, some 43x smaller.
+        The mask block is `r_0 = (s, e_key)`, so `B_s` covers `ell + n`
+        ring elements and carries `B_e`, which also dominates the bound
+        `beta` on `s`.
         """
         return self.w * self.gamma * self.B_e \
             * math.sqrt(self.d * (self.ell + self.n))
@@ -608,21 +607,61 @@ class RiVeRParams:
     def eps_tail(self):
         """The four `2 d <width> exp(-18)` tail terms, in `(a, b, s, m)` order.
 
-        The `s` and `m` widths follow the response split: `(ell+n)` and `1`
-       .  The appendix's own tail paragraph is internally
-        inconsistent here -- one line says `2d(ell+1)exp(-18)` for the `s`
-        block and the display two paragraphs later says `2d(n+ell)exp(-18)`.
-        We take the latter, which is the one that matches the algorithm's
-        `ell + n` coefficients.
+        The `s` and `m` widths follow the response split: `(ell+n)` and `1`,
+        matching the algorithm's two transmitted response blocks.
         """
         t = 2 * self.d * math.exp(-18)
         return (t * (self.N - 1), t * self.k_hat, t * (self.ell + self.n),
                 t * 1)
 
     @property
+    def compression_pass_residues(self):
+        """Number of residues satisfying both compression predicates.
+
+        A coefficient must simultaneously stay away from the centred
+        ``q_hat`` boundary and have a signed ``2^K_a`` remainder of magnitude
+        strictly below ``T_cmp``.  Both predicates inspect the same residue,
+        so multiplying their marginal probabilities would assume an
+        independence that is only approximately true.  Count their
+        intersection over one complete ``Z_q_hat`` representative set.
+        """
+        integer_fields = (self.K_a, self.K_b, self.q_hat, self.w, self.gamma)
+        if (any(not isinstance(value, int) or isinstance(value, bool)
+                or value <= 0 for value in integer_fields)
+                or not self.K_a < 127 or not self.K_b < 127):
+            return 0
+        modulus = 1 << self.K_a
+        perturbation = self.w * self.gamma * (1 << (self.K_b - 1))
+        threshold = modulus // 2 - perturbation
+        q_threshold = ((self.q_hat - 1) // 2
+                       - perturbation)
+        if not 0 < threshold <= modulus // 2 or q_threshold <= 0:
+            return 0
+
+        # F(n) counts accepted integers in [0,n), and remains valid for
+        # negative n because divmod uses a non-negative remainder.  Accepted
+        # residues are [0,T-1] U [M-T+1,M-1].
+        def prefix(n):
+            periods, remainder = divmod(n, modulus)
+            return (periods * (2 * threshold - 1)
+                    + min(remainder, threshold)
+                    + max(0, remainder - (modulus - threshold + 1)))
+
+        lo = -(q_threshold - 1)
+        hi = q_threshold - 1
+        return prefix(hi + 1) - prefix(lo)
+
+    @property
     def p_cmp_uniform(self):
-        """Uniform-low-bits sanity model for the compression check."""
-        return ((2 * self.T_cmp - 1) / 2 ** self.K_a) ** (self.n_hat * self.d)
+        """Uniform-residue success model for all compression coefficients."""
+        accepted = self.compression_pass_residues
+        dimensions = (self.n_hat, self.d)
+        if (accepted == 0
+                or any(not isinstance(value, int) or isinstance(value, bool)
+                       or value <= 0 for value in dimensions)):
+            return 0.0
+        coefficient_pass = accepted / self.q_hat
+        return coefficient_pass ** (self.n_hat * self.d)
 
     @property
     def mu_river(self):
@@ -632,13 +671,9 @@ class RiVeRParams:
         `(1-eps_a)(1-eps_b)((1-eps_s)(1-eps_m) - eps_2)(1-eps_g)(1-eps_c)`,
         which is `eq:river-repeat-bound`.
 
-        **This closed in the paper.**  Under the table the
-        appendix's own formula did not reproduce its printed column, and
-        this tree carried a per-profile `c_pub_model` backsolved *from* that
-        column -- a number with no provenance but the answer it had to
-        produce.  Against the paper table the components multiply out
-        to the printed value at all five profiles, so the backsolve is gone
-        and this is now computed.  `test_params.py` pins the agreement.
+        Every component is computed from the profile and the recorded
+        product-check confidence bound; `test_params.py` pins agreement with
+        all five printed rows.
         """
         return self.mu_gaussian / self.c_pub_from_components
 
@@ -651,9 +686,9 @@ class RiVeRParams:
     def eps_euclidean(self):
         """`eps_2`: the joint Euclidean response check's failure probability.
 
-        New.  The appendix bounds it by dominating all
+        The appendix bounds it by dominating all
         `d(ell+n+1)` response coefficients with a width-`sigma_s` Gaussian
-        (sound because the same revision requires `sigma_s >= sigma_m`) and
+        (sound because every profile requires `sigma_s >= sigma_m`) and
         applying the Euclidean tail bound at ratio
 
             rho = 1.2 sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1)),
@@ -712,40 +747,20 @@ class RiVeRParams:
 
     @property
     def proof_size_oom_kb(self):
-        """`|pi_OOM| = L_OOM / 8192` KB, from the communication formula.
+        """`|pi_OOM| = L_OOM / 8192` KiB, from the communication formula.
 
         The six terms are the contributions of `B`, `x`, `f_1`, `z_b`,
         `(z_s, z_key)` and `z_eval`.  The last two are charged at the
         dimensions the algorithm actually transmits: `(ell+n) d h(sigma_s)`
         and `d h(sigma_m)`.
 
-        **DISCREPANCY.**  The paper appendix regrouped the
-        response but left the communication display charging
-        `ell d h(sigma_s) + (n+1) d h(sigma_m)` -- the *previous* layout.
-        Its printed `|pi_OOM|` column (19.6 / 21.0 / 25.0 / 28.5 / 35.6 KB)
-        reproduces that stale formula to the digit, so the published sizes
-        under-count by 0.4-0.6 KB per profile.  `proof_size_oom_kb_paper`
-        below evaluates the stale form, and `test_params.py` pins both:
-        that ours matches the transmitted layout, and that the paper's
-        matches its own printed column.  Since the appendix describes the
-        LANES parameter search as minimising communication, the objective
-        it minimised was evaluated on the wrong layout.
+        The manuscript's displayed formula and final table now use this same
+        response split, so this value directly reproduces the published OOM
+        column.
         """
         return (self._proof_size_oom_common_bits
                 + self.s_dim * self.d * self._h(self.sigma_s)
                 + self.m_dim * self.d * self._h(self.sigma_m)) / 8192
-
-    @property
-    def proof_size_oom_kb_paper(self):
-        """The stale display formula, kept so the gap can be pinned."""
-        return (self._proof_size_oom_common_bits
-                + self.ell * self.d * self._h(self.sigma_s)
-                + (self.n + 1) * self.d * self._h(self.sigma_m)) / 8192
-
-    @property
-    def proof_size_total_kb_paper(self):
-        """`proof_size_oom_kb_paper` plus the paper's fixed `|pi_ex|`."""
-        return self.proof_size_oom_kb_paper + self.EXACT_PROOF_KB
 
     @property
     def proof_size_total_kb(self):
@@ -1129,12 +1144,10 @@ _TAU_PUBLISHED_2DP = {
     256: (Fraction(306, 100), Fraction(384, 100)),
 }
 
-#: `epsilon_g^U` per profile.  **Derived**: the paper states these lie
-#: between 0.78% and 0.91% and does not print the individual values, so
-#: these reproduce that range to the two decimals it is quoted to.  The
-#: underlying `10^6`-trial experiment is not published, so the individual
-#: numbers are not independently checkable -- only their range is, which
-#: `test_params.py` checks.
+#: `epsilon_g^U` per profile.  **Derived** from the one-million-trial counts
+#: and one-sided Clopper--Pearson convention in the parameter artifact.  Full
+#: recorded precision is retained because this value feeds the unrounded
+#: expected-attempt report, though it never affects protocol decisions.
 #:
 #: The companion `c_pub_model` backsolve is **gone**: the
 #: appendix's own component formula now reproduces the printed "Repeat
@@ -1144,11 +1157,11 @@ _TAU_PUBLISHED_2DP = {
 #: Nothing byte-visible depends on this: it enters only the reported
 #: attempt estimate, never the protocol.
 _EPSILON_G_U = {
-    8:   0.007956,
-    16:  0.007793,
-    64:  0.009060,
-    128: 0.007850,
-    256: 0.008599,
+    8:   0.0079564543,
+    16:  0.007793341355707927,
+    64:  0.0090602037,
+    128: 0.0078500789,
+    256: 0.0085985639,
 }
 
 

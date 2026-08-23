@@ -2,8 +2,8 @@
 #
 # Nothing here knows what a subdirectory contains.  Every component owns its
 # own Makefile and its own notion of `clean`, and this file only dispatches, so
-# adding `river-rs/` needs no edit here: drop in a Makefile with the standard
-# targets and it joins in automatically.
+# adding a component needs no edit here: drop in a Makefile with the standard
+# targets and it joins recursive cleanup automatically.
 #
 # Standard targets a component Makefile should provide:
 #
@@ -11,10 +11,14 @@
 #   test test-all selftest kat      implementations (river-*)
 #   vectors check-vectors           implementations (river-*)
 #   bench bench-lanes bench-sizes   implementations with a Rust benchmark binary
+#   table-check check               parameter-setting artifacts
 #
 # Discovered, not listed:
 #   SUBDIRS   every immediate subdirectory holding a Makefile
 #   IMPLDIRS  those matching `river-*`, i.e. the implementations
+#
+# Non-implementation components such as `parameters/` participate in
+# `clean`/`distclean` through SUBDIRS but are not added to protocol tests.
 
 SUBDIRS  := $(patsubst %/Makefile,%,$(wildcard */Makefile))
 IMPLDIRS := $(patsubst %/Makefile,%,$(wildcard river-*/Makefile))
@@ -52,7 +56,7 @@ help:
 	@echo "components:      $(SUBDIRS)"
 	@echo "implementations: $(IMPLDIRS)"
 	@echo
-	@echo "clean preserves the shipped test vectors and manifests."
+	@echo "clean preserves shipped vectors, manifests, and parameter data/reports."
 
 all: test
 
