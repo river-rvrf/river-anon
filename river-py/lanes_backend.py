@@ -32,18 +32,13 @@ Two consequences of using LANES's *native* encoding:
   of the [ESLR23] rounding relation has to centre for the same reason -- the
   product proof cannot certify `{0, 1, 2}` directly.
 
-  Earlier drafts contradicted themselves on the direction of that shift.
-  The relation and figures agree on the centred error:
+  The relation and figures use the centred error:
   `e_eval + 30 = sum_j g_j d_j`, equivalently
   `e_eval = sum_j g_j d'_j` on centred digits.
 
-* The link is proved **modulo `q~`**, because that is the only modulus LANES
-  has.  That used to make this backend *weaker* on the link than
-  `OpeningBackend`, which checks it over `Z` only because it transmits the
-  witness in the clear: `||z_eval||_inf` was permitted
-  up to `6 sigma_rs > q~`, so a congruence mod `q~` did not pin the integer.
-  The paper closes that by splitting the response -- `z_eval` now
-  sits in the error block at `sigma_m = phi_m eta_m`, and
+* The link is proved **modulo `q~`**, because that is the modulus LANES
+  uses.  The response split places `z_eval` in the error block at
+  `sigma_m = phi_m eta_m`, and
   `q~ > 24 phi_m eta_m` (see `exact.ExactParams.q_tilde_clears`) gives every
   accepted `z_eval`, and every difference of two of them, a unique centred
   lift.
@@ -51,19 +46,17 @@ Two consequences of using LANES's *native* encoding:
 **This module runs at the paper's own parameters.**
 Both the structure -- `d~ = 256`, `l = 64`, `q~ = 67107713`,
 `(n~, l~) = (4, 4)`, `D = 17`, six padded 64-slot message blocks -- and the
-Gaussian widths are the revision's; `lanes_params` re-derives every figure
+Gaussian widths are the paper's; `lanes_params` re-derives every figure
 it prints.
 
-The supported name `"lanes"` is nevertheless still gated, on security
-*evidence* rather than on parameters: `delta_MLWE = 1.0020` is not
-reproducible under either reading of the paper's Gaussian convention and
-[KLSS23]'s reduction loses about `2^-94.9`.
-
-The implementation itself is ready and says so -- `exact.LANES_BACKEND_READY`
-is true, and both `lanes-experimental` vector cases are re-derived
-byte for byte against `river-rs`.  What still closes the gate is the security
-condition alone: `exact.lanes_gate_cause()` returns
-`security-evidence-pending`, so `LanesBackend(par)` refuses, and
+The standard-deviation convention reproduces the paper's
+`delta_MLWE = 1.0040`.  The implementation is complete and both
+`lanes-experimental` vector cases are re-derived byte for byte against
+`river-rs`.  The production alias remains disabled as an artifact policy:
+the concrete compression/recovery and wire-format completion is
+implementation-defined, and this artifact does not supply a reduction for
+that exact composition.  Thus `exact.lanes_gate_cause()` returns
+`production-alias-reserved`, `LanesBackend(par)` refuses, and
 `LanesBackend.experimental(par)` / `exact_backend="lanes-experimental"` is
 the way past it -- with a *different instance name*, so a vector case
 recording it reconstructs this backend and not the gated one.  See
@@ -273,8 +266,8 @@ class LanesBackend(ExactBackend):
         #: dropping `D`; `c` and the recovery hint are signed ternary
         #: fields, and `z` is Rice-coded.  The widths are read off the
         #: constants rather than written out, because this backend is gated
-        #: and its dimensions and its *bounds* no longer come from the same
-        #: revision -- see `exact.lanes_unavailable_reason`.
+        #: and its dimensions and bounds must come from the same manifest --
+        #: see `exact.lanes_unavailable_reason`.
         qt = Uniform(R.QTILDE)
         t0_high = Uniform(T0_HIGH_MODULUS)
         rice_z = Rice(SIGMA_Y, Z_INF_BOUND)
@@ -323,7 +316,7 @@ class LanesBackend(ExactBackend):
 
         # Each block is `l = 64` slots wide and carries `d = 32`
         # coefficients, so every one of the six is *padded* -- the
-        # revision's `6 outer_d != N_ex l` (192 != 384) is intentional.
+        # paper's `6 outer_d != N_ex l` (192 != 384) is intentional.
         # Assigning the coefficient list directly leaves a 32-entry block
         # that `scale_blocks` and the linear system both read as 64.
         def _block(coeffs):
@@ -379,7 +372,7 @@ class LanesBackend(ExactBackend):
 
     #: The uniform ring elements `sigma_ex` still carries.  `w`, `v` and
     #: `v'` are gone: each is a check target the verifier recovers, which
-    #: is what the revision's `(N_ex + alpha + 1) = 10`-element uniform
+    #: is what the paper's `(N_ex + alpha + 1) = 10`-element uniform
     #: term already assumes.  See `lanes_proof`'s module docstring.
     _ELEMENTS = ("t_g", "t_mp1", "t_mp2", "h")
 
@@ -464,14 +457,14 @@ class LanesBackend(ExactBackend):
         return rows
 
     def model_bits(self):
-        """A **historical draft's** closed form, for comparison only.
+        """A comparison-only communication model.
 
         `n~ d~ (log2 q~ - D) + (N_ex + alpha + 1) d~ log2 q~
          + k_L (l~ + N_ex + alpha) d~ h(sigma_y)`, with `h(s) =
         log2(4.13 s)` and `k_L = 1`.
 
-        **Provenance matters here.**  This formula is *not* in the current
-        manuscript, which gives a closed form for `L_OOM` and, for the
+        This formula is not part of the paper's exact-layer size statement,
+        which gives a closed form for `L_OOM` and, for the
         exact proof, only the serialized figure "13.5 KB".  So whatever
         this returns is a **Derived** extrapolation and cannot be used to
         check the 13.5 KB claim.

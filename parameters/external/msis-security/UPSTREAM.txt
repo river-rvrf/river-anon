@@ -1,0 +1,22 @@
+Upstream project: https://gitlab.com/raykzhao/matrict_plus
+Reference commit: b24f3176d2db15ca55d91c8c9cbe1cef201c5d2d
+Upstream directory: asymmetric_sis_estimate/
+License: BSD-0-Clause (copied as LICENSE-BSD-0-Clause.txt)
+
+The bundled proba_util.py byte-matches the upstream file at the reference
+commit. MSIS_security.py and model_BKZ.py are derived copies with local
+compatibility and runtime changes: integer normalization for current Sage/Python
+types, guarded trivial block sizes, quieter progress output, and coarser default
+search steps. The artifact's driver explicitly sets STEPS_b=1 and STEPS_m=10
+before every selector A-MSIS run and validates its accelerated cost calculation
+against the bundled reference calculation at sampled points.
+
+SHA-256 at the reference commit:
+  MSIS_security.py  3462402389be874f95d86cd566562fbd578e9ebe39a16c792bd3eaf55222ee87
+  model_BKZ.py      778e1053e55cf1e7719210d0d14b9805877cf8da62834015409cdcd3efc91f36
+  proba_util.py     1489c43427c637ff427e648cb03865fd39ec9574b73466375277787db2d72423
+
+SHA-256 of the bundled files:
+  MSIS_security.py  e8f70af34356ec2c461c2367244c1a8e395c45818ad792dc3dd11fea6fda81f3
+  model_BKZ.py      fa8cdb9123b9ba21dce9531c02a4b48716afe1188aeb97341d69e43c150a8180
+  proba_util.py     1489c43427c637ff427e648cb03865fd39ec9574b73466375277787db2d72423

@@ -6925,8 +6925,8 @@
     13514047488,
     25
    ],
-   "mu_river": 8.616634985923838,
-   "pi_oom_kb": 29.12017786190496
+   "mu_river": 8.599820475055308,
+   "pi_oom_kb": 28.95220911190496
   },
   {
    "name": "RiVeR-N256",
@@ -6979,8 +6979,8 @@
     12180258816,
     25
    ],
-   "mu_river": 8.543595907038434,
-   "pi_oom_kb": 36.21287399348253
+   "mu_river": 8.526923940593298,
+   "pi_oom_kb": 36.04099899348253
   },
   {
    "name": "RiVeR-TOY",
@@ -7934,13 +7934,13 @@
    "bound_zm": 16682742,
    "bound_x": 16,
    "pk_bytes": 8640,
-   "max_bytes": 37488,
-   "min_bytes": 28368,
+   "max_bytes": 37316,
+   "min_bytes": 28196,
    "fields": [
     {
      "name": "B",
      "cols": 32,
-     "rows": 50,
+     "rows": 49,
      "ring_q": null,
      "max_bits": 43,
      "probe": [
@@ -8058,13 +8058,13 @@
    "bound_zm": 16682742,
    "bound_x": 16,
    "pk_bytes": 8064,
-   "max_bytes": 48512,
-   "min_bytes": 34808,
+   "max_bytes": 48336,
+   "min_bytes": 34632,
    "fields": [
     {
      "name": "B",
      "cols": 32,
-     "rows": 49,
+     "rows": 48,
      "ring_q": null,
      "max_bits": 44,
      "probe": [
@@ -36673,7 +36673,7 @@
  },
  "withheld": {
   "blocks": [],
-  "cause": "security-evidence-pending",
+  "cause": "production-alias-reserved",
   "constants": [
    "RECOVERY_BUCKETS",
    "RECOVERY_ERROR_BOUND",
@@ -36682,6 +36682,6 @@
    "Z_INF_BOUND",
    "Z_NORM2_BOUND"
   ],
-  "reason": "the LANES security evidence is pending, and is the authors' to supply. The parameters are the paper's and reproduce every figure it prints; what is not established is that they reach the 128-bit target they were selected for. (1) delta_MLWE = 1.0020 is not reproducible; the two readings of the paper's own Gaussian convention differ by about 18 bits. (2) [KLSS23] Thm 1 loses (d+m) 2 eps ~ 2^-94.91, below the 128-bit target, before any union bound over queries. (3) recovery-hint leakage and extraction analysis are still this implementation's, not the paper's. This repository's own run reaches 116.2 bits under the conservative reading, which is a **lower bound under deliberately worst-case assumptions** -- `B_H = w_hat^2` and an all-challenges response bound -- and so is evidence that the question is open, not an authoritative security level for the scheme. See lanes_security.json"
+  "reason": "the production LANES alias is reserved: the parameters reproduce the paper's printed figures, but the concrete compression/recovery completion is implementation-defined and this artifact does not supply a reduction for that exact composition. (1) the recovery-hint and concrete compression composition is an implementation-defined completion, and this artifact does not supply a reduction for that composition. Use exact_backend='lanes-experimental' for the tested candidate implementation"
  }
 }

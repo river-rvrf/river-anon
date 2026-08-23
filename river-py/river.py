@@ -117,35 +117,14 @@ class RiVeR:
     # ---- ring admissibility ----------------------------------------------
 
     def validate_ring(self, ring_pks):
-        """Check `R` and return it unchanged.  Replaces `CanonPad`.
+        """Check the ordered ring `R` and return it unchanged.
 
-        **Closed in the paper.**  Removing padding and canonical
-        reordering left a
-        contradiction: `Eval` spoke of "the unique index at which the
-        evaluator key occurs", while the preliminary definition admitted any
-        tuple in `(R_p^n)^N`, duplicates included, which would make "the
-        unique index" undefined.  The specification resolves it explicitly:
+        Duplicates are admissible.  If the evaluator's key occurs more than
+        once, `ring_index` implements the specified first-occurrence rule
+        `j* = min{j in [N] : t_j = pk}`.  Repeated entries do not create
+        additional distinct identities.
 
-            "We regard R as an ordered tuple and do not require its entries
-            to be distinct.  Repeated occurrences of the same public key do
-            not represent distinct key identities.  When an evaluator's
-            public key occurs more than once, RiVeR uses the first matching
-            position as its hidden index."
-
-        and both `Eval` and the construction now write
-        `j* = min{j in [N] : t_j = pk}`.  So duplicates are admissible and
-        the tie-break is first occurrence; the rejection is gone and
-        `ring_index` implements the `min`.
-
-        Note what this costs, because it is not nothing: a ring with `k`
-        copies of the evaluator's key hides the evaluator among `N - k + 1`
-        distinct identities, not `N`.  The paper's own sentence -- repeated
-        occurrences "do not represent distinct key identities" -- says as
-        much.  Anonymity is over identities, not positions, and nothing
-        here rejects it: the paper defines it as admissible.
-
-        What is enforced here, on both the prover and the verifier side, so
-        that the two hash the same admissible domain:
+        The prover and verifier enforce the same admissible domain:
 
           * exactly `N` keys -- not "at most", and no padding;
           * in caller-supplied order -- the order is part of the statement,
@@ -157,11 +136,6 @@ class RiVeR:
         `ring_index` establishes.  `Verify` does not need to locate an
         evaluator, but applies everything above.
 
-        This dissolves the old zero-witness forgery outright rather than
-        patching it: with no dummy slots there is no slot whose opening is
-        public.  The previous behaviour -- sort, then pad with keys expanded
-        from a digest of the real ring -- is gone with the draft that needed
-        it.
         """
         par = self.par
         if not isinstance(ring_pks, (list, tuple)):
@@ -237,9 +211,8 @@ class RiVeR:
     def ring_index(self, ring, pk):
         """`j* = min{j in [N] : t_j = pk}`, the paper's hidden index.
 
-        The paper admits duplicate ring entries and fixes the tie-break to
-        the *first* occurrence, in both the preliminaries and the `Eval`
-        figure.  Before it this raised on a duplicate; see `validate_ring`.
+        Duplicate ring entries are admissible, and the tie-break is the
+        first occurrence.
 
         Comparison is on the canonical encoding, not on the Python objects,
         so two structurally equal keys built by different paths tie-break
@@ -372,10 +345,7 @@ class RiVeR:
                 continue
 
             # Only now is `z_eval` defined.  The bottom test above happens
-            # first, unconditionally -- which is what the `Eval` figure now
-            # prints.  Until the paper it parsed
-            # `pi_OOM` and read `z_eval` before testing for bottom, and this
-            # order was a **Repair**; it is **Paper**.
+            # first, unconditionally, matching the `Eval` figure.
             z_eval = R.centered(pi_oom["z"][par.ell + par.n])
             x_c = pi_oom["x"]
 

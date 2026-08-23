@@ -478,8 +478,8 @@ fn communication_sizes() {
     // Both backends, every published profile.  `opening` is a mock whose
     // `|pi_ex|` is the cost of revealing the witness; `lanes-experimental`
     // is the candidate LANES layer at the paper's own widths.  It does not
-    // transmit the witness, and is the one comparable to the paper's
-    // stated 13.5 KB.
+    // transmit the witness, and is the concrete encoding shown beside the
+    // paper's 13.5 KB entropy estimate.
     for kind in [BackendKind::Opening, BackendKind::LanesExperimental] {
         section(&format!(
             "Communication (measured, one deterministic {} proof)",
@@ -488,13 +488,13 @@ fn communication_sizes() {
         if kind == BackendKind::Opening {
             println!(
                 "  `opening` transmits the witness: its ex KB is the cost of \
-                 the leak, NOT comparable to the paper's 13.5 KB."
+                 the leak, NOT comparable to the paper's 13.5 KB entropy estimate."
             );
         } else {
             println!(
                 "  candidate LANES layer at the paper's own widths; does not \
-                 transmit the witness.  Its ex KB is what the paper's 13.5 KB \
-                 should be compared against."
+                 transmit the witness. Its encoded ex KB is shown beside the \
+                 paper's 13.5 KB entropy estimate."
             );
         }
         println!(
@@ -540,9 +540,9 @@ fn communication_sizes() {
          it, so measured OOM exceeds ideal OOM by a few tenths of a percent."
     );
     println!(
-        "  `ideal tot` adds the paper's fixed |pi_ex| = {:.1} KB, stated for\n  \
-         every profile with no field-by-field derivation, so it is a claim\n  \
-         rather than something this encoder can reproduce.",
+        "  `ideal tot` adds the paper's entropy estimate |pi_ex| = {:.1} KB.\n  \
+         The measured ex column is this artifact's concrete encoding, so the\n  \
+         two quantities are reported separately.",
         RiVeRParams::EXACT_PROOF_KB
     );
     println!(
@@ -585,8 +585,8 @@ fn print_lanes_profile() {
         river::lanes::ring::LSPLIT
     );
     println!(
-        "  closed-form model: {model:.3} bits = {:.6} KB; paper states {} KB \
-         with no field list",
+        "  concrete entropy model: {model:.3} bits = {:.6} KB; paper's exact-layer \
+         entropy estimate is {} KB",
         model / 8192.0,
         river::exact::LANES_STATED_BITS as f64 / river::exact::BITS_PER_KB as f64
     );
@@ -594,7 +594,7 @@ fn print_lanes_profile() {
         "  D={D_DROP} t0: {t0_before} -> {t0_now} bits; recovery metadata: \
          c {challenge} + hint {hint} bits"
     );
-    println!("  parameters: the paper's own, the paper; byte-exact against river-py");
+    println!("  parameters: paper-derived; byte-exact against river-py");
 }
 
 fn bench_lanes_ring() {
@@ -702,21 +702,16 @@ fn bench_lanes_ring() {
 }
 
 fn bench_lanes_backend() {
-    // The production name is **gated** on security evidence.  Printing the reason and
-    // returning keeps `make bench-lanes` a truthful report of what exists
-    // rather than a set of numbers for an unported proof system.
+    // The production alias is reserved; the fully tested candidate is exposed
+    // under `lanes-experimental`.
     section("Exact layer (LANES backend)");
     // Measured through `LanesBackend::experimental`, the ungated name.
     //
-    // The production name is gated on security *evidence*, not on
-    // parameters — those are the paper's — so refusing to benchmark would
-    // report nothing about a layer that runs, is byte-exact against
-    // `river-py`, and is exactly the thing the paper's 13.5 KB figure
-    // should be compared against.  The reason is printed alongside so the
-    // numbers are not mistaken for a passing backend.
+    // The parameters are the paper's; the artifact-defined compression,
+    // recovery, and codec composition is benchmarked under its candidate name.
     if let Some(cause) = river::exact::lanes_gate_cause() {
         println!(
-            "  NOTE: the production `lanes` name is gated ({cause}); measured \
+            "  NOTE: the production `lanes` alias is reserved ({cause}); measured \
              below through `lanes-experimental`, which is the same code."
         );
     }

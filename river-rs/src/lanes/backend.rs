@@ -44,13 +44,10 @@
 //!   difference of two of them has a unique centred lift and the
 //!   congruence pins the integer.
 //!
-//! ## What the reference has and this does not
-//!
-//! `field_sizes` and `model_bits`, two reporting helpers that print a
-//! per-field size table against the revision's `L_ex` model.  They are
-//! measurement tools rather than protocol, and `crate::codec` already
-//! declines the reference's `proof_sizes` for the same reason; the measured
-//! lengths this crate does check are the ones `vectors.json` carries.
+//! The Python reference additionally provides `field_sizes` and `model_bits`
+//! reporting helpers. They are measurement tools rather than protocol; this
+//! crate checks the encoded lengths carried by `vectors.json` and reports
+//! field sizes through the benchmark binary.
 
 use super::commit::{commit, CommitSecret, Commitment, CommitmentKey, T0High};
 use super::params::{N_EX, N_TILDE, RESPONSE_RANK, SIGMA_Y, T0_HIGH_MODULUS, Z_INF_BOUND};
@@ -78,7 +75,7 @@ pub const ALPHA_HI: usize = IDX_DIGITS + RADIX_WEIGHTS.len();
 /// The uniform ring elements `sigma_ex` still carries.
 ///
 /// `w`, `v` and `v'` are gone: each is a check target the verifier
-/// recovers, which is what the revision's `(N_ex + alpha + 1) = 10`-element
+/// recovers, which is what the paper's `(N_ex + alpha + 1) = 10`-element
 /// uniform term already assumes.  See [`super::proof`]'s module docs.
 const ELEMENTS: [&str; 4] = ["t_g", "t_mp1", "t_mp2", "h"];
 
@@ -777,7 +774,7 @@ mod tests {
     /// witness.
     ///
     /// The mask is drawn at `sigma_m` with tailcut `GAUSSIAN_TAILCUT`, and
-    /// the revision's `q~ > 24 phi_m eta_m` is `q~ > 24 sigma_m`.  The
+    /// the paper's `q~ > 24 phi_m eta_m` is `q~ > 24 sigma_m`. The
     /// margin is therefore `24/14`, and it is a *consequence* of the
     /// modulus condition rather than an accident of the profiles — but the
     /// profiles are what ship, so they are what is checked.
@@ -972,7 +969,7 @@ mod tests {
         assert!(LanesBackend::experimental(crate::params::RIVER_TOY, &[0x21; 32]).is_ok());
         assert_eq!(
             crate::exact::lanes_gate_cause(),
-            Some("security-evidence-pending")
+            Some("production-alias-reserved")
         );
     }
 }

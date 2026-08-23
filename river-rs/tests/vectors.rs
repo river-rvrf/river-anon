@@ -24,14 +24,13 @@
 //! LANES proof layer is ported and byte-exact, so the exact layer is
 //! covered here rather than deferred.
 //!
-//! The two *production* `lanes` cases are *withheld*, not deleted — the
-//! reference lists them in `vectors.py::WITHHELD_CASES` — and the reason
-//! is **security evidence, not parameters**: the paper publishes the
-//! whole width chain in closed form, but `delta_MLWE = 1.0020` does not
-//! reproduce, so `exact::lanes_gate_cause` returns
-//! `security-evidence-pending` and `LanesBackend::new` refuses to
-//! construct.  `LanesBackend::experimental` is the same code under a name
-//! that claims no more than it has.
+//! The two production-alias `lanes` cases are withheld explicitly.  The
+//! paper-derived parameters, including `delta_MLWE = 1.0040`, reproduce;
+//! the tested candidate is named `lanes-experimental` because its concrete
+//! compression/recovery and wire-format completion is implementation-
+//! defined and this artifact supplies no reduction for that exact
+//! composition.  `LanesBackend::experimental` is the same tested code under
+//! the scope-accurate name.
 //!
 //! The accounting is **enforced rather than narrated**.
 //! [`every_case_is_checked`] fails if a case names a backend this crate

@@ -209,11 +209,11 @@
           "acceptance_metric": "root_hermite_factor_delta",
           "algorithm": "MSIS_security.MSIS_summarize_attacks",
           "attack_variant": 2,
-          "blocksize": 324,
-          "cost_bits": 85.94338410520234,
+          "blocksize": 315,
+          "cost_bits": 83.55606788005782,
           "cost_bits_diagnostic_only": true,
           "cost_evaluator": "fast exact equivalent of MSIS_security.SIS_linf_cost for attack_variant=2",
-          "delta": 1.0045991527145743,
+          "delta": 1.0046870515700201,
           "delta_target": 1.00469,
           "normalized_bounds": [
             80902752766526,
@@ -225,13 +225,13 @@
           "normalized_widths": [
             1,
             127,
-            50,
+            49,
             128,
             51
           ],
           "passes_delta_target": true,
           "pinned_blocksize": null,
-          "pinned_delta": 1.0045991527145743
+          "pinned_delta": 1.0046870515700201
         },
         "selector_hiding_mlwe": {
           "algorithm": "LWE.dual",
@@ -268,11 +268,11 @@
           "acceptance_metric": "root_hermite_factor_delta",
           "algorithm": "MSIS_security.MSIS_summarize_attacks",
           "attack_variant": 2,
-          "blocksize": 328,
-          "cost_bits": 87.0044135385999,
+          "blocksize": 318,
+          "cost_bits": 84.351839955106,
           "cost_bits_diagnostic_only": true,
           "cost_evaluator": "fast exact equivalent of MSIS_security.SIS_linf_cost for attack_variant=2",
-          "delta": 1.0045612704560136,
+          "delta": 1.0046573319311118,
           "delta_target": 1.00469,
           "normalized_bounds": [
             135171640236442,
@@ -284,13 +284,13 @@
           "normalized_widths": [
             1,
             255,
-            49,
+            48,
             256,
             52
           ],
           "passes_delta_target": true,
           "pinned_blocksize": null,
-          "pinned_delta": 1.0045612704560136
+          "pinned_delta": 1.0046573319311118
         },
         "selector_hiding_mlwe": {
           "algorithm": "LWE.dual",

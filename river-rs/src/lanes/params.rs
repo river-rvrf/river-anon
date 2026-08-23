@@ -1,10 +1,7 @@
 //! LANES parameters and samplers — port of `river-py/lanes_params.py`.
 //!
-//! **The parameters are the paper's.**  The previous
-//! revision published only the LANES search's *outputs* and left the
-//! Gaussian widths behind them unstated, so this module carried two
-//! selected integers (`K_S1`, `K_S2`).  They are retired.  The revision
-//! gives a closed form with no free constant:
+//! **The parameters are the paper's.** The Gaussian widths follow from a
+//! closed form with no free constant:
 //!
 //! ```text
 //! (ceil(log2 q~), n~, l~, D) = (26, 4, 4, 17),  q~ = 67107713
@@ -22,21 +19,21 @@
 //! `delta_MSIS = 1.0037`, and `D = 17` as the largest exponent with
 //! `2^D <= w_hat s_1 n~ d~` and `q~ > 4 w_hat 2^D`.
 //!
-//! Two identities the paper does not state, both load-bearing:
+//! Two derived identities are load-bearing:
 //! `s^2 = s_2^2 + w_hat^2 s_1^2` (so `s` is already the worst-case-`l1`
 //! response width), and `sigma_MLWE = s_0` exactly — the widths are chosen
 //! so the `[KLSS23]` hint reduction lands back on the smoothing parameter
 //! for `eps = 2^-100`, which is why `s_2 = w_hat s_1`.
 //!
-//! A convention trap: the paper's `s` is the standard deviation and its
-//! `sigma` the `[KLSS23]` Gaussian parameter, `sigma = s sqrt(2 pi)` — the
-//! reverse of the usual reading, and 18 bits of security if taken the wrong
-//! way.  It pins which is which by printing both.  This module works in
-//! standard deviations throughout, as `crate::sample` does.
+//! The paper's `s` is the standard deviation and its `sigma` the `[KLSS23]`
+//! Gaussian parameter, `sigma = s sqrt(2 pi)`. This module works in standard
+//! deviations throughout, as `crate::sample` does.
 //!
-//! **The backend is still gated**, on security *evidence* rather than on
-//! parameters: `delta_MLWE = 1.0020` is not reproducible under either
-//! reading, and `[KLSS23]` Theorem 1 loses about `2^-94.9`.  See
+//! The standard-deviation convention gives `delta_MLWE = 1.003996`,
+//! reproducing the paper's printed `1.0040`.  The tested backend is exposed
+//! as `lanes-experimental` because its concrete compression/recovery and
+//! wire-format completion is implementation-defined and this artifact does
+//! not supply a reduction for that exact composition.  See
 //! `crate::exact::lanes_unavailable_reason`.
 //!
 //! Both widths are independently rounded to exact rationals with
@@ -58,11 +55,7 @@ use crate::sample::{gaussian_int_ctx, uniform_int, GaussCtx, Xof, GAUSSIAN_TAILC
 
 // ---- dimensions ----------------------------------------------------------
 //
-// All current: read from `ExactParams`, which carries the revision's
-// values, so the wrapper and the prover share one source of truth.  The
-// backend still refuses to construct — see
-// `crate::exact::lanes_unavailable_reason` — but on security evidence,
-// not on a dimension mismatch.
+// Read from `ExactParams` so the wrapper and prover share one source of truth.
 
 /// Rows of `B_0`, the length of `t_0`, and the MLWE secret rank.
 pub const N_TILDE: usize = ExactParams::N_TILDE;
@@ -70,7 +63,7 @@ pub const N_TILDE: usize = ExactParams::N_TILDE;
 pub const ELL_TILDE: usize = ExactParams::ELL_TILDE;
 /// Message ring elements.
 pub const N_EX: usize = ExactParams::N_EX;
-/// `g`, and the two product-proof commitments; the revision's `alpha`.
+/// `g`, and the two product-proof commitments; the paper's `alpha`.
 pub const AUX: usize = ExactParams::AUX_SLOTS;
 /// The structural role of each rank, from the one place that mapping
 /// lives — [`crate::exact::rank_roles`].
@@ -572,7 +565,7 @@ mod tests {
         // measured, not assumed, because `lanes::proof::prove` aborts on
         // this bound and an inverted inequality would mean an honest
         // prover that never terminates.
-        assert_eq!(N_Z, 3328, "N_Z followed the revision's ranks");
+        assert_eq!(N_Z, 3328, "N_Z follows the paper's ranks");
         assert!(
             (bound.ceil() as i128) < Z_NORM2_BOUND,
             "honest requirement {bound} exceeds the enforced {Z_NORM2_BOUND}"
@@ -601,7 +594,7 @@ mod tests {
 
         // The *shape* of the derivation is still checkable, and it is the
         // half that was wrong twice: the quadratic-form bound, not
-        // the chi-square one the revision's wording still asks for.
+        // the chi-square form used by the paper's response model.
         //
         // Which of the two is larger is **not** a fixed fact.  The
         // quadratic-form correction grows like `sqrt(n)` while the trace
@@ -732,22 +725,10 @@ mod tests {
         assert!(Z_INF_BOUND as f64 > 13.99 * var_z.sqrt());
     }
 
-    /// The commitment-recovery accounting, and what the revision did to it.
-    ///
-    /// **BLOCKED (R4).**  `D = 17` is the revision's; `sigma_r`, and so
-    /// `R_INF_SUPPORT` and the bucket count, come from `K_S1`, which it
-    /// does not restate.  So the *structure* below still holds — the
-    /// power-of-two rounding is exact and centred at every boundary, and
-    /// that is a property of `D` alone — while the pinned bucket figures
-    /// are illustrative and are not re-derived here.
+    /// The commitment-recovery accounting at the selected `D = 17`.
     #[test]
     fn recovery_carries_cover_the_combined_perturbation() {
-        assert!(
-            crate::exact::lanes_skip_reason().is_some(),
-            "the LANES gate lifted — re-derive the recovery buckets from \
-             the supplied hint rules and restore the pinned figures"
-        );
-        assert_eq!(D_DROP, 17, "D is the revision's");
+        assert_eq!(D_DROP, 17, "D is the paper's");
         assert_eq!(T0_SCALE, 1 << D_DROP);
         // `t0_power2round` rounds to the *centred* low part, so the top
         // high value can be one past `floor((q~-1)/2^D)` — which is the

@@ -1,6 +1,6 @@
 # RiVeR Parameter-Setting Artifact
 
-This artifact contains the final RiVeR OOM parameter-setting code and data for reviewer inspection.
+This artifact contains the final RiVeR OOM parameter-setting code and data for reproduction and inspection.
 It is intentionally curated: macOS metadata, Python caches, and the very large challenge
 precomputation tables are not included.
 
@@ -23,23 +23,22 @@ make check
 
 The estimator step may print progress lines such as
 `running selector A-MSIS estimator for N=...`. The deterministic table,
-product-threshold, estimator-rerun, and all-parameter generation steps should
-report `PASS`. The expanded minimality check currently reports `FAIL`; see
-"Search Scope And Minimality Diagnostic" below.
+product-threshold, estimator-rerun, expanded minimality, and all-parameter
+generation steps should report `PASS`; see "Search Scope And Minimality
+Diagnostic" below for the finite search scope.
 
 ```json
 {"repeat_target": 10.0, "rows": 5, "status": "PASS"}
 {"rows": 5, "status": "PASS"}
 {"rows": 5, "status": "PASS"}
 {"rows": 5, "status": "PASS"}
-{"smaller_full_pass_rows": 7, "status": "FAIL"}
+{"smaller_full_pass_rows": 0, "status": "PASS"}
 {"markdown": "report/final_oom_all_parameters.md", "rows": 5, "status": "PASS", "tsv": "data/final_oom_all_parameters.tsv"}
 ```
 
 The fourth command reruns the real LWE estimator and the bundled selector A-MSIS estimator. The
 fifth command evaluates the finite-grid minimality claim and may print progress lines such as
-`minimality search N=...`. These two Sage commands are the slowest steps. The
-wrapper returns nonzero while the minimum-size claim remains unresolved.
+`minimality search N=...`. These two Sage commands are the slowest steps.
 `--skip-msis` is available only for local diagnostics and deliberately does
 not produce top-level `PASS`.
 
@@ -54,18 +53,18 @@ not produce top-level `PASS`.
 
 | Path | Purpose |
 |---|---|
-| `README.md` | This reviewer guide. |
+| `README.md` | Reproduction guide. |
 | `Makefile` | Deterministic/full checks and artifact-safe cleanup. |
 | `data/final_oom_parameters.tsv` | Compact final table, including explicit `p`, `q`, and `hat_q`. |
 | `data/final_oom_parameters.json` | Same compact final rows plus formula metadata. |
 | `data/final_oom_security.json` | Deterministic recomputation of moduli, bounds, repeat accounting, checked instances, and pass/fail flags. |
 | `data/final_oom_estimator_rerun.json` | Actual estimator rerun output. |
 | `data/final_oom_all_parameters.tsv` | Complete flat all-parameter table. |
-| `data/oom_search_minimality_diagnostic.json` | Finite-grid diagnostic for the selected OOM rows; its current status is `FAIL`. |
+| `data/oom_search_minimality_diagnostic.json` | Finite-grid diagnostic for the selected OOM rows; its current status is `PASS`. |
 | `data/product_tau_validation.csv` | One-million-trial product-threshold validation inputs for `epsilon_g^U`. |
 | `data/product_tau_validation_metadata.json` | Seed rule and source metadata for the product-threshold validation runs. |
 | `report/final_oom_parameters.md` | Generated compact verification report. |
-| `report/final_oom_all_parameters.md` | Generated complete reviewer-readable report. |
+| `report/final_oom_all_parameters.md` | Generated complete human-readable report. |
 | `scripts/reproduce_final_table.py` | Regenerates compact final rows and compact report. |
 | `scripts/river_oom_math_checks.sage.py` | Recomputes deterministic formulas and writes `data/final_oom_security.json`. |
 | `scripts/validate_product_tau_inputs.py` | Checks `tau_g0/tau_g1`, failures/trials, and Clopper-Pearson upper bounds from `data/product_tau_validation.csv`. |
@@ -78,15 +77,16 @@ not produce top-level `PASS`.
 | `external/lattice-estimator/UPSTREAM.txt` | Upstream commit provenance for the bundled lattice-estimator snapshot. |
 | `external/lattice-estimator/COPYING.LESSER-3.0.txt` | LGPLv3 license text referenced by the upstream lattice-estimator README. |
 | `external/msis-security/` | Bundled selector A-MSIS estimator backend. |
+| `external/msis-security/UPSTREAM.txt` | Upstream commit, file hashes, and artifact-local modification notes for the A-MSIS helpers. |
+| `external/msis-security/LICENSE-BSD-0-Clause.txt` | Upstream BSD-0-Clause license for the A-MSIS helper source. |
 | `optional_challenge_invertibility/` | Optional MatRiCT+ challenge-difference invertibility scripts; not needed for OOM table reproduction. |
 
 The parameter package deliberately contains no collaborator change log,
 generated file manifest, or checksum list. The package itself is the artifact
 distributed by the surrounding repository.
 
-`THIRD_PARTY.md` records one unresolved packaging issue: the bundled selector
-A-MSIS helper files do not yet carry upstream provenance or a redistribution
-license. Resolve that before publishing the artifact.
+`THIRD_PARTY.md` records the upstream provenance, artifact-local modifications,
+and redistribution licenses for both bundled estimator components.
 
 ## Final OOM Parameters
 
@@ -98,8 +98,8 @@ The table below contains the parameter values that are used by the final OOM row
 | 8 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 44 | 54 | 42 | 46 | 5 | 28 | 3 | 12 | 32 | 26 | 32 | 2 | 3.14 | 2.68 | 20.133209 | 8.344307 |
 | 16 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 41 | 59 | 43 | 49 | 5 | 28 | 3 | 12 | 40 | 22 | 32 | 2 | 3.09 | 3.08 | 21.409120 | 8.435196 |
 | 64 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 44 | 54 | 50 | 51 | 5 | 28 | 3 | 12 | 34 | 24 | 32 | 2 | 3.05 | 3.33 | 25.535994 | 8.626611 |
-| 128 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 45 | 54 | 50 | 51 | 5 | 28 | 3 | 12 | 24 | 34 | 32 | 2 | 3.09 | 3.58 | 29.120178 | 8.616635 |
-| 256 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 42 | 59 | 49 | 52 | 5 | 28 | 3 | 12 | 22 | 40 | 32 | 2 | 3.06 | 3.84 | 36.212874 | 8.543596 |
+| 128 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 45 | 54 | 49 | 51 | 5 | 28 | 3 | 12 | 24 | 34 | 32 | 2 | 3.09 | 3.58 | 28.952209 | 8.599820 |
+| 256 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 42 | 59 | 48 | 52 | 5 | 28 | 3 | 12 | 22 | 40 | 32 | 2 | 3.06 | 3.84 | 36.040999 | 8.526924 |
 
 In this artifact, the exact-layer repetition factor is `1`, so `mu_RiVeR = mu_OOM`.
 
@@ -149,22 +149,19 @@ the selected row.  A smaller candidate is rejected only if it fails a determinis
 condition or one of the real estimator delta checks. The generated diagnostic is
 `data/oom_search_minimality_diagnostic.json`.
 
-The original grid fixed or bounded `hat_n` and `hat_k` at the selected values
-in the two largest profiles. Expanding it by two lower values in each selector
-dimension finds seven strictly smaller rows that pass the artifact's own
-deterministic and estimator-delta checks. The selected rows therefore are not
-minimal under this expanded finite grid. This is not a proposal to change the
-parameters: the authors must either identify a missing admissibility
-constraint, reselect the affected rows, or withdraw the minimum-communication
-claim before the artifact can report this check as passing.
+The grid includes values below each selected `hat_n` and `hat_k`, including
+the two largest profiles. No strictly smaller row in this explicit grid passes
+both the deterministic conditions and the estimator-delta checks. This is a
+finite-grid certificate for the published search space, not a proof of global
+optimality outside that space.
 
 | N | grid rows | strictly smaller rows | deterministic-pass smaller rows | estimator-fail smaller rows | full-pass smaller rows |
 |---:|---:|---:|---:|---:|---:|
 | 8 | 12096 | 2230 | 664 | 664 | 0 |
 | 16 | 19200 | 5484 | 358 | 358 | 0 |
 | 64 | 2880 | 1994 | 1154 | 1154 | 0 |
-| 128 | 7938 | 912 | 784 | 779 | 5 |
-| 256 | 11520 | 3938 | 1817 | 1815 | 2 |
+| 128 | 7938 | 414 | 341 | 341 | 0 |
+| 256 | 11520 | 2772 | 1214 | 1214 | 0 |
 
 The selector product bounds are:
 
@@ -273,7 +270,7 @@ must be read together.
 | `MSIS_{q,n+r',ell+n+r',beta_{SIS,2}}` | required delta | 1.00254658498 | 1.00249321187 | 1.0025284924 | 1.00255321275 | 1.00256943698 | `<= 1.004690` |
 | `MSIS_{q,n+r',ell+n+r',beta_{SIS,2}}` | `q / max(beta_{SIS,2},12sigma_s,12sigma_m)` | 356996.154447 | 6615285.214404 | 386740.539827 | 270248.611939 | 3602651.084433 | `> 1` |
 | `MLWE_{hat q,hat k,hat n,U_beta,D_{2^{K_b}/sqrt(12)}}` | delta | 1.00468705157 | 1.00460873487 | 1.00465733193 | 1.00465733193 | 1.00466719099 | `<= 1.004690` |
-| `A-MSIS^infty_{hat n,m_sel,hat q,beta_sel}` | delta | 1.00466719099 | 1.00467709742 | 1.00462803543 | 1.00459915271 | 1.00456127046 | `<= 1.004690` |
+| `A-MSIS^infty_{hat n,m_sel,hat q,beta_sel}` | delta | 1.00466719099 | 1.00467709742 | 1.00462803543 | 1.00468705157 | 1.00465733193 | `<= 1.004690` |
 
 The JSON payloads keep the exact estimator inputs under `checked_instances`. The full TSV also records block sizes, MR09 sides, selector bounds, and diagnostic cost bits.
 
@@ -284,8 +281,8 @@ The JSON payloads keep the exact estimator inputs under `checked_instances`. The
 | 8 | 1.455702 | 2.266297 | 1.587687 | 1.455702 | 0.007956454 | 0.078766056 | -155.837499 | 0.999903503 | 0.913769 | 8.344307 | 20.133209 | yes |
 | 16 | 1.350281 | 2.266297 | 1.727176 | 1.455702 | 0.007793341 | 0.080562037 | -158.985731 | 0.999901554 | 0.912126 | 8.435196 | 21.409120 | yes |
 | 64 | 1.423863 | 2.266297 | 1.650153 | 1.455702 | 0.009060204 | 0.093047660 | -155.837499 | 0.999903503 | 0.898549 | 8.626611 | 25.535994 | yes |
-| 128 | 1.650153 | 2.266297 | 1.423863 | 1.455702 | 0.007850079 | 0.093047660 | -157.411615 | 0.999902528 | 0.899589 | 8.616635 | 29.120178 | yes |
-| 256 | 1.727176 | 2.266297 | 1.350281 | 1.455702 | 0.008598564 | 0.091274289 | -160.559847 | 0.999900579 | 0.900553 | 8.543596 | 36.212874 | yes |
+| 128 | 1.650153 | 2.266297 | 1.423863 | 1.455702 | 0.007850079 | 0.091274372 | -157.411615 | 0.999902528 | 0.901348 | 8.599820 | 28.952209 | yes |
+| 256 | 1.727176 | 2.266297 | 1.350281 | 1.455702 | 0.008598564 | 0.089497535 | -160.559847 | 0.999900579 | 0.902314 | 8.526924 | 36.040999 | yes |
 
 ## LANES Size Cross-Check
 

@@ -61,7 +61,7 @@ LARGE_PROFILES = [
 ]
 
 # This is the finite domain certified by this artifact.  It is deliberately
-# explicit so a reviewer can see exactly what is being minimized over.
+# explicit so the minimized search space can be inspected directly.
 SEARCH_GRID = {
     8: {
         "n": list(range(41, 45)),

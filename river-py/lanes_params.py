@@ -51,28 +51,19 @@ reading, and they differ by `sqrt(2 pi)`.  The paper pins which is which by
 printing both (`sigma_0 ~ 6.9353` against `s_0 ~ 2.7668`).  This module
 works in standard deviations throughout, as `sample.gaussian_int` does.
 
-What is still not settled
--------------------------
-The parameterization is reproducible; the *security evidence* is not, and
-the backend stays gated on that rather than on dimensions.  Specifically:
+Artifact status
+---------------
+The standard-deviation convention above gives
+`delta_MLWE = 1.003996`, reproducing the paper's printed `1.0040`.
+`estimate_lanes.py` retains an alternate estimator-API conversion only as a
+sensitivity diagnostic; it is not used to select these parameters.
 
-  * `delta_MLWE = 1.0020` is not reproducible from what the manuscript
-    supplies.  Running lattice-estimator `53da598` on the Hint-MLWE
-    instance at width `s_0 = 2.7668` gives about 116.2 bits
-    (`delta = 1.003996`); reading the printed `sigma_0 = 6.9353` as the
-    estimator's standard deviation instead gives about 134.3 bits
-    (`delta = 1.003611`).  Neither is 1.0020, and the paper does not state
-    which convention its estimator ran in.  `delta_MSIS` *is* reproducible
-    and is reproduced, which makes the gap specific rather than general.
-  * The [KLSS23] Theorem 1 reduction loses `(d + m) 2 eps`.  With `d+m = 17`
-    and `eps = 2^-100` that is about `2^-94.9` before any further union
-    bound -- below the 128-bit target the same section selects against.
-  * The recovery-hint rules are still this implementation's, not the
-    paper's; the revision specifies `D` and its two inequalities but not
-    the hint format or the bucket rule.  See `RECOVERY_BUCKETS`.
-
-`exact.LANES_SECURITY_EVIDENCE` carries the detail;
-`exact.lanes_gate_cause()` reports which blocker applies.
+The concrete recovery-hint format, response infinity bound, sampler tail
+cuts, and wire layout are implementation-level completions.  They are
+labelled `Repair` in `lanes_manifest.json`.  Because this artifact does not
+supply a reduction for that exact compression/recovery composition, the
+tested backend is exposed as `lanes-experimental`; see
+`exact.lanes_gate_cause()`.
 
 The verifier's two bounds on `z` are below the width block.  The Euclidean
 one is now the paper's `beta'` rule; the per-coefficient one is a Repair,
@@ -158,8 +149,8 @@ ALPHA = AUX                     # max degree in the exact relation, = 3
 # ENS20 compresses these two objects separately: it sends the high part of
 # t_0 (deferring its hint format to Dilithium) and sends only the response to
 # B_0's non-identity columns (under a rejection condition).  The RiVeR
-# revision combines that size formula with the rejection-free KLSS23 masking
-# but does not specify the composition or the hints.
+# artifact combines that size formula with rejection-free KLSS23 masking in
+# one concrete composition and hint format.
 #
 # This implementation makes that missing wire rule explicit.  It drops D bits
 # from t_0 with a centred remainder and quantises the first proof message w
@@ -283,7 +274,7 @@ assert RECOVERY_ERROR_BOUND < QTILDE // RECOVERY_BUCKETS
 
 # ---- the published security chain, re-derived ---------------------------
 #
-# Every number the revision prints for LANES follows from the widths above
+# Every number the paper prints for LANES follows from the widths above
 # and the dimensions, with no further input.  They are derived here rather
 # than transcribed so that a change to either end says so.
 

@@ -1,15 +1,15 @@
 {
   "cache_sizes": {
-    "outer_hiding": 74,
-    "outer_mlwr": 15,
-    "selector_binding_asis": 526,
-    "selector_hiding": 105
+    "outer_hiding": 55,
+    "outer_mlwr": 14,
+    "selector_binding_asis": 494,
+    "selector_hiding": 100
   },
   "claim_tested": "Within the finite search grid recorded in this file, no strictly smaller OOM row passes all deterministic and estimator checks.",
   "estimator_path": "external/lattice-estimator",
-  "scope_note": "This is a finite-grid diagnostic, not a theorem over all integer parameter tuples.",
   "msis_security_path": "external/msis-security",
   "repeat_target": 10.0,
+  "scope_note": "This is a finite-grid diagnostic, not a theorem over all integer parameter tuples.",
   "search_grid": {
     "8": {
       "ell": [
@@ -239,163 +239,8 @@
     }
   },
   "selected_rows_in_grid": true,
-  "smaller_full_pass_rows": [
-    {
-      "current_oom_kb": 29.12017786190496,
-      "deltas": {
-        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046870515700201,
-        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
-        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.004487582246496,
-        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
-        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.002553212746112
-      },
-      "oom_kb": 28.95220911190496,
-      "row": {
-        "N": 128,
-        "ell": 54,
-        "hat_k": 51,
-        "hat_n": 49,
-        "hat_q_bits": 48,
-        "n": 45,
-        "p_bits": 44,
-        "profile": "m3_pa24_ps34_pb2"
-      },
-      "saving_kib": 0.16796875
-    },
-    {
-      "current_oom_kb": 29.12017786190496,
-      "deltas": {
-        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046870515700201,
-        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
-        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.004487582246496,
-        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
-        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025660482626622
-      },
-      "oom_kb": 28.984098775416697,
-      "row": {
-        "N": 128,
-        "ell": 54,
-        "hat_k": 51,
-        "hat_n": 49,
-        "hat_q_bits": 48,
-        "n": 45,
-        "p_bits": 44,
-        "profile": "m3_pa24_ps36_pb2"
-      },
-      "saving_kib": 0.1360790864882624
-    },
-    {
-      "current_oom_kb": 29.12017786190496,
-      "deltas": {
-        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046870515700201,
-        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
-        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0044966458489966,
-        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
-        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025010277235953
-      },
-      "oom_kb": 29.05994408070691,
-      "row": {
-        "N": 128,
-        "ell": 54,
-        "hat_k": 51,
-        "hat_n": 49,
-        "hat_q_bits": 48,
-        "n": 46,
-        "p_bits": 44,
-        "profile": "m3_pa24_ps34_pb2"
-      },
-      "saving_kib": 0.06023378119805045
-    },
-    {
-      "current_oom_kb": 29.12017786190496,
-      "deltas": {
-        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046377544976532,
-        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
-        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0044966458489966,
-        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
-        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025368436047148
-      },
-      "oom_kb": 29.08925698437508,
-      "row": {
-        "N": 128,
-        "ell": 54,
-        "hat_k": 51,
-        "hat_n": 49,
-        "hat_q_bits": 48,
-        "n": 46,
-        "p_bits": 44,
-        "profile": "m3_pa22_ps40_pb2"
-      },
-      "saving_kib": 0.03092087752987993
-    },
-    {
-      "current_oom_kb": 29.12017786190496,
-      "deltas": {
-        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046870515700201,
-        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046573319311118,
-        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0044966458489966,
-        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.004647519882841,
-        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025135950408226
-      },
-      "oom_kb": 29.0921558620319,
-      "row": {
-        "N": 128,
-        "ell": 54,
-        "hat_k": 51,
-        "hat_n": 49,
-        "hat_q_bits": 48,
-        "n": 46,
-        "p_bits": 44,
-        "profile": "m3_pa24_ps36_pb2"
-      },
-      "saving_kib": 0.02802199987306153
-    },
-    {
-      "current_oom_kb": 36.21287399348253,
-      "deltas": {
-        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046573319311118,
-        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046671909922382,
-        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.004381952541052,
-        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0046183623349951,
-        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025694369835352
-      },
-      "oom_kb": 36.04099899348253,
-      "row": {
-        "N": 256,
-        "ell": 59,
-        "hat_k": 52,
-        "hat_n": 48,
-        "hat_q_bits": 49,
-        "n": 42,
-        "p_bits": 48,
-        "profile": "m3_pa22_ps40_pb2"
-      },
-      "saving_kib": 0.171875
-    },
-    {
-      "current_oom_kb": 36.21287399348253,
-      "deltas": {
-        "A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}": 1.0046573319311118,
-        "MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}": 1.0046671909922382,
-        "MLWE_{q,ell+rprime,n,U_Be,U_beta}": 1.0042981174701786,
-        "MLWR_{p,q,ell,n,U_beta,U_Be}": 1.0045425926265679,
-        "MSIS_{q,n+rprime,ell+n+rprime,beta_SIS2}": 1.0025716435585956
-      },
-      "oom_kb": 36.1497059193955,
-      "row": {
-        "N": 256,
-        "ell": 60,
-        "hat_k": 52,
-        "hat_n": 48,
-        "hat_q_bits": 49,
-        "n": 42,
-        "p_bits": 48,
-        "profile": "m3_pa22_ps40_pb2"
-      },
-      "saving_kib": 0.06316807408703085
-    }
-  ],
-  "status": "FAIL",
+  "smaller_full_pass_rows": [],
+  "status": "PASS",
   "summaries": [
     {
       "N": 8,
@@ -990,24 +835,23 @@
     },
     {
       "N": 128,
-      "deterministic_fail_smaller_rows": 128,
+      "deterministic_fail_smaller_rows": 73,
       "deterministic_failure_reasons": {
-        "('outer_msis_mr09_pass',)": 128
+        "('outer_msis_mr09_pass',)": 73
       },
-      "deterministic_pass_smaller_rows": 784,
-      "estimator_fail_smaller_rows": 779,
+      "deterministic_pass_smaller_rows": 341,
+      "estimator_fail_smaller_rows": 341,
       "estimator_failure_reasons": {
-        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 32,
-        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 113,
-        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 32,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 19,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 15,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 65,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}')": 33,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 89,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 117,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 261,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}',)": 3
+        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 11,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 47,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 7,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 6,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 3,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 23,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}')": 6,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 48,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 49,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 141
       },
       "failure_examples": [
         {
@@ -1193,41 +1037,41 @@
           }
         }
       ],
-      "full_pass_smaller_rows": 5,
+      "full_pass_smaller_rows": 0,
       "search_grid_size": 7938,
-      "selected_oom_kb": 29.12017786190496,
+      "selected_oom_kb": 28.95220911190496,
       "selected_row": {
         "N": 128,
         "ell": 54,
         "hat_k": 51,
-        "hat_n": 50,
+        "hat_n": 49,
         "hat_q_bits": 48,
         "n": 45,
         "p_bits": 44,
         "profile": "m3_pa24_ps34_pb2"
       },
-      "strictly_smaller_rows": 912
+      "strictly_smaller_rows": 414
     },
     {
       "N": 256,
-      "deterministic_fail_smaller_rows": 2121,
+      "deterministic_fail_smaller_rows": 1558,
       "deterministic_failure_reasons": {
-        "('outer_msis_mr09_pass',)": 2121
+        "('outer_msis_mr09_pass',)": 1558
       },
-      "deterministic_pass_smaller_rows": 1817,
-      "estimator_fail_smaller_rows": 1815,
+      "deterministic_pass_smaller_rows": 1214,
+      "estimator_fail_smaller_rows": 1214,
       "estimator_failure_reasons": {
-        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 24,
-        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 52,
-        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 13,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 169,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 211,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 232,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}')": 133,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 225,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 434,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 266,
-        "('MLWR_{p,q,ell,n,U_beta,U_Be}',)": 56
+        "('A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}',)": 9,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 34,
+        "('MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}',)": 3,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 109,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 85,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 204,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}')": 69,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 178,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}')": 252,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}', 'MLWE_{q,ell+rprime,n,U_Be,U_beta}', 'MLWE_{hat_q,hat_k,hat_n,U_beta,D_{2^K_b/sqrt(12)}}', 'A-MSIS^infty_{hat_n,m_sel,hat_q,beta_sel}')": 251,
+        "('MLWR_{p,q,ell,n,U_beta,U_Be}',)": 20
       },
       "failure_examples": [
         {
@@ -1383,20 +1227,20 @@
           }
         }
       ],
-      "full_pass_smaller_rows": 2,
+      "full_pass_smaller_rows": 0,
       "search_grid_size": 11520,
-      "selected_oom_kb": 36.21287399348253,
+      "selected_oom_kb": 36.04099899348253,
       "selected_row": {
         "N": 256,
         "ell": 59,
         "hat_k": 52,
-        "hat_n": 49,
+        "hat_n": 48,
         "hat_q_bits": 49,
         "n": 42,
         "p_bits": 48,
         "profile": "m3_pa22_ps40_pb2"
       },
-      "strictly_smaller_rows": 3938
+      "strictly_smaller_rows": 2772
     }
   ],
   "target_delta": 1.00469

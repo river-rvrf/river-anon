@@ -5,7 +5,7 @@ TESTS = test_kat test_params test_manifest test_ring test_sample test_codec \
         test_exact test_oom test_river test_e2e test_review \
         test_lanes
 
-MODULES = revision params manifest ring sample dgs codec exact oom river \
+MODULES = params manifest ring sample dgs codec exact oom river \
           lanes_ring lanes_params lanes_commit lanes_mp lanes_proof \
           lanes_backend lanes_manifest
 

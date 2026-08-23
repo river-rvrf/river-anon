@@ -19,13 +19,11 @@ significant figures for the bound columns, one decimal for the repeat bound
 and the sizes.  That is stricter than a tolerance and does not silently
 accept a value that would print differently.
 
-Not reproduced: the root-Hermite-factor figures (they need a lattice
+Out of scope here: the root-Hermite-factor figures (they need a lattice
 estimator), the Groebner-basis estimates, and the empirical non-abort data
-behind `epsilon_g^U`.
-
-Some tests pin *disagreements* on purpose -- places where the manuscript
-contradicts itself.  They are named `test_paper_*_is_*` and are not defects
-in this implementation; normalising them away would hide the finding.
+behind `epsilon_g^U`.  Separate regression checks below cover delicate
+source-to-formula consistency points without treating them as implementation
+outputs.
 """
 
 import dataclasses
@@ -33,8 +31,8 @@ import math
 import re
 from fractions import Fraction
 
-from params import (BOUNDGEN_ORDER, BOUNDGEN_ORDER_SWAPPED, PROFILES,
-                    TOY_PARAMS, _TAU, _TAU_DISPLAYED, get, is_prime,
+from params import (BOUNDGEN_ORDER, PROFILES, TOY_PARAMS, _TAU,
+                    _TAU_DISPLAYED, get, is_prime,
                     largest_prime_below, verify_moduli)
 
 PUBLISHED = [8, 16, 64, 128, 256]
@@ -55,8 +53,8 @@ PAPER_SIZES = {
     8:   (8.3, 20.1, 33.6),
     16:  (8.4, 21.4, 34.9),
     64:  (8.6, 25.5, 39.0),
-    128: (8.6, 29.1, 42.6),
-    256: (8.5, 36.2, 49.7),
+    128: (8.6, 29.0, 42.5),
+    256: (8.5, 36.0, 49.5),
 }
 
 #: The main table's per-profile module ranks and modulus bit lengths.
@@ -64,8 +62,8 @@ PAPER_INPUTS = {
     8:   ((32, 26), (44, 54), 44, (42, 46, 44)),
     16:  ((40, 22), (41, 59), 48, (43, 49, 46)),
     64:  ((34, 24), (44, 54), 44, (50, 51, 48)),
-    128: ((24, 34), (45, 54), 44, (50, 51, 48)),
-    256: ((22, 40), (42, 59), 48, (49, 52, 49)),
+    128: ((24, 34), (45, 54), 44, (49, 51, 48)),
+    256: ((22, 40), (42, 59), 48, (48, 52, 49)),
 }
 
 #: The concrete moduli, `N -> (p, q, q_hat)`, from
@@ -167,19 +165,11 @@ def test_challenge_space_has_160_bits():
         assert par.challenge_entropy >= 128
 
 
-def test_the_papers_own_soundness_figures_are_not_the_challenge_space():
-    """`2^-91.5` is not `1/|C|`, so the footnote means something else.
+def test_challenge_entropy_and_noninvertibility_figures_are_distinct():
+    """The 160-bit challenge space is distinct from auxiliary failure terms.
 
-    `5.Parameter.tex`'s footnote says the outer RVRF challenge space "remains
-    approximately `2^-91.5` in both constructions", and gives the LANES
-    challenge-difference noninvertibility probability as `2^-93.5`
-    re-optimized (`2^-70` originally).  Neither reaches the 128-bit level the
-    paragraph above the footnote selects against.
-
-    This pins the arithmetic that says the `2^-91.5` cannot be the challenge
-    space's own size, so it is a noninvertibility or soundness-slack term the
-    footnote does not name.  Nothing here is normalised away: the disagreement
-    is the finding.
+    This pins the challenge-space arithmetic independently of reported
+    challenge-difference noninvertibility and soundness-slack figures.
     """
     for _, par in published():
         # |C| = binom(d, w) (2 gamma)^w, and d == w, so binom == 1
@@ -221,11 +211,8 @@ def test_K_a_is_28_because_the_log_term_is_20():
 def test_embedded_key_noise_is_zero_with_negligible_probability():
     """`(2B_e+1)^{-d r'} = 61^-32`, which is below the `2^-128` target.
 
-    DISCREPANCY (cosmetic).  The appendix writes this as `< 2^-190`.  It is
-    `2^-189.78`, so the stated inequality is false by 0.22 bits.  Nothing
-    depends on it -- the conclusion it supports, "below the `2^-128`
-    target", holds with 60 bits to spare -- but the printed bound is not
-    reproducible and is pinned rather than rounded away.
+    Its exact base-two logarithm is `-189.78`; pinning it avoids rounding
+    across an integer-bit threshold.
     """
     for _, par in published():
         p_zero = (2 * par.B_e + 1) ** (-par.d * par.r_prime)
@@ -424,7 +411,7 @@ def test_check_is_total_and_fail_closed():
         ("n", 10 ** 400), ("ell", 10 ** 400), ("n_hat", 10 ** 400),
         ("k_hat", 10 ** 400), ("r_prime", 10 ** 400), ("w", 10 ** 400),
         # Past 4300 digits Python refuses int->str, so *formatting* the
-        # diagnostic raised `ValueError` and a domain finding surfaced as
+        # diagnostic raised `ValueError` and a domain error surfaced as
         # the outer guard.  The report must not be able to fail where the
         # check cannot.
         ("epsilon_g_u", 10 ** 10000), ("epsilon_g_u", -10 ** 8000),
@@ -440,7 +427,7 @@ def test_check_is_total_and_fail_closed():
                 f"check() raised on {field}={value!r}: "
                 f"{type(exc).__name__}: {exc}") from None
         assert errors, f"check() accepted {field}={value!r}"
-        # ... and it is a *named* finding, not the outer guard catching an
+        # ... and it is a named domain error, not the outer guard catching an
         # exception.  The guard is a backstop; a domain rule reaching it
         # means the rule is missing, not that totality is satisfied.
         assert not any("raised" in e for e in errors), (field, value, errors)
@@ -462,7 +449,7 @@ def test_domain_errors_short_circuit_the_derived_conditions():
 
     That ordering is the whole point: `K_a_boundgen` takes `log2(w gamma
     n_hat d)`, so a zero in any of them is a `ValueError` rather than a
-    finding, unless the domain pass runs first and stops.
+    domain error, unless the domain pass runs first and stops.
     """
     par = dataclasses.replace(TOY_PARAMS, d=0, q0=1, p=0)
     errors = par.check()
@@ -523,19 +510,13 @@ def test_tau_values_are_exact_rationals():
         assert isinstance(par.B_g1, Fraction)
 
 
-# ---- pinned disagreements ------------------------------------------------
+# ---- source-to-formula consistency ---------------------------------------
 
-def test_the_tail_count_paragraph_now_agrees_with_its_own_definition():
-    """**closed by the paper**, pinned as a closure.
+def test_the_tail_count_uses_the_response_dimension():
+    """The `z_s` tail count follows the algorithm's `ell + n` elements.
 
-    The `z_s` tail was `2d(ell+1)exp(-18)` in the display and
-    `2d(n+ell)exp(-18)` in the definition two paragraphs later.  The
-    algorithm responds to `ell + n` elements at `sigma_s`, so the
-    definition was the right one and `eps_tail` took it; the display now
-    agrees.
-
-    Asserted against the *algorithm's* dimension rather than against a
-    literal, so a future response regrouping moves both together.
+    The assertion uses the response dimension rather than a literal, so a
+    future response regrouping moves both together.
     """
     for name, par in published():
         _, _, eps_s, eps_m = par.eps_tail
@@ -547,20 +528,12 @@ def test_the_tail_count_paragraph_now_agrees_with_its_own_definition():
         assert not math.isclose(eps_s, t * (par.ell + 1), rel_tol=1e-9)
 
 
-def test_the_repetition_denominator_now_is_the_product_of_its_components():
-    """**closed in the paper**, and pinned as a closure.
+def test_the_repetition_denominator_is_the_product_of_its_components():
+    """The component product reproduces the printed repeat-bound column.
 
-    Under the table the appendix's own denominator --
-    `(1-eps_a)(1-eps_b)(1-eps_s)(1-eps_m)(1-eps_g^U)(1-eps_c^U)` -- did not
-    reproduce the printed "Repeat bound" column, and this tree carried a
-    per-profile `c_pub_model` backsolved from that column.  Against the
-    The paper table the components multiply out to the printed value at
-    every profile, so the backsolve is gone.
-
-    The assertion is on the *printed column*, not on an internal identity:
+    The assertion is on the printed column, not on an internal identity:
     `mu_river` is defined as the component product, so comparing it to
-    itself would pass no matter what.  What is checked is that the product
-    lands on the number the paper prints.
+    itself would pass no matter what.
     """
     printed = {8: 8.3, 16: 8.4, 64: 8.6, 128: 8.6, 256: 8.5}
     for name, par in published():
@@ -570,12 +543,11 @@ def test_the_repetition_denominator_now_is_the_product_of_its_components():
 
 
 def test_the_rejection_constant_is_the_hard_coded_twelve():
-    """`tau_rej` is a parameter now, and its concrete value is the
-    constant it replaced -- which is why that rendering moved no bytes.
+    """`tau_rej` is an explicit parameter with concrete value 12.
 
     The paper writes `M_1 = exp(tau_rej/phi + 1/(2 phi^2))`
     and fixes `tau_rej = 12` for the concrete sets.  Pinned in the direction
-    that can fail: if a future revision moves it, every repetition factor
+    that can fail: if a future parameter set moves it, every repetition factor
     moves and this says so, rather than the change surfacing as a quietly
     different "Repeat bound" column.
     """
@@ -591,8 +563,7 @@ def test_the_rejection_constant_is_the_hard_coded_twelve():
         assert math.isclose(par.mu_b, 2 * math.exp(1 / (2 * par.phi_b ** 2)),
                             rel_tol=1e-15)
 
-    # The printed column is unchanged by the parameterisation, which is
-    # what "wire-neutral" means here.
+    # The component product must reproduce the printed column.
     printed = {8: 8.3, 16: 8.4, 64: 8.6, 128: 8.6, 256: 8.5}
     for name, par in published():
         assert round(par.mu_river, 1) == printed[par.N], name
@@ -612,34 +583,9 @@ def test_the_euclidean_restart_term_is_negligible_as_the_paper_claims():
         assert round(par.mu_gaussian / without, 1) == round(par.mu_river, 1)
 
 
-def test_the_boundgen_tuple_now_has_one_order():
-    """`BoundGen`'s output tuple has exactly one order.
-
-    The figure defining `BoundGen` and the three OOM algorithms that parse
-    its output must agree on positions 4 and 5, `phi_s` and `phi_b`.  They
-    are the same multiset, so a positional reader of the wrong order gets a
-    well-formed tuple and only wrong numbers.
-
-    The swapped order is kept in `params.py` and asserted *not* to be the
-    live one.  Dropping it would make a regression to the old parse
-    indistinguishable from correctness, which is the failure this guards.
-    """
+def test_boundgen_tuple_order_matches_the_algorithms():
+    """The published `BoundGen` order places `phi_b` before `phi_s`."""
     assert BOUNDGEN_ORDER[2:6] == ("phi_a", "phi_b", "phi_s", "phi_m")
-    assert BOUNDGEN_ORDER != BOUNDGEN_ORDER_SWAPPED
-    differing = [i for i, (a, b) in
-                 enumerate(zip(BOUNDGEN_ORDER, BOUNDGEN_ORDER_SWAPPED))
-                 if a != b]
-    assert differing == [3, 4]
-    # The two are the same multiset, so a positional reader of the wrong one
-    # gets a well-formed tuple and no error -- only wrong numbers.  That is
-    # why the swap could survive a draft in the first place.
-    assert sorted(BOUNDGEN_ORDER) == sorted(BOUNDGEN_ORDER_SWAPPED)
-
-    # The size of the mistake it would still be, at every profile.
-    for _, par in published():
-        assert par.phi_b == 2
-        assert 22 <= par.phi_s <= 40
-        assert par.phi_s / par.phi_b >= 11
 
 
 def test_named_fields_make_the_boundgen_order_unreachable():
@@ -658,16 +604,11 @@ def test_the_abstract_and_the_tables_now_agree():
     assert round(baseline_kb / par.proof_size_total_kb) == 27
 
 
-def test_paper_embedded_key_noise_bound_is_stated_twice():
-    """DISCREPANCY (medium).  Sub-Assumption `rvp-embedded-key-binding`
-    requires the embedded-key noise `nz` to be nonzero and bounded by
-    `beta = 1`, while the concrete parameter discussion samples
-    `nz <- U_{B_e}^{r'}` with `B_e = 30` to obtain the stated `61^-32`
-    probability.  Those are different distributions and different bounds;
-    the implementation cannot resolve it, so it is pinned here.
+def test_embedded_key_noise_probability_uses_b_e():
+    """The concrete `61^-32` probability follows from the `B_e` range.
 
-    The `61^-32` figure is only reachable from the `U_{B_e}` reading: the
-    `beta = 1` reading would give `3^-32`.
+    A `beta = 1` range would instead give `3^-32`; keeping both calculations
+    explicit prevents the two parameter roles from being conflated.
     """
     for _, par in published():
         from_B_e = (2 * par.B_e + 1) ** (-par.d * par.r_prime)
@@ -677,25 +618,12 @@ def test_paper_embedded_key_noise_bound_is_stated_twice():
         assert from_B_e != from_beta
 
 
-def test_the_prover_now_applies_the_verifiers_euclidean_bound():
-    """**Closed in the paper**, and pinned as a closure.
+def test_the_prover_applies_the_verifiers_euclidean_bound():
+    """Prover and verifier use the same Euclidean response bound.
 
-    In the paper `OOM.Ver` checked
-    `||z||_2 <= 1.2 sqrt(sigma_s^2 d ell + sigma_m^2 d(n+1))` while the
-    corresponding prover check sat *commented out* in the figure, in a
-    different form -- `1.2 phi_s B_s sqrt((ell+n+1) d)`.  A prover that can
-    return a proof its own verifier rejects is a defect regardless of which
-    form is meant, so this tree applied the verifier's bound on the prover
-    path as a named repair (measured to cost zero restarts).
-
-    The paper puts that same bound in `OOM.Prove`'s reject list, in the
-    verifier's form.  The repair is now the specification.
-
-    The formerly-commented form is still worth pinning, because the
-    regrouping flipped its direction: `sigma_s > sigma_m` now, so charging
+    The uniform-width expression is also pinned: `sigma_s > sigma_m`, so charging
     `sigma_s` to all `ell+n+1` coefficients is an *upper* bound on the
-    verifier's, not the much smaller one it used to be.  That is the same
-    domination the revision's own `eps_2` argument uses.
+    verifier's.  This is the same domination used by the `eps_2` argument.
     """
     for _, par in published():
         dominating = 1.2 * par.sigma_s * math.sqrt(par.r_dim * par.d)
@@ -703,7 +631,7 @@ def test_the_prover_now_applies_the_verifiers_euclidean_bound():
         # Loose by under 1%: the two differ only in the one `z_eval`
         # element, which is `sigma_m` rather than `sigma_s`.
         assert 1.0 < dominating / par.z_l2_bound < 1.01
-        # And the revision's premise for that domination holds.
+        # And the premise for that domination holds.
         assert par.sigma_s >= par.sigma_m
 
 

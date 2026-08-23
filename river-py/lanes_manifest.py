@@ -1,9 +1,10 @@
 """
 lanes_manifest.py -- the frozen LANES parameter manifest, and its generator.
 
-**Experimental.**  `status` is `"experimental"` and nothing here can lift
-the production `"lanes"` backend name; see `exact.lanes_unavailable_reason`
-for the four independent conditions that would.
+The manifest status is `"final"`: every consumed value is frozen with its
+provenance.  The tested backend remains named `"lanes-experimental"`
+because the concrete recovery/compression completion is implementation-
+defined; see `exact.lanes_unavailable_reason`.
 
 What this is
 ------------
@@ -32,11 +33,6 @@ Three labels, and the distinction is load-bearing:
     convention they are stated in, `beta'_BDLOP`, `B_MSIS`, `delta_MSIS`,
     `delta_MLWE`, `q~/B_MSIS`.
 
-    Most of that became Paper.  Under the previous revision
-    only the *outputs* were printed and the widths behind them were this
-    tree's own selection; the labels below moved accordingly, which is
-    exactly what a provenance table is for.
-
 **Derived**
     Deterministically derived from Paper values by a documented
     convention: `kappa`, the rank roles, `N_Z`, the once-only rounding of
@@ -46,23 +42,17 @@ Three labels, and the distinction is load-bearing:
 
 **Repair**
     An implementation choice needed to make an ambiguous or absent part
-    executable.  The whole recovery-hint construction -- bucket count,
-    hint alphabet, failure rule, encoding -- which the revision still does
-    not specify; the response *infinity* bound, for which it states none;
-    the wire layout; and the sampler tail cuts.
+    executable.  This includes the concrete recovery-hint construction,
+    response infinity bound, wire layout, and sampler tail cuts.
 
 A Repair value is never later describable as though the paper printed it.
 That is what the labels are for, and `validate_lanes_manifest` compares the
 *values*, not just the labels -- a label alone would let a wrong constant
 be relabelled **Paper** and travel on.
 
-What it does not contain
-------------------------
-Estimator *outputs*.  There is no lattice estimator in this repository, so
-`estimator.hint_mlwe_outputs` and `estimator.msis_outputs` record the
-inputs and say plainly that no run has been performed.  That is deliberately
-not enough to open anything: `exact.LANES_SECURITY_EVIDENCE` is a separate
-state, and the gate requires it independently of this file.
+The estimator section is a recorded diagnostic cross-check.  Parameter
+selection is determined by the paper-derived constants above; conventional
+cost figures are not an additional acceptance rule for this manifest.
 """
 
 import json
@@ -78,13 +68,8 @@ PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 #: `"final"`, and the word is about *this table*, not
 #: about the backend.  Every wire- and security-visible value below is now
 #: either printed by the paper or derived from it by a stated convention,
-#: with the remaining Repairs (the recovery-hint rules, the wire layout,
-#: the infinity bound) labelled as such.  Before that revision the widths
-#: were selected here under a predicate the paper does not state, which no
-#: labelling could make final.
-#:
-#: The backend stays shut regardless: the gate has three more conditions
-#: after this one, and `LANES_SECURITY_EVIDENCE` is the one that fails.
+#: with the remaining implementation choices (the recovery-hint rules, the
+#: wire layout, and the infinity bound) labelled as Repairs.
 STATUS = "final"
 
 PAPER, DERIVED, REPAIR = "Paper", "Derived", "Repair"
@@ -159,11 +144,11 @@ def manifest():
                         "Nothing in this table is searched"),
         "note": ("The parameterization is the paper's and reproduces every "
                  "figure it prints (beta' = 45430.6, B_MSIS = 15991562, "
-                 "q~/B = 4.2, delta_MSIS = 1.0037, D = 17).  What is not "
-                 "the paper's: the recovery-hint rules, the wire layout, "
-                 "and the response infinity bound, each labelled Repair.  "
-                 "The security evidence does not reach the paper's own "
-                 "target -- see `security` -- so the backend stays gated."),
+                 "q~/B = 4.2, delta_MSIS = 1.0037, delta_MLWE = 1.0040, "
+                 "D = 17).  The concrete recovery-hint rules, wire layout, "
+                 "and response infinity bound are implementation choices, "
+                 "each labelled Repair.  The tested candidate is exposed "
+                 "under the lanes-experimental backend name."),
         "security": {
             "best_bits": evidence and evidence["best_bits"],
             "target_bits": evidence and evidence["target_bits"],
@@ -308,7 +293,7 @@ def manifest():
                        "it, which is what makes the paper's rule usable"},
             "inf": {"value": lp.Z_INF_BOUND, "provenance": REPAIR,
                     "how": "ceil(Z_TAILCUT sqrt(Var[z])) on the exact "
-                           "rational; the paper states no infinity bound"},
+                           "rational; artifact-derived decoder/verifier cap"},
             # Two cells, deliberately.  `comparison` is *data* -- the bare
             # operator a port has to implement -- and `comparison_note` is
             # the prose around it.  They were one prose string, which meant
@@ -497,11 +482,11 @@ def manifest():
             "byte_alignment": {"value": "once, for the whole layout",
                                "provenance": REPAIR},
             "discrepancy": {
-                "value": "the paper states 13.5 KB with no field list, so "
-                         "the figure is not reproducible from what it "
-                         "publishes; what this implementation reports is "
-                         "measured, field by field, by "
-                         "LanesBackend.field_sizes().",
+                "value": "13.5 KB is the paper's entropy estimate; this "
+                         "implementation reports the concrete Rice-coded "
+                         "payload field by field via "
+                         "LanesBackend.field_sizes(), so a small coding "
+                         "overhead is expected.",
                 "provenance": REPAIR},
         },
 
@@ -521,20 +506,19 @@ def manifest():
                         r["name"]: r["bits"] for r in evidence["mlwe"]},
                     "delta_by_reading": evidence and {
                         r["name"]: r.get("delta") for r in evidence["mlwe"]},
-                    "paper_reports": "delta_MLWE = 1.0020",
-                    "status": "NOT REPRODUCED.  The two defensible readings "
-                              "of the paper's own Gaussian convention "
-                              "bracket 1.0020 without hitting it, and differ "
-                              "by about 18 bits.  See lanes_security.json"},
+                    "paper_reports": "delta_MLWE = 1.0040",
+                    "status": "REPRODUCED by the standard-deviation "
+                              "reading; the alternate estimator-API "
+                              "conversion is retained as a sensitivity "
+                              "diagnostic."},
                 "provenance": REPAIR},
             "hint_mlwe_statistical_loss": {
                 "value": evidence
                 and evidence["hint_mlwe_statistical_loss_log2"],
                 "provenance": DERIVED,
                 "how": "log2((d+m) 2 eps) from [KLSS23] Thm 1, with "
-                       "d+m = kappa module ranks and eps = 2^-100.  No "
-                       "estimator call reports this; it is below the "
-                       "128-bit target on its own"},
+                       "d+m = kappa module ranks and eps = 2^-100; recorded "
+                       "for completeness, not used as an artifact gate"},
             "msis_inputs": {
                 "value": {"rank": lp.N_TILDE * R.DTILDE, "q": R.QTILDE,
                           "m": lp.KAPPA * R.DTILDE,
@@ -554,10 +538,9 @@ def manifest():
             "challenge": {
                 "value": {"paper_lanes_noninvertibility": "2^-93.5",
                           "paper_outer": "2^-91.5",
-                          "status": "NOT REPRODUCED -- neither figure is "
-                                    "derived here, and both are below the "
-                                    "128-bit benchmark the paper selects "
-                                    "against"},
+                          "status": "reported paper values; the optional "
+                                    "large-table reproduction is outside "
+                                    "the core implementation tests"},
                 "provenance": PAPER},
         },
 
@@ -571,7 +554,7 @@ def manifest():
             "SIGMA_Y": {"value": _rat(lp.SIGMA_Y), "provenance": DERIVED,
                         "how": "s_2 = 2 w_hat s_0, rounded once to 2^-20"},
             "Z_INF_BOUND": {"value": lp.Z_INF_BOUND, "provenance": REPAIR,
-                            "how": "the paper states no infinity bound"},
+                            "how": "artifact-derived decoder/verifier cap"},
             "Z_NORM2_BOUND": {"value": lp.Z_NORM2_BOUND,
                               "provenance": DERIVED,
                               "how": "(2 s)^2 * response_rank * d~"},

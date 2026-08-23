@@ -17,15 +17,15 @@ printed ones — including `q_hat`, which follows a *different* rule from
 `p`: largest prime below `2^bits` for `p`, smallest above `2^{bits-1}` for
 `q_hat`, both `5 mod 8`.
 
-The zero-knowledge `lanes` backend reads in three layers:
+The candidate `lanes` backend has the following status:
 
 * **complete** — the ring `R_q~` at `(d~, l, q~) = (256, 64, 67107713)`.
   The exact layer commits over it, and its block of `sampler_kat.json` is
   generated and driven, so it is cross-checked against `river-py` rather
   than against itself;
-* **complete** — `lanes::params`.  The revision
-  publishes the Hint-MLWE chain in closed form, so `K_S1`/`K_S2` are
-  retired and the widths, `beta'`, `B_MSIS`, `delta_MSIS` and `D` all
+* **complete** — `lanes::params`. The paper publishes the Hint-MLWE chain in
+  closed form, so no parameter search is needed: the widths, `beta'`,
+  `B_MSIS`, `delta_MSIS`, `delta_MLWE`, and `D` all
   re-derive from `s_0 = sqrt(ln(2 d~ (1 + 1/eps)))/pi` at `eps = 2^-100`.
   Tests pin each against the paper's printed digits;
 * **complete** — `lanes::{commit, mp, proof, backend}`.  The proof layer
@@ -34,14 +34,13 @@ The zero-knowledge `lanes` backend reads in three layers:
   this crate re-derives both from their seeds, with `sampler_kat.json`'s
   `lanes_ring`, `lanes_params` and `lanes_proof` blocks bisecting them
   primitive by primitive;
-* **gated** — the production `lanes` *name*, on the security evidence.  `BackendKind::LanesExperimental` is the
-  ungated name and is the same code; the separate name is what keeps an
-  experimental artifact from reconstructing a backend that refuses to
-  exist.
+* **reserved** — the production `lanes` *name*. `BackendKind::LanesExperimental`
+  is the tested name for the same code while the concrete recovery/compression
+  composition remains an artifact-level completion without a supplied
+  reduction.
 
-Gates guard it, and all are **readiness** tests rather than dimension
-diffs.  `exact::LANES_PARAMETER_MANIFEST` is the frozen table — tied to
-this paper's SHA-256, carrying data for every required field, and selecting
+Gates guard the production alias. `exact::LANES_PARAMETER_MANIFEST` is the
+frozen table, carrying data for every required field and selecting
 a *value* for every constant on the audit list, compared against what
 `lanes::params` actually consumes.  It is **generated**:
 `src/lanes_manifest.rs` comes from `../river-py/lanes_manifest.json` via
@@ -59,13 +58,14 @@ source table has to be regenerated.  The projection itself is complete —
 coder parameters and not just coder names, `Option<u64>` bits so a
 variable-length field is distinguishable from a zero-width one, real row
 counts, the dimensions, the three transcript rounds with their challenge
-separators, and the four recovery counts.  Each was absent once, and a
-check that passes because it is comparing nothing is worse than no check.
+separators, and the four recovery counts.
 
-`exact::LANES_SECURITY_MEETS_TARGET` is whether the security of this
-instantiation has been *established*; it is `false`, and it is the live
-blocker.  `exact::LANES_BACKEND_READY` is whether the implementation has
-passed its KAT, serialization, negative-test and vector gates.
+`exact::LANES_SECURITY_MEETS_TARGET` is the production-alias policy switch;
+it remains `false` because this artifact does not supply a reduction for its
+exact compression/recovery composition. It is not a claim that the paper's
+published parameter derivation fails. `exact::LANES_BACKEND_READY` records
+that the implementation has passed its KAT, serialization, negative-test and
+vector gates.
 
 A table is not evidence and evidence is not an implementation, so none of
 the three lifts another.  `BackendKind::Lanes` refuses to construct until
@@ -94,24 +94,22 @@ make bench-sizes # one measured LANES proof at every published profile
 
 `make check-vectors` checks **all four** shipped cases,
 `{RiVeR-TOY, RiVeR-N8}` against each of `opening` and `lanes-experimental`.
-The two *production* `lanes` cases are *withheld* by the reference, not
-dropped, and this crate's backend is gated to match — on the security
-evidence, not on the parameters.  The accounting is enforced rather than
-narrated — `every_case_is_checked` fails both if a case names a backend
+The two production-alias `lanes` cases are *withheld* by the reference, not
+dropped, and this crate's backend is reserved to match. The accounting is
+enforced by `every_case_is_checked`, which fails both if a case names a backend
 this crate does not have *and* if the LANES gate ever lifts without the
 withheld cases coming back, so coverage cannot shrink in silence in either
 direction.
 
 The `lanes` layer runs at the paper's parameters — `D = 17`,
 `q~ = 67107713` over a degree-256 ring, the published widths — and produces
-byte-identical proofs to `river-py`.  A measured exact proof
-at the paper's parameters is **13.88 KB** against its stated 13.5; `make
-bench` reports the whole `lanes-experimental` proof in its `Scheme` section
+byte-identical proofs to `river-py`. A measured exact proof at the paper's
+parameters is **13.88 KB** beside its 13.5 KB entropy estimate; `make bench`
+reports the whole `lanes-experimental` proof in its `Scheme` section
 and the OOM half in its size table, and the exact half is the difference.
 `river-py` ships no benchmark: it is the reference and the vector
-generator.  The recovery-hint construction is
-in any case an implementation-derived completion rather than a paper rule;
-see
+generator. The recovery-hint construction and concrete codec are
+implementation-level completions of the black-box exact layer.
 
 The modulus condition is now decided over the integers
 (`ExactParams::q_tilde_clears`) rather than in floating point, because the
@@ -295,7 +293,7 @@ The exact layer sits on top of it and is complete at the paper
 parameters for both backends -- `opening` and, under the experimental
 name, LANES.  Only the production `lanes` name is gated.
 
-Two requirements the revisions made explicit are enforced here: a declared sampler tail cut beyond what
+Two parameter requirements are enforced here: a declared sampler tail cut beyond what
 `PROB_BITS` supports is an error rather than a silently unchanged
 distribution (`sample::check_probability_width`, called from
 `GaussCtx::new`), and both response bounds are *derived* from the response
@@ -327,12 +325,13 @@ backend is in use and this module does not need to know which.
 `make bench`. Single-threaded, `--release`, one machine — indicative, and
 the run prints its own CPU, target triple and compiler so the numbers stay
 attributable. `make bench-lanes` is the short reproducible run for the
-incomplete NTT over `R_q~`, the two reduction strategies, and the exact
+NTT over `R_q~`, the two reduction strategies, and the exact
 backend itself, which runs under the `lanes-experimental` name.
 `make bench-sizes` generates one deterministic proof per published profile
 under both backends and prints actual framed bytes beside the paper's model.
 Read the `opening` exact half as the cost of revealing the witness; the
-`lanes-experimental` half is the one comparable to the paper's 13.5 KiB.
+`lanes-experimental` half is the concrete encoding shown beside the paper's
+13.5 KiB entropy estimate.
 
 The headline end-to-end measurements below use `lanes-experimental` on an
 AMD Ryzen AI 9 HX 370. `Eval` is aggregated over five independent seeds as
@@ -341,11 +340,11 @@ repeated batches.
 
 | profile | Eval/attempt | attempts sampled | Verify | decode |
 |---|---:|---:|---:|---:|
-| `RiVeR-N8` | 24.6 ms | 26 | 4.52 ms | 130 µs |
-| `RiVeR-N16` | 29.1 ms | 11 | 5.56 ms | 134 µs |
-| `RiVeR-N64` | 38.7 ms | 35 | 12.0 ms | 154 µs |
-| `RiVeR-N128` | 62.9 ms | 77 | 20.5 ms | 177 µs |
-| `RiVeR-N256` | 110.9 ms | 67 | 36.2 ms | 232 µs |
+| `RiVeR-N8` | 25.6 ms | 26 | 4.77 ms | 138 µs |
+| `RiVeR-N16` | 30.6 ms | 11 | 5.84 ms | 141 µs |
+| `RiVeR-N64` | 40.4 ms | 35 | 16.0 ms | 161 µs |
+| `RiVeR-N128` | 65.7 ms | 59 | 21.4 ms | 182 µs |
+| `RiVeR-N256` | 118.6 ms | 32 | 37.3 ms | 241 µs |
 
 These are performance observations, not interoperability evidence.
 Byte-for-byte agreement is established separately by `make check-vectors`,
@@ -490,7 +489,7 @@ open, and neither this crate nor the reference does it today.
 
 **`Cargo.lock` is committed** — this is destined to be a reproducibility
 artifact, and the "libraries do not commit their lockfile" convention
-applies to published crates, not to something a reviewer has to rebuild
+applies to published crates, not to a reproducibility artifact rebuilt
 byte-for-byte.
 
 ## Dependencies

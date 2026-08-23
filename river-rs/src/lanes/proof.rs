@@ -65,7 +65,7 @@
 //!
 //! `c` costs `d~ = 256` ternary coefficients, 512 bits, against the 19,968
 //! the three elements cost. The two further bandwidth optimisations in the
-//! revision's size model are also applied:
+//! paper's size model are also applied:
 //!
 //! * `t_0` carries only its coefficient-domain high part after dropping
 //!   `D = 17` low bits;
@@ -82,10 +82,9 @@
 //! and applies one fixed ternary bucket carry per coefficient. That carry
 //! costs 2,048 bits (`l~ = 4` rows of `d~ = 256` at 2 bits); its exact
 //! perturbation bound is in [`super::params`]. A measured proof is about
-//! **13.88 KB** against the paper's stated 13.5, for which it gives no
-//! field list. Of the gap, 2,560 bits are `c`
-//! plus the hint — neither of which the paper's figure accounts for either
-//! way — and the remainder is measured Rice-over-entropy overhead.
+//! **13.88 KB**, shown beside the paper's 13.5 KB entropy estimate. Of the
+//! concrete overhead, 2,560 bits are `c` plus the hint; the remainder is
+//! measured Rice-over-entropy overhead.
 //!
 //! The displayed perturbation contains `r_identity`, but substituting
 //! `t_0 = r_identity + B_0' r_tail` cancels it:
@@ -99,14 +98,13 @@
 //! tail opening and public compressed commitment; accounting for that
 //! leakage is the fixed-hint composition obligation below.
 //!
-//! This carry format is an implementation-derived completion of an
-//! underspecified part of the revision. `[ENS20]` gives response compression
-//! with a rejection condition and defers commitment-compression hints to
-//! Dilithium; the RiVeR revision combines that size model with rejection-free
-//! `[KLSS23]` masking without specifying their composition. Byte
-//! interoperability and algebraic correctness are tested here; neither the
-//! paper nor this repository supplies a reduction for this exact fixed-hint
-//! composition.
+//! This carry format is an implementation-derived completion of the black-box
+//! exact layer. `[ENS20]` gives response compression with a rejection
+//! condition and defers commitment-compression hints to Dilithium. This
+//! artifact combines that model with rejection-free `[KLSS23]` masking in one
+//! concrete wire format. Byte interoperability and algebraic correctness are
+//! tested here; the artifact does not supply a reduction for this exact
+//! fixed-hint composition.
 //! No arbitrary hint-weight cap is imposed: unlike Dilithium's sparse hint
 //! format, this format is dense, LANES has no retry here, and the paper gives
 //! neither a cap nor a completeness/security argument for one.
@@ -564,8 +562,8 @@ pub fn verify(
 /// calls it before hashing anything.  A single definition is what keeps an
 /// honest proof from being rejected by its own verifier.
 ///
-/// * per-coefficient: `|z_i| <= Z_INF_BOUND` — a **Repair**, since the
-///   paper states no infinity bound for LANES;
+/// * per-coefficient: `|z_i| <= Z_INF_BOUND`, an artifact-derived decoder
+///   and verifier cap;
 /// * Euclidean: `||z||_2^2 < Z_NORM2_BOUND`, the paper's `2 s sqrt(N_z)`
 ///   rule at the transmitted rank.
 ///

@@ -109,8 +109,8 @@ ROWS = [
     },
     {
         "N": 128,
-        "oom_kb": 29.12017786190496,
-        "repeat_bound": 8.616634985923838,
+        "oom_kb": 28.95220911190496,
+        "repeat_bound": 8.599820475055308,
         "n": 45,
         "ell": 54,
         "p": 17592186043877,
@@ -118,7 +118,7 @@ ROWS = [
         "p_bits": 44,
         "hat_q": 140737488355333,
         "hat_q_bits": 48,
-        "hat_n": 50,
+        "hat_n": 49,
         "hat_k": 51,
         "profile": 'm3_pa24_ps34_pb2',
         "phi_a": 24,
@@ -131,8 +131,8 @@ ROWS = [
     },
     {
         "N": 256,
-        "oom_kb": 36.21287399348253,
-        "repeat_bound": 8.543595907038434,
+        "oom_kb": 36.04099899348253,
+        "repeat_bound": 8.526923940593298,
         "n": 42,
         "ell": 59,
         "p": 281474976710597,
@@ -140,7 +140,7 @@ ROWS = [
         "p_bits": 48,
         "hat_q": 281474976710677,
         "hat_q_bits": 49,
-        "hat_n": 49,
+        "hat_n": 48,
         "hat_k": 52,
         "profile": 'm3_pa22_ps40_pb2',
         "phi_a": 22,
@@ -206,7 +206,9 @@ def write_tsv(rows: list[dict[str, object]]) -> Path:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     path = DATA_DIR / "final_oom_parameters.tsv"
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=FIELDNAMES, delimiter="\t")
+        writer = csv.DictWriter(
+            handle, fieldnames=FIELDNAMES, delimiter="\t", lineterminator="\n"
+        )
         writer.writeheader()
         for row in rows:
             writer.writerow({key: fmt(row[key]) for key in FIELDNAMES})
@@ -352,7 +354,7 @@ def check_rows(rows: list[dict[str, object]]) -> None:
 def check_package_shape() -> None:
     """Check that the curated release contains the files needed to reproduce the tables.
 
-    This deliberately does not fail on additional optional files.  Reviewers
+    This deliberately does not fail on additional optional files.  Evaluators
     can add local logs while investigating the package; the release check only
     asserts that the reproducibility-critical files are present and that obvious
     cache/metadata files or generated Sage preparse files are absent.
@@ -382,6 +384,8 @@ def check_package_shape() -> None:
         Path("external/lattice-estimator/LANES.sage"),
         Path("external/lattice-estimator/UPSTREAM.txt"),
         Path("external/lattice-estimator/COPYING.LESSER-3.0.txt"),
+        Path("external/msis-security/UPSTREAM.txt"),
+        Path("external/msis-security/LICENSE-BSD-0-Clause.txt"),
         Path("optional_challenge_invertibility/README.md"),
         Path("optional_challenge_invertibility/d256_current_q_result.txt"),
     }

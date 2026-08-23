@@ -49,7 +49,7 @@
 //! | exact thresholds | [`fixed`] | complete — the specification of the acceptance test |
 //! | fixed-width acceptance | [`fastexp`] | complete — same predicate, 10 ns instead of 40 µs |
 //! | frozen wire manifest | [`manifest`] | generated from `river-py/manifest.json`; `make manifest-check` |
-//! | parameters, `BoundGen` | [`params`] | complete, reproduces the revision's table |
+//! | parameters, `BoundGen` | [`params`] | complete, reproduces the paper's table |
 //! | ring arithmetic, rounding, centred bit dropping | [`ring`] | complete |
 //! | CRT-NTT matrix backend | [`aux_ntt`] | complete |
 //! | XOF and samplers | [`sample`] | complete |
@@ -58,29 +58,29 @@
 //! | exact layer `Pi_ex` | [`exact`] | complete against `opening` and `lanes-experimental` |
 //! | `Setup` / `KeyGen` / `Eval` / `Verify` | [`river`] | complete — byte-exact against `vectors.json` |
 //! | interop against `vectors.json` | `tests/vectors.rs` | all four shipped cases; two production `lanes` cases withheld |
-//! | LANES ring `R_q~` (R3) | [`lanes::ring`] | **complete** at `(d~, l, q~) = (256, 64, 67107713)`, cross-checked by an active KAT |
-//! | LANES parameters (R3) | [`lanes::params`] | **complete** — the paper's closed form; every printed figure re-derived |
-//! | LANES commitment (R3) | [`lanes::commit`] | **complete** — exercised at the current parameters by the shipped `lanes-experimental` cases |
-//! | LANES proof and backend (R4) | [`lanes`] | **complete** — runs end to end, byte-exact against `river-py`; the production `lanes` *name* stays gated, see [`exact::lanes_unavailable_reason`] |
+//! | LANES ring `R_q~` | [`lanes::ring`] | **complete** at `(d~, l, q~) = (256, 64, 67107713)`, cross-checked by an active KAT |
+//! | LANES parameters | [`lanes::params`] | **complete** — the paper's closed form; every printed figure re-derived |
+//! | LANES commitment | [`lanes::commit`] | **complete** — exercised at the current parameters by the shipped `lanes-experimental` cases |
+//! | LANES proof and backend | [`lanes`] | **complete** — runs end to end, byte-exact against `river-py`; the production `lanes` alias stays reserved, see [`exact::lanes_unavailable_reason`] |
 //!
 //! *complete* means active and covered by a discriminating test.
 //!
 //! The LANES *ring* is complete because [`exact`] commits over it and its
 //! block of `tests/sampler_kat.json` is generated and driven.  The
 //! *parameters* became complete, which publishes the whole
-//! Hint-MLWE chain in closed form: the searched integers `K_S1`/`K_S2`
-//! are retired, and the widths, `beta'`, `B_MSIS`, `delta_MSIS` and `D`
-//! all re-derive from `s_0 = sqrt(ln(2 d~ (1 + 1/eps)))/pi`.
+//! Hint-MLWE chain in closed form: the widths, `beta'`, `B_MSIS`,
+//! `delta_MSIS` and `D` all re-derive from
+//! `s_0 = sqrt(ln(2 d~ (1 + 1/eps)))/pi`.
 //!
 //! The implementation is now current too: [`lanes::proof`] and
 //! [`lanes::backend`] run the proof end to end and are byte-exact against
-//! `river-py` for both shipped `lanes-experimental` cases.  What is not
-//! *established* is the security evidence, and that alone is what still
-//! withholds the production name.  Four gates guard it, in this order: the
-//! live constants still match the paper's closed form; a frozen
+//! `river-py` for both shipped `lanes-experimental` cases. The artifact does
+//! not supply a reduction for its concrete compression/recovery composition,
+//! so the production alias remains reserved. Four gates guard it, in this
+//! order: the live constants still match the paper's closed form; a frozen
 //! [`exact::LANES_PARAMETER_MANIFEST`] exists, validates and is final;
-//! [`exact::LANES_SECURITY_MEETS_TARGET`], the recorded verdict — which is
-//! `false`, and is the live blocker; and [`exact::LANES_BACKEND_READY`],
+//! [`exact::LANES_SECURITY_MEETS_TARGET`], the production-alias policy switch
+//! — which is `false`; and [`exact::LANES_BACKEND_READY`],
 //! whether the implementation has passed its gates — which is now `true`.
 //! A table is not evidence and evidence is not an implementation, so all
 //! four are required, and dimensions do not enter any of the decisions.

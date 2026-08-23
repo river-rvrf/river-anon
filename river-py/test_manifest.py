@@ -2,9 +2,9 @@
 test_manifest.py -- Freeze the wire-visible numeric choices.
 
 `manifest.py` collects every value two implementations have to agree on
-exactly and that the paper does not state: the pinned Gaussian rationals,
-the Rice parameters, the response bounds, the fixed field widths.  This
-pins them.
+exactly: paper-derived parameters together with the pinned Gaussian
+rationals, Rice parameters, response bounds, and fixed field widths.  This
+pins their concrete wire representation.
 
 The point is the *order* in which a mismatch is discovered.  Without this,
 a changed sampler width or a one-off Rice parameter first shows up as
@@ -95,7 +95,7 @@ FROZEN_LAYOUTS = {
     "RiVeR-N128": {
         "exact_W": (['t0', 't1'], 8320, 8320),
         "exact_opening": (['t0', 't1', 'e_eval', 'y_eval', 'digits', 'randomness'], 9584, 9552),
-        "oom": (['B', 'x', 'f1', 'zb', 'zs', 'zm'], 37488, 28368),
+        "oom": (['B', 'x', 'f1', 'zb', 'zs', 'zm'], 37316, 28196),
     },
     "RiVeR-N16": {
         "exact_W": (['t0', 't1'], 8320, 8320),
@@ -105,7 +105,7 @@ FROZEN_LAYOUTS = {
     "RiVeR-N256": {
         "exact_W": (['t0', 't1'], 8320, 8320),
         "exact_opening": (['t0', 't1', 'e_eval', 'y_eval', 'digits', 'randomness'], 9584, 9552),
-        "oom": (['B', 'x', 'f1', 'zb', 'zs', 'zm'], 48512, 34808),
+        "oom": (['B', 'x', 'f1', 'zb', 'zs', 'zm'], 48336, 34632),
     },
     "RiVeR-N64": {
         "exact_W": (['t0', 't1'], 8320, 8320),

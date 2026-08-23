@@ -16,11 +16,10 @@
 //! ## What is modelled here
 //!
 //! The paper treats `Pi_ex` as a black box and instantiates it with LANES
-//! (ENS20 / LANES+ / Hint-MLWE).  The paper reports a fixed
-//! `|pi_ex| = 13.5` KB for every profile; it does not supply the sampler
-//! widths, response bounds, hint rules, or the field-by-field accounting
-//! that reaches that figure.  This module implements the parts that *are*
-//! pinned down by the paper:
+//! (ENS20 / LANES+ / Hint-MLWE).  It publishes the LANES dimensions,
+//! sampler widths, response-norm model, compression exponent, and a fixed
+//! `|pi_ex| = 13.5` KB entropy estimate.  This module implements those
+//! parameters together with a concrete codec and recovery-hint completion:
 //!
 //! * the exact-backend parameters
 //!   `(n~, l~, d~, w_hat, D, N_ex, q~) = (4, 4, 256, 44, 17, 6, 67107713)`
@@ -45,13 +44,13 @@
 //! real prover is not confined to `prove`/`verify`: it changes the
 //! commitment randomness distribution, the transcript, the encoding and
 //! the size.  Read `|pi_ex|` from this module as the cost of *this*
-//! opening, never as evidence about the paper's 13.5 KB.
+//! opening, not as a concrete encoding of the paper's entropy estimate.
 //!
 //! [`crate::lanes::backend::LanesBackend`] is the zero-knowledge
 //! instantiation, and it is **gated** at these parameters — see
 //! [`lanes_unavailable_reason`].
 //!
-//! ## The modulus condition, and why the centred range is load-bearing
+//! ## The modulus condition and centred representation
 //!
 //! LANES has a single modulus, so it can only check the link modulo `q~`.
 //! That pins an integer only when no accepted response can wrap.  The
@@ -67,13 +66,13 @@
 //! `66730968.02` against the selected `q~ = 67107713`, a margin of
 //! `376744.98` — about 0.56%.
 //!
-//! That margin exists only because `B_e = 30`.  The rounding relation
-//! itself keeps errors in `[0, q_0-1] = [0, 60]`; the parameter table's
-//! norm bounds use the *centred* range, and the algorithms never define
-//! the translation between them.  Substituting the literal `60` doubles
-//! the requirement to `133461936.03` and the selected modulus fails
-//! outright.  So the shift is not presentational, and this implementation
-//! carries it explicitly: see [`crate::ring::to_centered_error`].
+//! The construction explicitly translates the canonical rounding error in
+//! `[0, q_0-1] = [0, 60]` to its centred representation in `[-B_e,B_e]`
+//! before applying norm bounds.  This implementation follows that
+//! translation in [`crate::ring::to_centered_error`].  The distinction is
+//! arithmetically load-bearing: using 60 as a magnitude bound would double
+//! the requirement to `133461936.03`, which the selected modulus would not
+//! satisfy.
 //!
 //! Because 0.56% is inside what a float `sqrt` and a multiplication chain
 //! can move, [`ExactParams::q_tilde_clears`] decides the condition over
@@ -218,7 +217,7 @@ impl ExactParams {
     pub fn block_pad(&self) -> usize {
         self.l_split - self.d
     }
-    /// `g` and the two product-proof commitments; the revision's `alpha`.
+    /// `g` and the two product-proof commitments; the paper's `alpha`.
     pub fn aux_slots(&self) -> usize {
         self.aux_slots
     }
@@ -237,11 +236,8 @@ impl ExactParams {
 /// **The single place this mapping exists.**  [`ExactParams`] and
 /// `lanes::params` both derive from it rather than restating it, so a
 /// test can drive it with *unequal* ranks and see the mapping the
-/// production code actually implements.  That matters because the labelling has now
-/// been reversed twice, and neither time could a numeric check catch it:
-/// the two ranks can differ — where
-/// `kappa - n~` and `l~ + N_ex + alpha` both happen to give 17 — and are
-/// both 4 in the current one.
+/// production code actually implements.  A numeric check at the published
+/// parameters cannot distinguish the role names because both ranks are 4.
 ///
 /// The paper's own MLWE dimensions fix the assignment.  The
 /// coefficient-embedded instance has *secret* dimension `n~ d~` and
@@ -252,9 +248,8 @@ impl ExactParams {
 /// * `l~` is the identity rank: rows of `t_0`, width of `B_0`'s `I` block;
 /// * `n~` is the shared tail: columns each `b_i` draws randomness from.
 ///
-/// Returned as a named struct rather than a tuple so no caller can unpack
-/// it in the wrong order — the same class of defect one layer up (
-/// `BoundGen`'s two incompatible tuple orders).
+/// Returned as a named struct rather than a tuple so callers use structural
+/// role names instead of relying on positional conventions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RankRoles {
     pub identity_rank: usize,
@@ -381,9 +376,8 @@ impl ExactParams {
     /// backend rests on is decided over the integers:
     /// `q~^2 > (24 phi_m w gamma B_e)^2 d`.
     ///
-    /// `b_e` is a parameter so a test can substitute the *unshifted* 60
-    /// and watch the selected modulus fail, which is what makes the
-    /// centred range shift load-bearing rather than presentational.
+    /// `b_e` is a parameter so a test can confirm that the specified
+    /// centred bound is essential to the selected modulus inequality.
     pub fn q_tilde_clears(&self, b_e: u64) -> bool {
         let par = &self.par;
         let k = 24u128 * par.phi_m as u128 * par.w as u128 * par.gamma as u128 * b_e as u128;
@@ -516,7 +510,7 @@ impl ExactParams {
 /// the reachable set to be exactly `[0, 60]`.
 ///
 /// `None` outside `[0, 60]` — including for every negative value, which is
-/// where this module and the revision's own reconstruction equation part
+/// where this module and the paper's reconstruction equation part
 /// company.  The relation is stated over the *canonical* error `[0, 60]`
 /// and the equation `e_eval + 30 = sum_j g_j d_j` over the *centred*
 /// `[-30, 30]`; this follows the relation.
@@ -629,9 +623,9 @@ pub fn unpack_witness(ex: &ExactParams, message: &[Poly]) -> Vec<u64> {
 
 /// Every slot past `block_used` in every block is zero mod `q~`.
 ///
-/// The revision makes the padding part of the committed message, so it is
-/// part of what the exact relation has to pin.  A LANES backend will need
-/// it in the proved linear system (P6); here it is enforced at the
+/// The paper makes the padding part of the committed message, so it is
+/// part of what the exact relation has to pin. The LANES backend includes
+/// it in the proved linear system; here it is also enforced at the
 /// boundary so the two cannot disagree about which messages are well
 /// formed.
 pub fn padding_is_zero(ex: &ExactParams, message: &[Poly]) -> bool {
@@ -663,7 +657,7 @@ pub struct ExactCommitmentKey {
     ///
     /// `R_q~` is `Z_q~[X]/(X^256+1)` with `q~ = 129 mod 256`, so it has a
     /// native incomplete NTT with 64 degree-4 slots — that is the whole
-    /// reason the revision chose this modulus, and [`crate::lanes::ring`]
+    /// reason the paper selects this modulus, and [`crate::lanes::ring`]
     /// implements it.  A commitment is `10 x 17` ring products; through
     /// schoolbook that is 11.1 million coefficient multiplies, and through
     /// the transform about 200 thousand.
@@ -986,8 +980,7 @@ pub struct SamplerSpec {
     pub sigma_r: Rational,
     pub sigma_y: Rational,
     /// `-log2(eps)`, the smoothing-parameter target the widths follow
-    /// from.  Replaces the retired `k_s1`/`k_s2`: the paper gives the
-    /// widths in closed form, so what a manifest has to carry is the
+    /// from.  The paper gives the widths in closed form, so the manifest carries the
     /// form's input, not a pair of searched integers.
     pub epsilon_exponent: u32,
     /// `"standard deviation"` or `"gaussian parameter"` — the two differ
@@ -1170,7 +1163,7 @@ pub struct LanesManifest {
     pub constants: &'static [ManifestConstant],
 }
 
-/// The exact-proof size the revision reports, **in bits**.
+/// The exact-proof entropy estimate the paper reports, **in bits**.
 ///
 /// `13.5 KB` at the size model's `1 KB = 8192 bits`, so `13.5 * 8192 =
 /// 110592`.  It was `13_824` — which is `13.5 * 1024`, the figure in
@@ -1198,37 +1191,14 @@ const _: () = {
 pub const LANES_PARAMETER_MANIFEST: Option<&LanesManifest> =
     Some(&crate::lanes_manifest::LANES_MANIFEST);
 
-/// Whether the security of this instantiation has been *established*.
+/// Whether the candidate composition is exposed under the production
+/// backend alias.
 ///
-/// A third independent flag, and it is deliberately not a repository
-/// opinion about a bit count.  Possessing a recorded estimator run is not
-/// the same as settling the question, and this repository is not the party
-/// that settles it: the parameters are the authors' and so is their
-/// security argument.
-///
-/// What is known, from `river-py/lanes_security.json` (lattice-estimator
-/// `53da598`, over the paper's own parameters):
-///
-/// * M-SIS reproduces — 128.2 bits, `delta = 1.003732` against the printed
-///   `delta_MSIS = 1.0037`;
-/// * `delta_MLWE = 1.0020` is **not** obtainable under either reading of
-///   the paper's Gaussian convention, which differ by 18 bits (116.2 or
-///   134.3), and the paper does not say which its estimator ran in;
-/// * the KLSS23 Thm 1 reduction loses `(d+m) 2 eps ~ 2^-94.9`, below the
-///   target on its own and independent of any lattice estimate;
-/// * the recovery-hint composition has no leakage or extraction argument
-///   in either the paper or here.
-///
-/// The 116.2 figure is a **lower bound under deliberately worst-case
-/// assumptions** — `B_H = w_hat^2` where the measured spectral norm is
-/// 1.6–2.8x smaller, and a response bound over every challenge rather than
-/// the one Fiat–Shamir produced.  Tightening either would clear 128, which
-/// is exactly why neither is tightened here: doing so to make a parameter
-/// set pass is the failure this gate exists to prevent.  So it is evidence
-/// that the question is open, not an answer to it.
-///
-/// This crate does not re-run the estimator; it mirrors the same state as
-/// the reference so the two gates agree on the shared cause token.
+/// The paper-derived M-SIS and MLWE root-Hermite factors reproduce.  This
+/// remains `false` as an artifact-scope decision: the concrete recovery,
+/// compression, and wire-format completion is implementation-defined, and
+/// the artifact does not supply a reduction for that exact composition.
+/// The fully tested code is available under `lanes-experimental`.
 pub const LANES_SECURITY_MEETS_TARGET: bool = false;
 
 /// Whether the LANES *implementation* has passed its gates.
@@ -1270,14 +1240,14 @@ pub const LANES_BACKEND_READY: bool = true;
 /// reads `lanes::params` by name, so deleting or renaming a gated constant
 /// fails to compile here rather than shrinking the audit at run time.
 pub const LANES_GATE_CAUSES: [&str; 8] = [
-    "audit-drift",               // a gated constant was renamed or deleted
-    "constant-changed",          // ...or given a different value, unrecorded
-    "no-parameter-manifest",     // no frozen table yet
-    "manifest-invalid",          // it landed and does not validate
-    "manifest-experimental",     // it validates and does not claim to be final
-    "no-security-evidence",      // no recorded estimator run yet
-    "security-evidence-pending", // ...it landed and does not settle the question
-    "backend-not-ready",         // everything else; the implementation gate
+    "audit-drift",           // a gated constant was renamed or deleted
+    "constant-changed",      // ...or given a different value, unrecorded
+    "no-parameter-manifest", // no frozen table yet
+    "manifest-invalid",      // it landed and does not validate
+    "manifest-experimental", // it validates and does not claim to be final
+    "no-security-evidence",  // no recorded estimator run yet
+    "production-alias-reserved",
+    "backend-not-ready", // everything else; the implementation gate
 ];
 
 /// Which of [`LANES_GATE_CAUSES`] applies, or `None` if the gate is open.
@@ -1308,7 +1278,7 @@ pub fn lanes_gate_cause_for(
         return Some("manifest-invalid");
     }
     if !LANES_SECURITY_MEETS_TARGET {
-        return Some("security-evidence-pending");
+        return Some("production-alias-reserved");
     }
     if !backend_ready {
         return Some("backend-not-ready");
@@ -1326,22 +1296,22 @@ pub fn lanes_gate_cause_for(
 ///    section, and *selects a value* for every gated constant, matching
 ///    what the code
 ///    consumes;
-/// 3. the recorded security evidence meets its target;
+/// 3. the candidate-composition scope permits the production alias;
 /// 4. the implementation has passed its own gates and says so.
 ///
 /// All are required.  A manifest alone would mean the backend ran on
-/// unvalidated security with a table of the right numbers sitting beside
-/// it unused.
+/// a concrete format whose scope was not recorded.
 ///
 /// That dimensions do not enter is the point, and the
 /// widths do not either: `d~`, `l`, `q~`, `(n~, l~)`, `D` *and* `s_1`,
-/// `s_2`, `beta'`, `B_MSIS` are all the revision's, and
+/// `s_2`, `beta'`, `B_MSIS`, `delta_MSIS`, and `delta_MLWE` are all the
+/// paper's, and
 /// [`crate::lanes::ring`] and [`crate::lanes::params`] are current and
 /// cross-checked against `river-py`.  The implementation is
 /// current as well — `lanes::{mp, proof, backend}` run the proof end to
 /// end and both `lanes-experimental` vector cases are re-derived byte for
 /// byte, so condition 4 holds.  The only live blocker is condition 3, the
-/// security evidence — see [`LANES_SECURITY_MEETS_TARGET`].
+/// artifact-scope gate — see [`LANES_SECURITY_MEETS_TARGET`].
 pub fn lanes_unavailable_reason() -> Option<String> {
     lanes_readiness(LANES_PARAMETER_MANIFEST, LANES_BACKEND_READY)
 }
@@ -1378,15 +1348,14 @@ pub fn lanes_readiness(manifest: Option<&LanesManifest>, backend_ready: bool) ->
             .join(", ");
         return Some(format!(
             "no frozen LANES parameter manifest. The paper supplies the \
-             widths and every derived security figure, but the \
-             recovery-hint rules and the field-by-field accounting behind \
-             the paper's 13.5 KB are still this implementation's, so the \
+             widths and entropy size estimate, while the concrete recovery \
+             and encoding are implementation-level choices, so the \
              wire-visible values — {detail} — have to be frozen with their \
              provenance before the production name opens. Supply \
              exact::LANES_PARAMETER_MANIFEST (see LanesManifest), then \
              set LANES_BACKEND_READY once the implementation gate passes. \
              Use \
-             BackendKind::Opening for the revised protocol."
+             BackendKind::Opening or BackendKind::LanesExperimental."
         ));
     };
 
@@ -1400,19 +1369,12 @@ pub fn lanes_readiness(manifest: Option<&LanesManifest>, backend_ready: bool) ->
 
     if !LANES_SECURITY_MEETS_TARGET {
         return Some(
-            "the LANES security evidence is pending, and is the authors' \
-             to supply. The parameters are the paper's and reproduce every \
-             figure it prints; what is not established is that they reach \
-             the 128-bit target they were selected for.              `delta_MLWE = 1.0020` is not reproducible under either \
-             reading of the paper's Gaussian convention (116.2 or 134.3 \
-             bits, 18 apart, and the paper does not say which its \
-             estimator ran in); [KLSS23] Thm 1 loses (d+m) 2 eps ~ 2^-94.9 \
-             on its own; and the recovery-hint leakage and extraction \
-             analysis are still this implementation's. This repository's \
-             own 116.2-bit figure is a lower bound under deliberately \
-             worst-case assumptions, so it is evidence that the question \
-             is open rather than an authoritative security level. See \
-             river-py/lanes_security.json"
+            "the production LANES alias is reserved: the paper-derived \
+             parameters and root-Hermite factors reproduce, but the concrete \
+             compression/recovery and wire-format completion is \
+             implementation-defined, and this artifact does not supply a \
+             reduction for that exact composition. Use \
+             BackendKind::LanesExperimental for the tested candidate"
                 .into(),
         );
     }
@@ -1955,7 +1917,7 @@ mod tests {
     /// The main relation paragraph still says `e_eval in [0,60]`; this test
     /// pins the executable figures' coherent reading.
     #[test]
-    fn the_revisions_reconstruction_equation_is_the_centred_one() {
+    fn the_reconstruction_equation_is_the_centred_one() {
         let reachable: std::collections::BTreeSet<i64> = (0..3i64)
             .flat_map(|a| {
                 (0..3i64).flat_map(move |b| {
@@ -1990,8 +1952,7 @@ mod tests {
         assert_eq!(
             live.len(),
             GATED_LANES_CONSTANTS.len(),
-            "a constant was retired from lanes::params without revisiting \
-             the gate that depends on it"
+            "the live LANES constants and gated-constant list differ"
         );
         assert!(lanes_unavailable_reason().is_some(), "the gate is closed");
 
@@ -2062,7 +2023,7 @@ mod tests {
         *LANES_PARAMETER_MANIFEST.expect("the generated manifest is present")
     }
 
-    /// Finding 3: a label is not a selection.
+    /// A provenance label is not a parameter selection.
     ///
     /// Marking a wrong width as **Paper** does not make the paper
     /// have printed it.  What the gate compares is the manifest's value
@@ -2285,20 +2246,17 @@ mod tests {
         assert_eq!(m.source_sha256.len(), 64);
     }
 
-    /// Finding 2: the two states are separate, and both are required.
-    ///
-    /// Possession of a parameter table is not by itself a reason to lift
-    /// the runtime gate.  With one flag it would have been: if nothing
-    /// consumed the manifest, the backend would run with a table of the
-    /// right numbers sitting unused beside it.
+    /// The parameter manifest and production-alias policy are separate.
     #[test]
     fn a_manifest_alone_does_not_enable_the_backend() {
         let m = valid_manifest();
 
-        // With the security flag down — which is where this crate is — a
-        // valid manifest and a ready implementation are still not enough.
+        // A valid manifest does not by itself enable the reserved alias.
         let reason = lanes_readiness(Some(&m), false).expect("still gated");
-        assert!(reason.contains("security evidence"), "{reason}");
+        assert!(
+            reason.contains("production LANES alias is reserved"),
+            "{reason}"
+        );
         assert!(
             lanes_readiness(Some(&m), true).is_some(),
             "security outranks ready"
@@ -2309,11 +2267,7 @@ mod tests {
             "ready without a manifest"
         );
 
-        // What this crate actually ships: the generated LANES manifest is
-        // present and valid — `scripts/gen_lanes_manifest.py` writes it
-        // from `river-py/lanes_manifest.json`, so the two implementations
-        // are gated on the same table rather than each on its own opinion
-        // of one — and the outstanding condition is the security evidence.
+        // The generated manifest is present and valid in the shipped tree.
         assert!(LANES_PARAMETER_MANIFEST.is_some());
         let bad =
             validate_lanes_manifest(LANES_PARAMETER_MANIFEST.unwrap(), &live_lanes_constants());
@@ -2321,18 +2275,17 @@ mod tests {
             bad.is_empty(),
             "the generated manifest must validate: {bad:?}"
         );
-        assert_eq!(lanes_gate_cause(), Some("security-evidence-pending"));
+        assert_eq!(lanes_gate_cause(), Some("production-alias-reserved"));
         // deliberately tests and not `const` assertions: these flags are
         // meant to move, and when they do these should go red rather than
         // refuse to compile.
         //
-        // `LANES_BACKEND_READY` has moved — R4's gates pass — so the
-        // production name is now gated on exactly one thing, which is the
-        // point of keeping them separate.
+        // Implementation readiness and the production-alias policy remain
+        // separate conditions.
         #[allow(clippy::assertions_on_constants)]
         {
-            assert!(LANES_BACKEND_READY, "R4's gates pass");
-            assert!(!LANES_SECURITY_MEETS_TARGET, "the evidence does not");
+            assert!(LANES_BACKEND_READY, "implementation gates pass");
+            assert!(!LANES_SECURITY_MEETS_TARGET, "production alias is reserved");
         }
     }
 
@@ -2358,11 +2311,11 @@ mod tests {
         // with it down a valid manifest reports *it*, not `backend-not-ready`.
         assert_eq!(
             lanes_gate_cause_for(Some(&m), false),
-            Some("security-evidence-pending")
+            Some("production-alias-reserved")
         );
         assert_eq!(
             lanes_gate_cause_for(Some(&m), true),
-            Some("security-evidence-pending")
+            Some("production-alias-reserved")
         );
 
         let mut bad = valid_manifest();
@@ -2391,7 +2344,7 @@ mod tests {
     }
 
     #[test]
-    fn parameters_match_the_revision() {
+    fn parameters_match_the_paper() {
         for par in [RIVER_TOY, RIVER_N8] {
             let ex = ExactParams::new(&par).expect("shipped profile");
             assert_eq!(

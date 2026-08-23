@@ -1,9 +1,9 @@
 """
 test_lanes.py -- Tests for the optional LANES exact backend.
 
-**The parameters are the paper's; the evidence is not.**
+The parameters are the paper-derived LANES parameters.
 
-Structure and widths both come from the revision now: `d~ = 256`, `l = 64`,
+Structure and widths both come from the paper: `d~ = 256`, `l = 64`,
 `q~ = 67107713` (26 bits), `(n~, l~) = (4, 4)`, `D = 17`, six separately
 padded 64-slot message blocks, and the closed-form Gaussian widths
 `s_1 = 2 s_0`, `s_2 = 2 w_hat s_0` with
@@ -16,10 +16,10 @@ What is still this repository's, and is labelled Repair everywhere: the
 whole recovery-hint construction, the response *infinity* bound (the paper
 states none), the wire layout, and the sampler tail cuts.
 
-What keeps the production name shut is no longer the parameters but the
-security evidence: the published `delta_MLWE = 1.0020` is not reproducible
-under either reading of the paper's own Gaussian convention (116.2 or 134.3
-bits, 18 apart), and [KLSS23]'s reduction loses about `2^-94.9` on its own.
+The standard-deviation convention reproduces the published
+`delta_MLWE = 1.0040`.  The production alias remains reserved because the
+concrete compression/recovery completion is implementation-defined and this
+artifact does not supply a reduction for that exact composition.
 
 So this suite reaches the code through
 `exact_backend="lanes-experimental"`, a different backend name from
@@ -849,7 +849,7 @@ def test_verifier_bounds_hold_for_honest_responses():
 def test_backend_rejects_a_modified_y_eval():
     """`y_eval` is a committed message, so moving it must break the proof.
 
-    The revision asks for a rejection test on each of `y_eval`, `z_eval` and
+    The relation tests each of `y_eval`, `z_eval` and
     `x`; the other two are the wrong-statement and wrong-challenge tests
     above.  `y_eval` is not in the statement, so it has to be moved in the
     witness and the proof re-run against the original commitment.
@@ -875,7 +875,7 @@ def test_alternative_integer_lifts_are_excluded_by_the_bound_not_the_proof():
 
     What excludes the lift is the response bound.  An accepted `z_eval`
     satisfies `||z_eval||_inf <= 6 sigma_rs`, so with `q~ > 12 sigma_rs` at
-    most one integer per residue class is in range, and with the revision's
+    most one integer per residue class is in range, and with the paper's
     `q~ > 24 phi_rs B_rs` the same holds for the difference of two accepted
     responses -- which is the quantity cross-fork extraction needs.
     """
@@ -935,10 +935,10 @@ def test_backend_handles_coefficients_at_the_edge_of_the_modulus():
 
 
 def test_measured_proof_size_is_reported_field_by_field():
-    """The revision requires a per-field record from the real serializer.
+    """Report every field from the real serializer.
 
-    `model_bits` puts a closed form beside it -- a historical draft's, not
-    the current manuscript's; see below.  The two are reported together
+    `model_bits` puts a comparison-only closed form beside it; see below.
+    The two are reported together
     because the port sits above the model and the difference is the
     deliverable.
     """
@@ -973,19 +973,9 @@ def test_measured_proof_size_is_reported_field_by_field():
     assert by_name["hint"]["bits"] == N_TILDE * R.DTILDE * 2 == 2048
     assert by_name["z"]["coeffs"] == RESPONSE_RANK * R.DTILDE == 3328
 
-    # The measured total and a closed-form model, together.
-    #
-    # The widths are the paper's now, so `z` -- the only field whose size
-    # depends on them -- is priced at the published `s_2`.  What is still
-    # not the paper's is `model_bits` itself: the paper states only
-    # "13.5 KB" with no field list, so the model is a Derived
-    # extrapolation and neither number below is the paper's 13.5 KB.  What is pinned is that the measured format and that
-    # extrapolation agree with each other, term by term.
-    #
-    # For the record, since these are the numbers a benchmark reports:
-    # at the paper's widths the model is 13.30 KB and the measured proof
-    # 13.89 KB, against the paper's stated 13.5 KB.  Under other
-    # widths they were 13.4 and 14.0.
+    # The measured total and a field-level entropy model, together. At the
+    # paper's widths the model is 13.30 KB and the concrete encoding is
+    # 13.89 KB, shown beside the paper's 13.5 KB entropy estimate.
     model = backend.model_bits()
     model_kb = sum(model.values()) / 8192
     assert 13.2 < model_kb < 13.4, model_kb

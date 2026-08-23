@@ -102,9 +102,8 @@ def smallest_prime_above(bits, residue=5, modulus=8):
 
 # Pinned moduli.  Keys are the bit lengths quoted in the paper's table.
 #
-# **Paper**: the revision prints the concrete moduli in
-# `tab:river-concrete-moduli`, so these are no longer this tree's guess at
-# a convention.  Both tables are reproduced by a rule, and the two rules are
+# **Paper**: the concrete moduli are printed in the parameter table. Both
+# tables are reproduced by a rule, and the two rules are
 # *different*, which is exactly why guessing was not safe:
 #
 #   `p`      is the largest prime *below* `2^bits`   that is 5 mod 8;
@@ -151,7 +150,7 @@ def _show(value, digits=24):
     `check()` reports the offending value, and an arbitrary caller-supplied
     integer can be arbitrarily long -- past 4300 digits Python refuses to
     convert it at all, so *formatting the error* raised `ValueError` and a
-    domain finding surfaced as the outer guard catching an exception.  The
+    domain error surfaced as the outer guard catching an exception.  The
     diagnostic must not be able to fail where the check itself cannot.
     """
     if isinstance(value, int) and not isinstance(value, bool):
@@ -249,24 +248,8 @@ class RiVeRParams:
         return self.q0 * self.p
 
     # ---- BoundGen --------------------------------------------------------
-    # Each bound below is one entry of BoundGen's output tuple.
-    #
-    # **closed in the paper**.  The paper gave that tuple in
-    # two incompatible orders: `BoundGen` returned
-    #   (r', s_c, phi_a, phi_s, phi_b, phi_m, tau_g0, tau_g1, ...)
-    # while all three OOM algorithms parsed
-    #   (r', s_c, phi_a, phi_b, phi_s, phi_m, tau_g0, tau_g1, ...)
-    # -- positions 4 and 5 swapped.  That was not cosmetic: `phi_s` is 22 to
-    # 40 and `phi_b` is 2, so a positional implementation would have sampled
-    # and tested the two responses at each other's widths.
-    #
-    # the paper makes `BoundGen` return the OOM order, so there is one
-    # normative order and the two agree.  Nothing here was ever positional
-    # -- every value is a named field -- which is why the contradiction
-    # never reached the arithmetic.  `test_params.py` keeps pinning it:
-    # `BOUNDGEN_ORDER` is now a single tuple, and the test asserts the
-    # swapped order is *not* it, so a positional reader of the wrong one
-    # so rather than passing quietly.
+    # Each bound below is one named entry of BoundGen's output tuple.  The
+    # names keep callers independent of positional unpacking conventions.
 
     @property
     def B_e(self):
@@ -565,7 +548,7 @@ class RiVeRParams:
     #: for which `eps_1 <= 2^-100`.
     #:
     #: Carried as a named constant rather than inlined so the parameter is
-    #: visible where it acts, and so a future revision that moved it would
+    #: visible where it acts, and so a future parameter update would
     #: move `mu_a`, `mu_s` and `mu_m` together rather than one at a time.
     #: It is 12 today, which is why that rendering moved no bytes.
     #:
@@ -1074,15 +1057,12 @@ class RiVeRParams:
 # (phi_a, phi_s), (n, ell), log2 p, (n_hat, k_hat, ceil log2 q_hat)
 #   -- Table `tab:river-final-all-params`, the paper.  **Paper.**
 #
-# Every entry moved in this revision: `n` rose by 1-2 at each profile, and
-# `(phi_a, phi_s)` moved at N=128 (28,28 -> 24,34) and N=256 (26,32 -> 22,40).
-
 _PUBLISHED = {
     8:   ((32, 26), (44, 54), 44, (42, 46, 44)),
     16:  ((40, 22), (41, 59), 48, (43, 49, 46)),
     64:  ((34, 24), (44, 54), 44, (50, 51, 48)),
-    128: ((24, 34), (45, 54), 44, (50, 51, 48)),
-    256: ((22, 40), (42, 59), 48, (49, 52, 49)),
+    128: ((24, 34), (45, 54), 44, (49, 51, 48)),
+    256: ((22, 40), (42, 59), 48, (48, 52, 49)),
 }
 
 #: `BoundGen`'s output tuple.  **One order**: the
@@ -1093,28 +1073,15 @@ BOUNDGEN_ORDER = (
     "tau_g0", "tau_g1", "cal_B", "B_e", "eta_m", "B_a", "B_s",
     "B_g0", "B_g1", "K_b", "K_a")
 
-#: The other order the same multiset admits, with `phi_s` and `phi_b`
-#: swapped.  Kept so `test_params.py` can assert this is *not* the live
-#: order: a positional reader of the wrong one gets a well-formed tuple and
-#: only wrong numbers, so nothing else would catch it.
-BOUNDGEN_ORDER_SWAPPED = (
-    "r_prime", "s_cmp", "phi_a", "phi_s", "phi_b", "phi_m",
-    "tau_g0", "tau_g1", "cal_B", "B_e", "eta_m", "B_a", "B_s",
-    "B_g0", "B_g1", "K_b", "K_a")
-
-#: Back-compatible aliases (both names referred to the two orders).
+#: Descriptive alias used by the OOM layer.
 BOUNDGEN_ORDER_OOM = BOUNDGEN_ORDER
 
 
 #: `(tau_g0, tau_g1)` as exact rationals.  **Paper**.
 #:
-#: These were **Derived** under the table, which printed one decimal
-#: -- and one decimal failed to reproduce its own `B_g0` column at N=256, so
-#: this tree recovered the second decimal.  The paper prints two decimals
-#: and adds a table note saying so explicitly ("reported to two decimal
-#: places to make the corresponding bounds reproducible from the table").
-#: All ten recovered values match the published ones exactly, which closes
-#: `test_params.py` pins the agreement rather than dropping the check.
+#: The paper prints two decimals so the associated product bounds can be
+#: reproduced.  `test_params.py` also confirms that one decimal would be
+#: insufficient for two table entries.
 _TAU = {
     8:   (Fraction(314, 100), Fraction(268, 100)),
     16:  (Fraction(309, 100), Fraction(308, 100)),

@@ -8,16 +8,16 @@ serialization and test-vector machinery, with a deterministic vector mode.
 four rejection samplers in the figure's order.
 
 The outer protocol, codec, opening backend, vectors **and the LANES
-parameters** are complete against it — the revision publishes the whole
-Hint-MLWE chain in closed form and `lanes_params.py` re-derives every
-printed figure.  The LANES *backend* is gated on security evidence; see
-"The exact layer".
+parameters** are complete against it. `lanes_params.py` re-derives the
+published Hint-MLWE quantities and `delta_MLWE = 1.0040`. The candidate
+LANES backend is available as `lanes-experimental`; see "The exact layer".
 
 It is not a production or security-preserving RiVeR implementation.  The
-`opening` backend carries the revised protocol end to end but deliberately
+`opening` backend carries the protocol end to end but deliberately
 reveals its opening; the zero-knowledge `lanes` layer runs under
 `exact_backend="lanes-experimental"`, with the production `"lanes"` name
-**gated** on security evidence — see "The exact layer".  What it is good
+reserved pending a reduction for the concrete compression/recovery
+composition — see "The exact layer". What it is good
 for is the OOM and parameter layers, composition, wire format, and being
 the byte-for-byte reference for `river-rs`.
 
@@ -37,8 +37,8 @@ both.
 Every source of randomness is a SHAKE-256 stream, so a complete execution —
 setup, keys, evaluation, proof bytes — is reproducible *when asked for*.  `Eval`
 defaults to fresh `os.urandom`; `eval_deterministic` is the explicit pinned
-path, and is what `vectors.py` exports.  The default is fresh coins because a
-seed argument that silently becomes the whole nonce is a footgun — see
+path, and is what `vectors.py` exports. The default is fresh coins so a seed
+argument cannot silently become the nonce for every evaluation.
 
 ## Quick start
 
@@ -60,8 +60,9 @@ par = get("RiVeR-N8")
 scheme = RiVeR(par)
 pp = scheme.setup(b"\x00" * 32)
 
-# A ring is an ordered tuple of exactly `N` distinct keys.  There is no
-# padding and no canonical reordering: the order is part of the statement.
+# A ring is an ordered tuple of exactly `N` valid keys. Duplicates are
+# permitted; the evaluator uses the first matching position. There is no
+# padding or canonical reordering: the order is part of the statement.
 keys = [scheme.keygen(pp, bytes([i]) + b"\x00" * 31) for i in range(par.N)]
 ring = [pk for _, pk in keys]
 sk, pk = keys[1]
@@ -105,8 +106,7 @@ complete OOM layer with its split `(z_s, z_m)` response and all four
 rejection samplers, the centred `[[.]]_K` of the Preliminaries, the exact
 relation `R^_ex` with its radix-3 range encoding and six padded `N_ex = 6`
 message blocks, the two-stage commit ordering that binds `W` into `rho'`
-before the challenge, serialization, and verification including the two
-checks the figure omits.
+before the challenge, serialization, and the complete verification boundary.
 
 ## The exact layer
 
@@ -116,12 +116,12 @@ checks the figure omits.
 |---|---|---|---|
 | `"opening"` (default) | over `Z` | **transmitted** | runs; a mock, about 9.3 KB |
 | `"lanes-experimental"` | mod `q~` | not transmitted | runs, at the paper's parameters; about 13.9 KB |
-| `"lanes"` | mod `q~` | not transmitted | **gated** on security evidence — see below |
+| `"lanes"` | mod `q~` | not transmitted | reserved production alias; see below |
 
 **`opening`** is a mock.  It enforces every clause of the relation, including
 the integer link, but `sigma_ex` *is* the opening: `e_eval` leaks, and with it
 `<G(m), s>`, so the secret key falls out after about `ell` distinct messages.
-It carries the revised protocol end to end, which is what it is for.
+It carries the protocol end to end, which is what it is for.
 
 **`lanes`** is a port of [ENS20].  Every layer of it runs at the paper's
 own parameters, and `exact_backend="lanes-experimental"` exercises it end
@@ -140,96 +140,27 @@ free constant, so nothing here is searched:
 `lanes_params.py` re-derives every printed figure to the last digit —
 `beta' = 45430.6`, `B_MSIS = 15991562`, `q~/B_MSIS = 4.2`,
 `delta_MSIS = 1.0037`, `D = 17` — and `test_lanes.py` pins each against the
-printed digits.  Two identities the paper does not state fall out and are
-pinned too: `s^2 = s_2^2 + w_hat^2 s_1^2`, so the published `s` is already
+printed digits. Two derived identities are pinned too:
+`s^2 = s_2^2 + w_hat^2 s_1^2`, so the published `s` is already
 the worst-case-`l1` response width; and `sigma_MLWE = s_0` exactly, which
 is *why* the widths are these.
 
-**What gates the production name is security evidence, not parameters.**
-An independent lattice-estimator run (commit `53da598`, recorded in
-`lanes_security.json`) confirms M-SIS at 128.2 bits and `delta = 1.003732`
-against the printed 1.0037.  The MLWE side does not reproduce:
-`delta_MLWE = 1.0020` is not obtainable under either reading of the paper's
-own Gaussian convention (116.2 bits reading `s_0` as a standard deviation,
-which is what the paper says it is; 134.3 reading `sigma_0 = s_0 sqrt(2 pi)`
-as one), and [KLSS23] Theorem 1 loses `(d+m) 2 eps ~ 2^-94.9` on its own.
-The recovery-hint rules are still this implementation's.  See
-`lanes_security.json` and
+The published parameters are recorded in `lanes_manifest.json` and checked
+against the values consumed by the code. The same manifest is projected into
+Rust, and the KAT and vector suites cover commitment generation, proof fields,
+serialization, verification, and negative cases in both languages.
 
-Two steps in the chain are deliberately worst-case, so 116.2 is a lower
-bound on this instantiation rather than a claim the paper is short —
-and neither is tightened here, because tightening a security bound to make
-a parameter set pass is the failure the gate exists to prevent.
+The paper treats LANES as an exact-proof backend and gives the dimensions,
+Gaussian widths, response model, compression parameter, and entropy estimate.
+This executable candidate additionally fixes a concrete wire codec and a
+compression/recovery-hint construction. Those choices are labelled
+**Derived** or **Repair** in the manifest. The artifact does not supply a
+security reduction for that exact composition, so the working backend is
+named `lanes-experimental`; the production alias `lanes` remains reserved.
+`lanes_security.json` is a reproducible estimator diagnostic, not a normative
+security verdict for the paper.
 
-**What the cross-check found.**  The two implementations disagreed on
-every LANES byte, and the cause was one unit: `bound_z`, the codec's cap on
-`z_eval`, was `int(math.ceil(par.zm_inf_bound))` here — a *float* ceiling —
-giving 16682743, against `river-rs`'s exact `floor_sqrt` giving 16682742.
-`(6 sigma_m)^2 = 278313880780800` exactly, so 16682742 is the largest
-coefficient the verifier's own test admits: the cap was one unit looser
-than the accept/reject bound it was meant to mirror, and it fed the
-statement hash.  Fixed here, to match; it is the repository's own rule
-("no float reaches an accept/reject decision") applied at the one place
-that had slipped it, and nothing short of a byte comparison would have
-found it.
-
-It also reports, in a footnote to §5, a LANES challenge-difference
-noninvertibility probability of about `2^-93.5` for its re-optimized
-parameters (`2^-70` for the original) and an outer figure of about
-`2^-91.5`.  Those two are the only published quantities that separate the
-LANES parameters from any other set, so a manifest has to
-reproduce them; neither reaches 128 bits.
-
-**Separate gates, not one.**  `exact.LANES_PARAMETER_MANIFEST` is the
-frozen table, carrying data (not headings) in every section and *selecting
-a value* for every constant in `exact.GATED_LANES_CONSTANTS` under a
-Paper/Derived/Repair label — a label alone would let a wrong width be
-relabelled **Paper** and travel on, so the value is compared against what
-the code consumes.  `exact.LANES_SECURITY_EVIDENCE` carries a *verdict*:
-having a recorded estimator run is not the same as passing, and this one
-does not.  `exact.LANES_BACKEND_READY` records whether the implementation
-has passed its KAT, serialization, negative-test and vector gates.  All are
-required.  With one flag, obtaining a parameter table would have run the
-backend on unvalidated security with a table of the right numbers sitting
-beside it.
-
-the manifest is `status: "final"` — every wire- and
-security-visible value is Paper or a stated derivation from it — and the
-live cause is `security-evidence-pending`, in both implementations.
-
-The manifest check is deliberately *not* a comparison against the old
-dimensions — those have already moved, so such a check could only ever
-answer "gated", and the one way to make it answer "available" was to move
-the exact parameters backwards.  `test_exact.py` drives every such move and
-asserts the verdict does not change, and walks the constant list to require
-the gate closed while any of them has drifted.
-
-`exact.lanes_gate_cause()` reports which blocker applies as one of eight
-short tokens — `audit-drift`, `constant-changed`, `no-parameter-manifest`,
-`manifest-invalid`, `manifest-experimental`, `no-security-evidence`,
-`security-evidence-pending`, `backend-not-ready` — so a generated artifact
-records *why* a layer is missing in a form the Rust tree can compare
-against its own gate.  It does compare, directly and by equality:
-`river-rs/src/lanes_manifest.rs` is generated from `lanes_manifest.json`,
-so both implementations are gated on the same table and a difference in
-cause is a real divergence rather than one side lacking an input.  The
-prose reason names each language's own API and is not compared.
-
-Until then `LanesBackend(par)` **refuses to construct** under the
-production name; `LanesBackend.experimental(par)` does not, and is what
-`test_lanes.py`, the five `lanes_*` self-checks, the two
-`lanes-experimental` vector cases and the three `lanes_*` KAT blocks all
-run against.  None of them skips: a self-check that skips while the code
-demonstrably works is one gate away from silence, which is how
-`lanes_ring`'s twiddle tree stayed wrong for as long as it did.
-
-What the gate still prevents is the thing it was built for.  Substituting
-new dimensions into old widths and hint constants — or tightening a
-security bound to make a parameter set pass — would produce something that
-ran, verified against itself, and could be described as "the paper's LANES
-instantiation" while being no such thing.
-
-### The modulus condition, and why the centred range is load-bearing
+### The exact-modulus margin
 
 LANES has a single modulus, so it checks the link only modulo `q~`.  That
 pins an integer only when no accepted response can wrap.  Two accepted error
@@ -243,14 +174,12 @@ most `12 sigma_m`, and a unique centred lift of `z_eval - x e_eval` needs
 86889.3 for every profile — so this is one number for all five:
 66730968.02, against the selected `q~ = 67107713`.
 
-The margin is 376744.98, about **0.56%**, and it exists only because
-`B_e = 30`.  The rounding relation is written on `[0, q_0-1]`; the parameter
-table's norm bounds use the centred range; the algorithms never define the
-translation.  Substituting the literal 60 doubles the requirement to
-133461936.03 and the selected modulus fails outright.  So the shift is
-carried explicitly (`ring.to_centered_error`), and because 0.56% is inside
-what a float `sqrt` chain can move, `ExactParams.q_tilde_clears` decides the
-condition over the integers as `q~^2 > (24 phi_m w gamma B_e)^2 d`.
+The margin is 376744.98, about **0.56%**. The construction translates
+canonical rounding errors to centred representatives before applying the
+bound; `ring.to_centered_error` implements that translation. Because the
+margin is small, `ExactParams.q_tilde_clears` decides the condition over the
+integers as `q~^2 > (24 phi_m w gamma B_e)^2 d` rather than through a floating
+point square-root chain.
 
 ## Sizes
 
@@ -270,13 +199,13 @@ coder.  Golomb-Rice is this repository's concrete approximation to that, and
 lands about half a bit per coefficient above it. Measured candidate-LANES
 proofs against the current ideal model:
 
-| profile | measured OOM | ideal OOM | measured exact | paper exact | framed proof |
+| profile | measured OOM | ideal OOM | measured exact | exact entropy estimate | framed proof |
 |---|---:|---:|---:|---:|---:|
 | `RiVeR-N8` | 20.245 KiB | 20.133 KiB | 13.890 KiB | 13.5 KiB | 34.143 KiB |
 | `RiVeR-N16` | 21.548 KiB | 21.409 KiB | 13.883 KiB | 13.5 KiB | 35.438 KiB |
 | `RiVeR-N64` | 25.729 KiB | 25.536 KiB | 13.887 KiB | 13.5 KiB | 39.623 KiB |
-| `RiVeR-N128` | 29.366 KiB | 29.120 KiB | 13.893 KiB | 13.5 KiB | 43.267 KiB |
-| `RiVeR-N256` | 36.487 KiB | 36.213 KiB | 13.888 KiB | 13.5 KiB | 50.383 KiB |
+| `RiVeR-N128` | 29.224 KiB | 28.952 KiB | 13.886 KiB | 13.5 KiB | 43.117 KiB |
+| `RiVeR-N256` | 36.315 KiB | 36.041 KiB | 13.888 KiB | 13.5 KiB | 50.211 KiB |
 
 Those are single measurements, and Rice makes length data-dependent, so the
 last digit moves between proofs — the comparison is good to about 0.1%, not to
@@ -289,47 +218,19 @@ not the opening test backend that transmits its witness:
 
     make -C ../river-rs bench      # backend `lanes-experimental`
 
-measures `|pi_ex|` at **13.88 KiB** against the stated 13.5, a 2.9% excess
-that is the recovery hint (2048 bits) and the transmitted challenge — for
-neither of which the paper's figure has any accounting.
+measures `|pi_ex|` at **13.88 KiB** against the paper's 13.5 KiB
+entropy-based estimate. The concrete encoder also carries the recovery hint
+and transmitted challenge; the side-by-side values distinguish encoded bytes
+from the entropy estimate.
 
 **Proof length varies between proofs.**  Entropy coding makes it depend on
 the sample; `Layout.max_bytes` is the worst case.
 
-Length is *as* witness-independent as the accepted responses themselves, and
-no more.  Rejection sampling targets witness-independent distributions for the
-released `f_1`, `z_b`, `z_s` and `z_m`, which are the only variable-length
-fields.  The current proof mirrors the later public `6 sigma` checks in its
-simulator and treats them as deterministic post-processing, so their Gaussian
-tail is not a separate distinguishing loss.  What remains open is the
-proof's fixed `2^-100` rejection-sampling loss and how it composes with the
-asymptotic and concrete query budgets.  The response split gives the two blocks their
-own Rice parameters — `sigma_m / sigma_s` runs from 3.9 to 5.7 across the
-published profiles, so a single parameter would have cost about a bit per
-coefficient on whichever block it did not fit.  The honest statement is that
-length leaks no more than the accepted proof bytes already do, not that it
-leaks nothing.  Measured spread is 7 bytes in 8580, identical across signers;
-padding to `max_bytes` would close the channel at the cost of the entire coding
-gain.
-
-Wall clock on one core of a modern x86-64 box, CPython 3.14:
-
-| profile | eval / attempt | verify |
-|---|---|---|
-| `RiVeR-TOY` | 0.08 s | 0.03 s |
-| `RiVeR-N8` | 0.67 s | 0.12 s |
-| `RiVeR-N16` | 0.75 s | 0.15 s |
-| `RiVeR-N64` | 1.13 s | 0.29 s |
-| `RiVeR-N128` | 1.65 s | 0.50 s |
-| `RiVeR-N256` | 2.40 s | 0.83 s |
-
-Total `Eval` time is that times the attempt count, which averages about
-`mu-tilde_RiVeR` — 8.3 to 8.6 for the published profiles, against 5.4 to 5.6
-before the paper.  The increase is the fourth rejection sampler: the
-response split turns one `Rej_1` call into two, and `mu_m` is a genuinely new
-factor.  The paper's design target moved from `< 3` to `<= 10` to accommodate
-it.  A full `RiVeR-N256` evaluation is therefore about 20 s here, which is
-what `river-rs` exists to fix.
+The response blocks have separate Rice parameters because
+`sigma_m / sigma_s` runs from 3.9 to 5.7 across the published profiles.
+Encoded length is data-dependent and this artifact does not claim a
+length-hiding wire format; applications that require fixed-length messages can
+pad to `Layout.max_bytes`.
 
 The one performance trick in the code is Kronecker substitution for
 polynomial multiplication (`ring.py::mul`): pack both operands into single
@@ -339,8 +240,8 @@ multiply once with Python's bignum, unpack and fold `X^d = -1`.  It is about
 
 ## The numeric manifest
 
-Every value two implementations must agree on *exactly*, and that the paper
-does not state, is collected in `manifest.py` and pinned by
+Every implementation-level value the two implementations must agree on
+*exactly* is collected in `manifest.py` and pinned by
 `test_manifest.py`: the rational each Gaussian width is pinned to, the Rice
 parameter per field, the largest coefficient that can pass each bound, and
 the fixed field widths.  `make manifest` prints it; `python3 manifest.py
@@ -350,51 +251,44 @@ The point is *which failure you get first*.  Without it, a changed sampler
 width or a one-off Rice parameter surfaces as "proof bytes differ at byte 4"
 in a cross-language vector, which names neither the field nor the cause.
 
-It is meant to be readable standalone, as the handoff artifact `R1` starts
-from, so it carries its own provenance (paper revision and SHA-256), both
-wire layouts walked field by field in wire order, the exact layer's
-dimensions including which rank plays which structural role, and the
-framing overhead.  A port that reproduces the manifest has nothing left to
-infer from prose.
+It is readable standalone: both wire layouts are listed field by field in
+wire order, along with the exact-layer dimensions, structural rank roles, and
+framing overhead. A port that reproduces the manifest has nothing left to
+infer about the wire format from prose.
 
-Four things it made explicit that were previously implicit:
+The manifest makes the following choices explicit:
 
 * `rational_sigma` does not represent sigma "exactly" — no rational does,
   since the widths are irrational.  It pins `round(sigma * 2^20) / 2^20`,
   and the `2^20` is part of the wire format.  The `round` removes only the
   *final* float error, so a port must compute the input in the same
   operation order.
-* The Rice constant `sqrt(2 ln 2)` was a 4-digit rational, `11774/10000`.
-  It is now 30 digits, and a test measures how far each field sits from the
-  power-of-two boundary where `k` would move — at least 1% at every field of
-  every profile, so the old constant was in fact safe here, and now that is
-  checked rather than assumed.
+* The Rice calculation uses a 30-digit value of `sqrt(2 ln 2)`. A test
+  measures how far each field sits from the power-of-two boundary where `k`
+  would move — at least 1% at every field of every profile.
 * Every verifier bound has the shape `K sqrt(M)`, so the acceptance tests
   are decided by squaring — exact rationals, no `sqrt`, no float on the
   accept/reject path.  The codec's field caps are `floor(sqrt(bound_sq))`,
   which is exactly the largest coefficient that can pass, so the encoder and
   the verifier cannot disagree about the boundary.
 * Which of `n~` and `l~` is the identity rank and which is the shared tail.
-  They are both 4, so no
-  dimension check can tell them apart — and the `lanes_*` modules were
-  internally inconsistent about it. The manifest states the roles, and
-  `test_exact.py` checks them against `ExactParams` even while the LANES
-  backend is gated.
+  They are both 4, so a numeric dimension check alone cannot distinguish the
+  roles; `test_exact.py` checks them against `ExactParams` explicitly.
 
 ## Test vectors
 
-`vectors.json` holds two pinned executions — the toy profile and `RiVeR-N8`,
-each under the `opening` backend — with hex for every object plus intermediate
-values (`j*`, the ring, the challenge, response norms, `W`).  Fixed seeds:
+`vectors.json` holds four pinned executions — the toy profile and `RiVeR-N8`,
+each under both `opening` and `lanes-experimental` — with hex for every object
+plus intermediate values (`j*`, the ring, the challenge, response norms,
+`W`). Fixed seeds:
 setup `00 01 .. 1f`, key `i` uses `bytes([i ^ 0x40]) + 00*31`, evaluation
-`aa..aa`.  Schema 2, stamped with the paper revision and its SHA-256, so an
-artifact produced before the migration cannot be mistaken for one produced
-after it.
+`aa..aa`. The top-level metadata identifies `river-py` as the generator; the
+profile and backend are recorded in each case.
 
-The two `lanes` cases are **withheld**, not dropped: `vectors.WITHHELD_CASES`
-lists them, so the gap is visible in the artifact rather than only in a commit
-message.  Pinning a retuned guess as a normative vector would give a second
-implementation a target that is not the paper's.
+The two production-alias `lanes` cases are **withheld**, not dropped:
+`vectors.WITHHELD_CASES` lists them. They use the same code as
+`lanes-experimental` but remain withheld while the production alias is
+reserved.
 
 ```bash
 python vectors.py --out vectors.json      # regenerate
@@ -405,53 +299,22 @@ python vectors.py --verify vectors.json   # re-derive and compare
 diffs every field, reporting the first differing byte of the proof.  A second
 implementation reproduces this file byte-for-byte or it is not compatible.
 
-## Where the paper is open
+## Specification and artifact scope
 
-Every implementation-facing ambiguity is resolved behind a named helper, so
-a clarification changes one boundary rather than the scheme, and each
-resolution is labelled **Repair** where it is not derivable from the paper.
+The paper fixes the algorithms, profiles, exact-layer dimensions, LANES
+widths, response bounds, and entropy-based size model. The executable wire
+format additionally needs exact rational approximations to irrational widths,
+sampler tail cuts, coefficient coders, framing, transcript byte order, and a
+concrete LANES compression/recovery procedure. These choices are collected in
+the manifests and labelled **Paper**, **Derived**, or **Repair** according to
+their source.
 
-**Open questions, asked back to the paper.**
-
-* The centred range shift is absent from the algorithms even though the
-  selected `q~` depends on it.  The relation is stated over canonical
-  errors in `[0, 60]` while `BoundGen` bounds them with `B_e = 30`; taking
-  the paper literally almost exactly doubles every bound.  This
-  implementation carries the translation explicitly in
-  `ring.to_centered_error`.
-* The challenge-invertibility assumption is stated unqualified while the
-  concrete parameters give `1 - 2^-91.5`, below the 128-bit target.
-  `test_review.py` reproduces the exact figures, `2155/131072` per paired
-  coordinate and `p_nonunit ~ 2^-93.82`.
-* The embedded-key assumption preamble uses a `beta = 1` bound while the
-  concrete section samples `U_{B_e}`.
-* `|pi_ex| = 13.5 KB` is stated with no field-by-field derivation, so it
-  cannot be reproduced; a measured proof is 13.88 KB.
-* Statistical accounting is asymptotic: `eps_1 <= 2^-100` per `Rej_1` call
-  at `tau_rej = 12`, about 25 calls per returned proof, and neither a
-  concrete statistical target nor a proof budget is stated.
-
-**Two places the paper states something twice**, both pinned by tests
-rather than normalised away:
-
-* `(tau_g0, tau_g1)` is printed to two decimals, with a table note saying
-  why: rounded to one decimal the same values reproduce only 8 of the 10
-  `(B_g0, B_g1)` entries in the same table — `N = 256` fails both.  The
-  printed pairs are used, labelled **Paper**, and a test pins that the
-  coarser figures would not reproduce the table.
-* `BoundGen` returns its bounds in one order and the three OOM algorithms
-  parse another, with `phi_s` and `phi_b` swapped and nothing else.
-  `phi_s` is 22 to 32 and `phi_b` is 2, so a positional implementation
-  would sample and test both responses at each other's widths.  Neither
-  implementation is positional — every value is a named field — which is
-  why this is pinned by a test rather than left to a comment.
-
-**Gated.**  The production `lanes` backend name; see "The exact layer".
-
-Every constant in `params.py` carries one of three provenance labels —
-**Paper**, **Derived**, **Repair** — and a Derived or Repair value is never
-described as though the paper printed it.  `test_params.py` pins the
-distinction.
+The tests establish internal arithmetic consistency, cross-language byte
+interoperability, rejection boundaries, and honest-path/negative-case
+behaviour. They do not constitute a proof of the paper's security theorems or
+a reduction for the artifact's concrete LANES recovery composition. The
+production alias remains reserved for that reason; the fully tested candidate
+is explicitly named `lanes-experimental`.
 
 ## References
 

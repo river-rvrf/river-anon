@@ -58,7 +58,7 @@ Fiat-Shamir commitment-recovery trade: an adversary who moves any of the three
 moves the transcript, hence `c'`.
 
 `c` costs `d~` ternary coefficients, 256 bits, against the 33,408 the three
-elements cost.  The two further bandwidth optimisations in the revision's
+elements cost. The two further bandwidth optimisations in the paper's
 size model are also applied:
 
   * `t_0` is sent as its coefficient-domain high part after dropping
@@ -75,21 +75,15 @@ and then applies one fixed ternary bucket carry per coefficient.  The carry
 is 2,048 bits (`n~ = 4` rows of `d~ = 256` at 2 bits); its derivation and
 exact perturbation bound are in `lanes_params.py`.
 
-At the paper's own dimensions and widths, a measured proof is about
-13.9 KB against its stated 13.5 KB.  `lanes_backend.model_bits` puts a
-closed form beside it at about 13.4 KB, and the gap has three named parts,
-each pinned by
+At the paper's dimensions and widths, a measured proof is about 13.9 KB
+beside its 13.5 KB entropy estimate. `lanes_backend.model_bits` evaluates a
+field-level entropy model at about 13.4 KB, and the concrete encoding overhead
+has three named parts, each pinned by
 `test_lanes.py::test_measured_proof_size_is_reported_field_by_field`: the
 closed form omits the recovery hint (2,048 bits) and the challenge (512),
 codes `z` at its entropy where the serializer uses Rice, and charges
 `log2 q~ - D = 9` bits for a `t0` high part that `power2round` leaves in
 `[0, 513)` and the serializer therefore writes in 10 (1,024 bits).
-
-That closed form is **not** the current manuscript's -- it survives only in
-an unincorporated `draft.tex`, and the active sources state the exact
-proof's size as "13.5 KB" and nothing else.  Neither number here is
-comparable to that 13.5 KB: the widths are this repository's, and the paper
-publishes no field list to compare against.
 
 Although the displayed perturbation contains `r_identity`, substituting
 `t_0 = r_identity + B_0' r_tail` cancels it:
@@ -101,13 +95,13 @@ block.  It does reveal a deterministic carry depending on the tail opening and
 the public compressed commitment; accounting for that leakage is precisely
 the fixed-hint composition obligation left open below.
 
-This carry format is an implementation-derived completion of an underspecified
-part of the revision.  [ENS20] gives response compression with a rejection
-condition and defers commitment-compression hints to Dilithium; the RiVeR
-revision combines the resulting size model with rejection-free [KLSS23]
-masking without specifying their composition.  Byte interoperability and
-algebraic correctness are tested here; a security reduction for this exact
-fixed-hint composition is not supplied by the paper or this repository.
+This carry format is an implementation-derived completion of the black-box
+exact layer. [ENS20] gives response compression with a rejection condition
+and defers commitment-compression hints to Dilithium. This artifact combines
+the compression model with rejection-free [KLSS23] masking in one concrete
+wire format. Byte interoperability and algebraic correctness are tested here;
+the artifact does not supply a security reduction for this exact fixed-hint
+composition.
 No arbitrary hint-weight cap is imposed: unlike Dilithium's sparse hint
 format, this wire format is dense, LANES has no retry at this point, and the
 paper supplies neither a cap nor a completeness/security argument for one.
@@ -390,8 +384,8 @@ def response_within_bounds(z):
     it before hashing anything.  A single definition is what keeps an honest
     proof from being rejected by its own verifier.
 
-    * per-coefficient: `|z_i| <= Z_INF_BOUND` (a Repair -- the paper states
-      no infinity bound for LANES);
+    * per-coefficient: `|z_i| <= Z_INF_BOUND`, an artifact-derived decoder
+      and verifier cap;
     * Euclidean: `||z||_2^2 < Z_NORM2_BOUND`, the paper's `2 s sqrt(N_z)`
       rule at the transmitted rank.
 

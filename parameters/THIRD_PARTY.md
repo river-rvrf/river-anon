@@ -2,8 +2,8 @@
 
 This artifact bundles a local copy of `malb/lattice-estimator` under
 `external/lattice-estimator/` and a local copy of the selector A-MSIS estimator
-helpers under `external/msis-security/`.  They are included so the reviewer can
-rerun the parameter checks without fetching code from the network.
+helpers under `external/msis-security/`.  They are included so the parameter
+checks can be rerun without fetching code from the network.
 
 The bundled `lattice-estimator` files `README.rst`, `requirements.txt`, and
 `estimator/` match the upstream tree
@@ -22,10 +22,15 @@ artifact and is not part of upstream lattice-estimator.
 
 ## Selector A-MSIS helper provenance
 
-The three files under `external/msis-security/` are required by the selector
-A-MSIS rerun, but this package does not currently contain their upstream URL,
-commit identifier, copyright notice, or license. Their numerical inclusion is
-therefore reproducible, but their provenance and redistribution permission are
-not established by this artifact. Those details must be supplied before a
-public artifact release; they must not be inferred from the unrelated
-`lattice-estimator` license above.
+The three Python files under `external/msis-security/` are based on the
+`asymmetric_sis_estimate/` scripts from
+`https://gitlab.com/raykzhao/matrict_plus` at commit
+`b24f3176d2db15ca55d91c8c9cbe1cef201c5d2d`. The upstream project uses the
+BSD-0-Clause license; its license text is included as
+`external/msis-security/LICENSE-BSD-0-Clause.txt`.
+
+`external/msis-security/UPSTREAM.txt` records file hashes and distinguishes the
+one byte-identical file from the two artifact-local derived copies. The latter
+contain compatibility and runtime adaptations. The artifact driver fixes its
+search steps explicitly and cross-checks the accelerated cost evaluator against
+the bundled reference calculation at sampled points.

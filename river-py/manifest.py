@@ -2,10 +2,10 @@
 manifest.py -- The wire-visible numeric choices, frozen per profile.
 
 Everything here is a value two implementations must agree on *exactly* or
-they produce different bytes, and none of it is stated by the paper.  It is
-collected in one place, as data, so that porting `river-rs` is a matter of
-reproducing a table rather than re-deriving a chain of float expressions in
-the same order.
+they produce different bytes.  It includes both parameters derived from the
+paper and implementation-level encoding choices.  They are collected in one
+place, as data, so that porting `river-rs` is a matter of reproducing a table
+rather than re-deriving a chain of float expressions in the same order.
 
 What is in it, and why each one is a hazard:
 
@@ -221,8 +221,7 @@ if __name__ == "__main__":
         print(canonical_json(blob), end="")
         raise SystemExit(0)
 
-    print(f"paper revision {blob['paper_revision']}, "
-          f"vector schema {blob['vector_schema']}")
+    print(f"wire manifest: {len(blob['profiles'])} profiles")
     print("global: " + ", ".join(f"{k}={v}"
                                  for k, v in blob["global"].items()
                                  if k.startswith(("sigma", "prob", "gauss"))))

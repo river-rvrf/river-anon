@@ -27,18 +27,10 @@ from river import RiVeR
 
 #: Cases covered by the shipped vectors, as `(profile, exact backend)`.
 #:
-#: The production `"lanes"` name is **withheld**, and the reason changed at
-#: the paper.
-#:
-#: The parameters are not the obstacle: `lanes_params` derives every
-#: published figure from the paper's closed
-#: form, and both implementations run the proof end to end.
-#:
-#: What withholds `"lanes"` now is that the production name is gated on
-#: security *evidence*: `delta_MLWE = 1.0020` is not reproducible under
-#: either reading of the paper's Gaussian convention, and [KLSS23]'s
-#: reduction loses about `2^-94.9`.  A vector recorded under a name whose
-#: backend refuses to construct would be unverifiable by construction.
+#: The production `"lanes"` name is withheld because the artifact exposes
+#: its implementation-defined compression/recovery completion under the
+#: explicit `"lanes-experimental"` name.  A vector recorded under a backend
+#: name that refuses to construct would be unverifiable by construction.
 #:
 #: `"lanes-experimental"` *is* shipped, and is a real cross-language
 #: contract: `river-rs` re-derives both cases byte for byte.  That is what
@@ -50,9 +42,8 @@ CASE_PROFILES = (("RiVeR-TOY", "opening"),
                  ("RiVeR-TOY", "lanes-experimental"),
                  ("RiVeR-N8", "lanes-experimental"))
 
-#: Cases that return once the LANES security evidence does.  Listed rather
-#: than deleted so the gap is visible in the artifact instead of only in a
-#: commit.
+#: Production-alias cases, listed explicitly so coverage accounting cannot
+#: silently confuse them with the experimental backend cases.
 WITHHELD_CASES = (("RiVeR-TOY", "lanes"),
                   ("RiVeR-N8", "lanes"))
 

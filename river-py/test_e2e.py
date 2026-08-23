@@ -349,14 +349,7 @@ def test_vectors_regenerate_identically():
 
 
 def _blob_with(blob, cases):
-    """The shipped file's metadata, with `cases` swapped in.
-
-    Carrying *all* the metadata matters: the corruption test used to build
-    `{schema_version, cases}` only, so `verify_vectors` returned early on
-    the missing `paper_revision` and never looked at the corrupted proof at
-    all.  It passed for the wrong reason, and would have kept passing if
-    the proof check had been deleted.
-    """
+    """Return the shipped file metadata with `cases` replaced."""
     out = {k: v for k, v in blob.items() if k != "cases"}
     out["cases"] = cases
     return out
@@ -376,7 +369,6 @@ def test_vector_verification_catches_corruption():
     # It must fail on the *proof*, not on metadata it never got past.
     joined = " ".join(errors)
     assert "proof bytes differ" in joined, errors
-    assert "paper_revision" not in joined and "schema_version" not in joined
 
     # The control: the same blob, uncorrupted, verifies.
     ok_ctrl, _ = vectors.verify_vectors(_blob_with(blob, blob["cases"]))
@@ -409,17 +401,11 @@ def test_vector_metadata_gate_rejects_a_substituted_file():
 def test_withheld_cases_are_accounted_for():
     """The coverage claim is enforced, not narrated.
 
-    The READMEs say the vector accounting cannot shrink in silence.  That
-    was true of the *shipped* set -- `REQUIRED_CASES` is checked -- but the
-    withheld `lanes` cases were only a comment, so one quietly reappearing
-    or the gate quietly lifting would have gone unnoticed.
+    Both the shipped and deliberately withheld sets are pinned independently
+    so coverage cannot shrink in silence.
     """
     # The four tuples are frozen *here*, independently of `vectors.py`.
-    # Deriving them from `CASE_PROFILES` -- which is what this test used to
-    # do -- makes every assertion below vacuous: delete both `RiVeR-N8`
-    # entries, shipped and withheld together, and a self-referential check
-    # still passes while coverage has silently halved.  Reproduced before
-    # fixing.
+    # Deriving them from `CASE_PROFILES` would make the check self-referential.
     PROFILES_COVERED = ("RiVeR-TOY", "RiVeR-N8")
     EXPECTED_SHIPPED = {(p, b) for p in PROFILES_COVERED
                         for b in ("opening", "lanes-experimental")}
@@ -454,9 +440,13 @@ def test_withheld_cases_are_accounted_for():
     assert present == EXPECTED_SHIPPED
 
 
-def test_vector_schema_version_is_checked():
-    ok, errors = vectors.verify_vectors({"schema_version": 999, "cases": []})
-    assert not ok and errors
+def test_unknown_metadata_does_not_bypass_file_checks():
+    ok, errors = vectors.verify_vectors({
+        "generator": vectors.GENERATOR,
+        "schema_version": 999,
+        "cases": [],
+    })
+    assert not ok and any("cases" in err for err in errors)
 
 
 # --------------------------------------------------------------------------

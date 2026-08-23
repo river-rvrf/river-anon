@@ -98,9 +98,9 @@ def test_hash_message_shape_and_determinism():
 
 # ---- ring admissibility --------------------------------------------------
 #
-# `CanonPad` is gone.  A ring is an ordered tuple of exactly `N` distinct,
-# structurally valid public keys, and both `Eval` and `Verify` enforce that
-# so the two hash the same admissible domain.  See `RiVeR.validate_ring`.
+# A ring is an ordered tuple of exactly `N` structurally valid public keys.
+# Duplicates are admissible, and both `Eval` and `Verify` enforce the same
+# domain.  See `RiVeR.validate_ring`.
 
 def test_ring_must_be_exactly_N_keys():
     scheme, pp, keys = _scheme(n_keys=PAR.N + 1)
@@ -146,13 +146,7 @@ def test_ring_order_changes_the_proof_but_not_the_value():
 
 
 def test_ring_admits_duplicates():
-    """the paper: "we ... do not require its entries to be distinct".
-
-    This tree rejected duplicates in the paper, which said `Eval`
-    used "the unique index" while the preliminaries admitted any tuple.  The
-    revision resolves it the other way, so the rejection is gone -- and a
-    duplicated ring must now prove and verify end to end, not merely parse.
-    """
+    """A duplicated ring is admissible and proves end to end."""
     scheme, pp, keys = _scheme()
     ring = [pk for _, pk in keys]
     ring[2] = ring[0]
@@ -170,7 +164,7 @@ def test_a_duplicated_evaluator_key_uses_the_first_occurrence():
     the OOM layer hides -- so this pins `ring_index` directly, and pins that
     the proof is the *same* one an unduplicated ring at position 0 gives.
     Both rings put the evaluator's key at index 0; the second merely repeats
-    it later, and the paper says a repeat is not a distinct identity.
+    it later, which does not create another identity.
     """
     scheme, pp, keys = _scheme()
     ring = [pk for _, pk in keys]
@@ -186,11 +180,9 @@ def test_a_duplicated_evaluator_key_uses_the_first_occurrence():
 def test_a_duplicated_key_shrinks_the_anonymity_set():
     """The cost of admitting duplicates, stated as a test rather than prose.
 
-    The paper says repeated occurrences "do not represent distinct key
-    identities".  A ring of `N` positions carrying `k` copies of one key
-    therefore hides its evaluator among `N - k + 1` identities, not `N`.
-    Nothing rejects this -- the paper defines it as admissible -- but a
-    caller building a ring should know the number it is getting.
+    A ring of `N` positions carrying `k` copies of one key contains
+    `N - k + 1` identities, not `N`.  A caller constructing a ring should
+    distinguish the number of positions from the number of identities.
     """
     scheme, pp, keys = _scheme()
     ring = [pk for _, pk in keys]

@@ -1118,7 +1118,7 @@ def main():
     # parameter set neither implementation accepted as current -- a red
     # test that says nothing.
     #
-    # The revision publishes the whole Hint-MLWE chain in closed form, both
+    # The paper publishes the whole Hint-MLWE chain in closed form, both
     # implementations derive the same widths from it, and both run the
     # proof layer end to end and produce byte-identical proofs.  So these
     # blocks now do what a KAT is for: bisect the two `lanes-experimental`

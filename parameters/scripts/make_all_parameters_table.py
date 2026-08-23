@@ -295,7 +295,9 @@ def build_rows() -> list[dict[str, Any]]:
 def write_tsv(rows: list[dict[str, Any]]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with TSV_PATH.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=COLUMNS, delimiter="\t")
+        writer = csv.DictWriter(
+            handle, fieldnames=COLUMNS, delimiter="\t", lineterminator="\n"
+        )
         writer.writeheader()
         for row in rows:
             writer.writerow({key: fmt(row.get(key)) for key in COLUMNS})
@@ -333,7 +335,7 @@ def write_markdown(rows: list[dict[str, Any]]) -> None:
     lines = [
         "# RiVeR OOM Complete Parameter Table",
         "",
-        "This report flattens the verified JSON outputs into reviewer-readable tables.",
+        "This report flattens the verified JSON outputs into human-readable tables.",
         "The corresponding machine-readable table is `data/final_oom_all_parameters.tsv`.",
         "Long selector vectors are kept in the TSV as `|`-separated entries.",
         "",

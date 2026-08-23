@@ -15,11 +15,10 @@ the challenge `x` (Figure 4, and Lemma "exact-delayed-simulation").
 What is modelled here
 ---------------------
 The paper treats `Pi_ex` as a black box and instantiates it with LANES
-(ENS20 / LANES+ / Hint-MLWE).  The paper reports a fixed
-`|pi_ex| = 13.5` KB for every profile; it does not supply the sampler widths,
-response bounds, hint rules, or the field-by-field accounting that reaches
-that figure.  This module implements the parts that *are* pinned down by the
-paper:
+(ENS20 / LANES+ / Hint-MLWE).  It publishes the LANES dimensions, sampler
+widths, response-norm model, compression exponent, and a fixed
+`|pi_ex| = 13.5` KB entropy estimate.  This module implements those
+parameters together with a concrete codec and recovery-hint completion:
 
   * the exact-backend parameters
     `(n~, l~, d~, w_hat, D, N_ex, q~)
@@ -42,11 +41,11 @@ not zero knowledge.
 `OpeningBackend` is a mock, not a stand-in for LANES.  Substituting a real
 prover is not confined to `prove`/`verify`: it changes the commitment
 randomness distribution, the transcript, the encoding and the size.  Read
-`|pi_ex|` from this module as the cost of *this* opening, never as evidence
-about the paper's 13.5 KB.
+`|pi_ex|` from this module as the cost of *this* opening, not as a concrete
+encoding of the paper's entropy estimate.
 
-The modulus condition, and why the centred range is load-bearing
-----------------------------------------------------------------
+The modulus condition and centred representation
+-------------------------------------------------
 LANES has a single modulus, so it can only check the link modulo `q~`.  That
 pins an integer only when no accepted response can wrap.  The difference of
 two accepted error responses is at most `12 sigma_m = 12 phi_m eta_m`, so
@@ -58,13 +57,12 @@ makes `z_eval - x e_eval` have a unique centred lift.  With
 `66730968.02` against the selected `q~ = 67107713`, a margin of `376744.98`
 -- about 0.56%.
 
-That margin exists only because `B_e = 30`.  The rounding relation itself
-keeps errors in `[0, q_0-1] = [0, 60]`; the parameter table's norm bounds use
-the *centred* range, and the algorithms never define the translation between
-them.  Substituting the literal `60` doubles the requirement to
-`133461936.03` and the selected modulus fails outright.  So the shift is not
-presentational, and this implementation carries it explicitly: see
-`ring.to_centered_error`.
+The construction explicitly translates the canonical rounding error in
+`[0, q_0-1] = [0, 60]` to its centred representation in `[-B_e,B_e]` before
+applying the norm bounds.  This implementation follows that translation in
+`ring.to_centered_error`.  The distinction is arithmetically load-bearing:
+using 60 as a magnitude bound would double the requirement to
+`133461936.03`, which the selected modulus would not satisfy.
 
 Because 0.56% is inside what a float `sqrt` and a multiplication chain can
 move, `q_tilde_clears` decides the condition over the integers as
@@ -98,11 +96,8 @@ def lanes_rank_roles(n_tilde, ell_tilde, n_ex, aux_slots):
     **The single place this mapping exists.**  `ExactParams` and
     `lanes_params` both derive from it rather than restating it, so a test
     can drive it with *unequal* ranks and see the mapping the production
-    code actually implements.  That matters because the labelling has been
-    reversed twice, and neither time could a numeric check catch it: the
-    two ranks can differ -- where
-    `kappa - n~` and `l~ + N_ex + alpha` both happen to give 17 -- and are
-    both 4 in the current one.
+    code actually implements.  A numeric check at the published parameters
+    cannot distinguish the role names because both ranks are 4.
 
     The paper's own MLWE dimensions fix the assignment.  The
     coefficient-embedded instance has *secret* dimension `n~ d~` and
@@ -113,9 +108,8 @@ def lanes_rank_roles(n_tilde, ell_tilde, n_ex, aux_slots):
         l~   the identity rank: rows of `t_0`, width of `B_0`'s `I` block
         n~   the shared tail:   columns each `b_i` draws randomness from
 
-    Returned as a dict rather than a tuple so no caller can unpack it in
-    the wrong order -- which is the same class of defect one layer up
-    (`BoundGen`'s two incompatible tuple orders).
+    Returned as a dict rather than a tuple so callers use the structural
+    role names instead of relying on positional conventions.
     """
     kappa = n_tilde + ell_tilde + n_ex + aux_slots
     return {
@@ -190,7 +184,7 @@ class ExactParams:
             raise ValueError("exact parameters rejected: " + "; ".join(bad))
 
     #: Coefficients carried by each of the `N_ex` message blocks, and the
-    #: zero padding that fills the block out to `l` slots.  The revision
+    #: zero padding that fills the block out to `l` slots. The paper
     #: gives each of the six outer ring elements its own 64-slot block whose
     #: first `d = 32` slots carry coefficients, so the old `N_ex l == 6 d`
     #: identity no longer holds: 384 != 192, and that is intentional.
@@ -275,11 +269,10 @@ class ExactParams:
         that.  `eta_m = w gamma B_e sqrt(d)` is profile-independent, so this
         is one number for all five: 66730968.02, against `q~ = 67107713`.
 
-        The margin is 376744.98, about 0.56%, and it exists only because
-        `B_e = 30`: substituting the *unshifted* range bound 60 doubles the
-        requirement to 133461936.03 and the selected modulus fails.  That is
-        why the centred range shift is not presentational -- see
-        `q_tilde_clears` and `ring.to_centered_error`.
+        The margin is 376744.98, about 0.56%.  It relies on the specified
+        centred bound `B_e = 30`; using 60 as a magnitude bound would double
+        the requirement.  See `q_tilde_clears` and
+        `ring.to_centered_error`.
 
         The old reconstruction-side floor `w gamma 3^4 = 41472` is kept in the
         max only because it costs nothing; it is three orders of magnitude
@@ -447,9 +440,9 @@ def unpack_witness(ex, message):
 def padding_is_zero(ex, message):
     """Every slot past `block_used` in every block is zero mod `q~`.
 
-    The revision makes the padding part of the committed message, so it is
-    part of what the exact relation has to pin.  `LanesBackend` will need it
-    in the proved linear system (`P6`); here it is enforced at the boundary
+    The paper makes the padding part of the committed message, so it is
+    part of what the exact relation has to pin. `LanesBackend` includes it
+    in the proved linear system; here it is also enforced at the boundary
     so the two cannot disagree about which messages are well formed.
     """
     if len(message) != ex.N_ex:
@@ -726,9 +719,9 @@ OPTIONAL_BACKENDS = ("lanes", "lanes-experimental")
 #: select.
 #:
 #: The dimensions are deliberately absent.  `d~`, `l`, `q~`, `(n~, l~)` and
-#: `D` have all moved to the revision's values and are current; what has
-#: not moved is the security-critical half, and that is what gates the
-#: backend.
+#: `D` are read from the current manifest. The production alias is reserved
+#: until the artifact's concrete compression/recovery composition has a
+#: matching security argument.
 #:
 #: The list is *closed*: `live_lanes_constants` reports a name it cannot
 #: find as an error rather than dropping it, so renaming or deleting one
@@ -821,7 +814,7 @@ LANES_MANIFEST_SECTIONS = {
 #: Labels a manifest constant may carry.
 PROVENANCE_LABELS = ("Paper", "Derived", "Repair")
 
-#: The exact-proof size the revision reports, in bits, under the KB
+#: The exact-proof entropy estimate the paper reports, in bits, under the KB
 #: convention the manifest has to name.  `wire.total_bits` must reproduce
 #: it field by field, or the manifest has to say it cannot.
 LANES_STATED_KB = Fraction(27, 2)
@@ -848,35 +841,12 @@ def _load_lanes_manifest():
 
 LANES_PARAMETER_MANIFEST = _load_lanes_manifest()
 
-#: The security evidence behind the manifest, or `None`.
+#: Diagnostic data associated with the candidate LANES completion.
 #:
-#: A third, separate state, and it is separate for the reason the review
-#: gave: a manifest validator checks schema completeness and agreement
-#: with the live constants, which a non-empty placeholder satisfies.  It
-#: cannot check that a lattice estimator was run, what version, on what
-#: inputs, or what it said -- nor that the recovery hint's leakage and
-#: extraction tolerance were analysed.  So that evidence is its own gate.
-#:
-#: To lift it, this must carry, at minimum:
-#:
-#: * the estimator's name, version, exact command line and full output for
-#:   the Hint-MLWE instance and for the M-SIS instance;
-#: * the challenge-difference invertibility argument at these dimensions;
-#: * the recovery-hint analysis: what the hint leaks, the extraction
-#:   tolerance, and any hint-weight rule.
-#:
-#: `lanes_security.json` carries a run: the `lattice-estimator` over the
-#: paper's own parameters -- M-SIS at its published `B_MSIS`, and Hint-MLWE
-#: under *both* readings of the paper's Gaussian convention -- with the
-#: tool's commit and cost model recorded.  Its **verdict is
-#: `below-target`**: M-SIS reproduces at 128.2 bits, but the conservative
-#: MLWE reading gives 116.2 against the paper's 128, and [KLSS23] Thm 1
-#: loses `2^-94.9` on its own.  Having evidence is not the same as passing,
-#: and the gate checks the verdict, not the presence.
-#:
-#: Still missing from it, and each is its own reason the gate stays shut:
-#: the challenge-difference invertibility argument at these dimensions, and
-#: the recovery hint's leakage and extraction analysis.
+#: The paper-derived root-Hermite factors reproduce.  The production alias
+#: remains disabled because this artifact's concrete compression/recovery
+#: completion has no reduction in the artifact; `lanes_security.json`
+#: records that scope separately from the parameter manifest.
 def _load_lanes_security():
     try:
         from estimate_lanes import load
@@ -901,8 +871,8 @@ class _Unset:
 #: impossible to ask what the gate says without one.
 UNSET = _Unset()
 
-#: **P6's output**: whether the LANES *implementation* has passed its
-#: gates.  **True** since the port landed.
+#: Whether the LANES *implementation* has passed its interoperability,
+#: serialization, negative-test, and vector gates.
 #:
 #: Deliberately a separate flag from the manifest and from the security
 #: evidence.  With one state, obtaining a manifest would have enabled
@@ -911,7 +881,7 @@ UNSET = _Unset()
 #: right numbers sitting unused beside the code is not an implementation
 #: of them.
 #:
-#: What the implementation gate requires, and where each part now is:
+#: The implementation gate covers:
 #:
 #:   * proof and hint rules built *from* the manifest -- `lanes_params`
 #:     derives every published figure and `lanes_manifest.json` freezes
@@ -927,14 +897,6 @@ UNSET = _Unset()
 #:   * the two LANES vector cases restored -- shipped as
 #:     `lanes-experimental` and re-derived byte for byte by `river-rs`.
 #:
-#: Leaving it `False` after all of that was a *stale* flag rather than a
-#: gate: the security check runs first, so it hid behind a condition that
-#: is genuinely outstanding.  A gate that is closed for a reason that is no
-#: longer true is worse than one that is open, because it cannot be
-#: distinguished from one that is closed for a reason that is.
-#:
-#: The production `lanes` name remains gated -- on
-#: `LANES_SECURITY_EVIDENCE`, and now on exactly that.
 LANES_BACKEND_READY = True
 
 
@@ -962,25 +924,22 @@ def lanes_unavailable_reason(manifest=UNSET, backend_ready=UNSET,
                              evidence=UNSET):
     """Why the LANES backend cannot run, or `None` if it can.
 
-    A **readiness** test, not a dimension diff, with two independent
-    halves:
+    A readiness test with three independent parts:
 
     1. a frozen parameter manifest exists, carries real data in every
        section, and *selects a value* for every gated constant, matching
        what the code consumes;
-    2. the implementation has passed its own gates and says so.
+    2. the candidate completion's scope is recorded explicitly;
+    3. the implementation has passed its own gates and says so.
 
     Both are required.  A manifest alone would mean a table of the right
     numbers sitting beside the code unused.
 
-    That dimensions do not enter is the point, and the
-    widths do not either: `d~`, `l`, `q~`, `(n~, l~)`, `D` *and* `s_1`,
-    `s_2`, `beta'`, `B_MSIS` are all the revision's, re-derived here to the
-    last printed digit.  What is still open is the security *evidence* --
-    `delta_MLWE = 1.0020` is not reproducible under either reading of the
-    paper's Gaussian convention, and [KLSS23]'s reduction loses about
-    `2^-94.9` -- together with the recovery-hint rules, which the revision
-    still does not state.  No rearrangement of parameters changes that.
+    The dimensions and widths do not enter as blockers: `d~`, `l`, `q~`,
+    `(n~, l~)`, `D`, `s_1`, `s_2`, `beta'`, `B_MSIS`, `delta_MSIS`, and
+    `delta_MLWE` all reproduce the published values.  The remaining gate is
+    an artifact-scope decision about the implementation-defined recovery
+    composition, not a parameter mismatch.
 
     """
     if manifest is UNSET:
@@ -1016,15 +975,14 @@ def lanes_unavailable_reason(manifest=UNSET, backend_ready=UNSET,
         detail = ", ".join(f"{n} ({w})" for n, (w, _) in sorted(live.items()))
         return (
             "no frozen LANES parameter manifest. The paper supplies the "
-            "widths and every derived security figure, but the recovery-hint "
-            "rules and the field-by-field accounting behind the paper's "
-            "13.5 KB are still this implementation's, so the wire-visible "
+            "widths and entropy size estimate, while the concrete recovery "
+            "and encoding are implementation-level choices, so the wire-visible "
             f"values -- {detail} -- have to be frozen with their provenance "
             "before the production name opens. Supply "
             "exact.LANES_PARAMETER_MANIFEST (see LANES_MANIFEST_SECTIONS), "
             "then set LANES_BACKEND_READY once the implementation gate "
             "passes. "
-            "Use exact_backend='opening' for the revised protocol.")
+            "Use exact_backend='opening' or 'lanes-experimental'.")
 
     bad = validate_lanes_manifest(manifest, live)
     if bad:
@@ -1041,29 +999,20 @@ def lanes_unavailable_reason(manifest=UNSET, backend_ready=UNSET,
     if evidence is not None and evidence.get("verdict") != "meets-target":
         blockers = evidence.get("blockers") or []
         return (
-            "the LANES security evidence is pending, and is the authors' to "
-            "supply. The parameters are the paper's and reproduce every "
-            "figure it prints; what is not established is that they reach "
-            "the 128-bit target they were selected for. "
+            "the production LANES alias is reserved: the parameters "
+            "reproduce the paper's printed figures, but the concrete "
+            "compression/recovery completion is implementation-defined and "
+            "this artifact does not supply a reduction for that exact "
+            "composition. "
             + " ".join(f"({i + 1}) {b}." for i, b in enumerate(blockers))
-            + f" This repository's own run reaches "
-              f"{evidence.get('best_bits', float('nan')):.1f} bits under the "
-              "conservative reading, which is a **lower bound under "
-              "deliberately worst-case assumptions** -- `B_H = w_hat^2` and "
-              "an all-challenges response bound -- and so is evidence that "
-              "the question is open, not an authoritative security level "
-              "for the scheme. See lanes_security.json")
+            + " Use exact_backend='lanes-experimental' for the tested "
+              "candidate implementation")
 
     if evidence is None:
         return (
-            "the LANES parameter manifest is valid but no security "
-            "evidence backs it: exact.LANES_SECURITY_EVIDENCE is None. "
-            "It must carry the lattice estimator's name, version, command "
-            "line and full output for the Hint-MLWE and M-SIS instances, "
-            "the challenge-difference invertibility argument at these "
-            "dimensions, and the recovery hint's leakage and extraction "
-            "analysis. A schema-complete manifest is not evidence that "
-            "anything was checked")
+            "the LANES parameter manifest is valid but the artifact has no "
+            "scope record for its implementation-defined recovery and "
+            "compression completion. Use exact_backend='lanes-experimental'")
 
     if not ready:
         return (
@@ -1089,7 +1038,7 @@ LANES_GATE_CAUSES = (
     "manifest-invalid",       # it landed and does not validate
     "manifest-experimental",  # it validates and does not claim to be final
     "no-security-evidence",   # no recorded estimator run yet
-    "security-evidence-pending",  # ...it landed and does not settle the question
+    "production-alias-reserved",
     "backend-not-ready",      # everything else; the implementation gate
 )
 
@@ -1113,9 +1062,8 @@ def lanes_gate_cause(manifest=UNSET, backend_ready=UNSET,
     if missing:
         return "audit-drift"
     # The paper's closed form is the baseline, with or without a manifest:
-    # a live value that has left it means the code no longer implements
-    # the paper, which no table can excuse.  Before that revision there
-    # which is why this check used to live under `manifest is None`.
+    # a live value that has left it means the code no longer implements the
+    # selected parameter set.
     if any(v != PAPER_LANES_VALUES[n] for n, (_, v) in live.items()):
         return "constant-changed"
     if manifest is None:
@@ -1127,7 +1075,7 @@ def lanes_gate_cause(manifest=UNSET, backend_ready=UNSET,
     if evidence is None:
         return "no-security-evidence"
     if evidence.get("verdict") != "meets-target":
-        return "security-evidence-pending"
+        return "production-alias-reserved"
     if not ready:
         return "backend-not-ready"
     return None

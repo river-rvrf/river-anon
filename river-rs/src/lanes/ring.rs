@@ -68,10 +68,10 @@
 //! under multiplication, which `[ENS20]` relies on throughout; placing them
 //! in the coefficient domain would silently commit to a different message.
 //!
-//! ## What is ported and what is not
+//! ## Integration
 //!
-//! This ring **is** ported to the revision — `river-py/lanes_ring.py` is,
-//! its KATs exist, and [`crate::exact`] commits over exactly this ring.
+//! `river-py/lanes_ring.py` implements the same ring, its KATs are active,
+//! and [`crate::exact`] commits over exactly this ring.
 //! The layers above it run at the paper's own widths; only the production
 //! `lanes` *name* is withheld, on security evidence — see
 //! [`crate::exact::lanes_unavailable_reason`].

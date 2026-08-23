@@ -7,7 +7,7 @@ Commit subject: Merge pull request #184 from TabOg/edit_beta_range
 
 The bundled files README.rst, requirements.txt, and estimator/ were compared
 against the upstream tree at this commit and matched byte-for-byte.  The
-reviewer-facing LANES.sage file in this directory is RiVeR-specific glue code
+LANES.sage file in this directory is RiVeR-specific artifact glue code
 and is not part of upstream lattice-estimator.
 
 The upstream README.rst states that lattice-estimator is licensed under

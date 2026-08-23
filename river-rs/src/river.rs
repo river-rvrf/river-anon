@@ -74,14 +74,14 @@ use crate::sample::{
 pub enum BackendKind {
     /// [`OpeningBackend`] — complete and binding, **not** zero knowledge.
     Opening,
-    /// [`LanesBackend`] — the ported `[ENS20]` prover.  **Gated** on
-    /// security evidence; see [`crate::exact::lanes_unavailable_reason`].
+    /// [`LanesBackend`] — the ported `[ENS20]` prover under the reserved
+    /// production alias; see [`crate::exact::lanes_unavailable_reason`].
     Lanes,
     /// The same prover under a different name, ungated.
     ///
-    /// It runs at the paper's own parameters; what it lacks is the
-    /// security evidence the production name requires.  The separate name
-    /// is load-bearing: a vector case or a benchmark row recording
+    /// It runs at the paper's parameters with the artifact's concrete
+    /// compression/recovery composition. The separate name is load-bearing:
+    /// a vector case or benchmark row recording
     /// `"lanes-experimental"` reconstructs *this*, and recording `"lanes"`
     /// for both would make an experimental artifact reconstruct a backend
     /// that refuses to exist.
@@ -675,19 +675,14 @@ impl RiVeR {
 
     // ---- ring admissibility ----------------------------------------------
 
-    /// Check `R` and return it unchanged.  Replaces `CanonPad`.
+    /// Check the ordered ring `R` and return it unchanged.
     ///
-    /// Duplicates are admissible, and the tie-break is first occurrence.
-    /// The specification is explicit: "we regard R as an ordered tuple and
-    /// do not require its entries to be distinct … RiVeR uses the first
-    /// matching position as its hidden index", and both `Eval` and the
-    /// construction write `j* = min{j in [N] : t_j = pk}`.
+    /// Duplicates are admissible, and the tie-break is first occurrence:
+    /// `j* = min{j in [N] : t_j = pk}`.
     ///
-    /// Note what this costs: a ring with `k` copies of the evaluator's key
-    /// hides the evaluator among `N - k + 1` distinct identities, not `N`.
-    /// The paper's own sentence — repeated occurrences "do not represent
-    /// distinct key identities" — says as much.  Nothing here rejects it,
-    /// because the paper now defines it as admissible.
+    /// A ring with `k` copies of the evaluator's key contains only
+    /// `N - k + 1` distinct identities; repeated positions do not create
+    /// additional identities.
     ///
     /// What is enforced here, on both the prover and the verifier side, so
     /// that the two hash the same admissible domain:
@@ -702,11 +697,6 @@ impl RiVeR {
     /// [`RiVeR::ring_index`] establishes.  `Verify` does not need to locate
     /// an evaluator, but applies everything above.
     ///
-    /// This dissolves the old zero-witness forgery outright rather than
-    /// patching it: with no dummy slots there is no slot whose opening is
-    /// public.  The previous behaviour — sort, then pad with keys expanded
-    /// from a digest of the real ring — is gone with the draft that needed
-    /// it.
     pub fn validate_ring(&self, ring_pks: &[PolyVec]) -> Result<Vec<PolyVec>, EvalError> {
         let par = self.par;
         if ring_pks.len() != par.N {
@@ -759,9 +749,8 @@ impl RiVeR {
 
     /// `j* = min{j in [N] : t_j = pk}`, the paper's hidden index.
     ///
-    /// the paper admits duplicate ring entries and fixes the tie-break
-    /// to the *first* occurrence, in both the preliminaries and the `Eval`
-    /// figure.  Before it this returned `None` on a duplicate.
+    /// Duplicate ring entries are admissible; the tie-break is the first
+    /// occurrence.
     ///
     /// **The index is the secret**, so the scan is fixed work and the
     /// index is accumulated by masking rather than by assignment — the
@@ -953,10 +942,7 @@ impl RiVeR {
             };
 
             // Only now is `z_eval` defined.  The bottom test above happens
-            // first, unconditionally — which is what the `Eval` figure now
-            // prints.  Until the paper it parsed
-            // `pi_OOM` and read `z_eval` before testing for bottom, and
-            // this order was a **Repair**; it is **Paper**.
+            // first, unconditionally, matching the `Eval` figure.
             let z_eval = r_ring.centered(&pi_oom.z[par.ell + par.n]);
 
             // Correctness invariant: the response equation is exact over
@@ -1817,15 +1803,12 @@ mod tests {
         assert!(RiVeR::try_new(zero_d).is_none(), "d = 0");
     }
 
-    /// A ring is an ordered tuple of exactly `N` distinct keys.
+    /// A ring is an ordered tuple of exactly `N` valid keys; duplicates are
+    /// admissible and order is part of the statement.
     ///
     /// The order is part of the statement, so validation returns the ring
     /// unchanged and two orderings of the same members are two different
-    /// statements.  This replaces `CanonPad`, which sorted and padded —
-    /// and whose dummy slots carried the public short witness
-    /// `s = 0, e_key = e_eval = -B_e`, so anyone could prove `v = 0`.
-    /// With no dummy slots there is no slot whose opening is public, so
-    /// the forgery is dissolved rather than patched.
+    /// statements.  There is no sorting or padding.
     #[test]
     fn a_ring_is_ordered_and_exactly_n_keys() {
         let par = RIVER_TOY;
@@ -1849,7 +1832,7 @@ mod tests {
             "the evaluator's index moves with the order"
         );
 
-        // and every real key is still findable, exactly once
+        // and every key in this distinct fixture is findable
         for pk in &ring {
             assert!(scheme.ring_index(&validated, pk).is_some());
         }
@@ -1867,13 +1850,8 @@ mod tests {
         assert!(scheme.validate_ring(&short_key).is_err(), "short key");
     }
 
-    /// the paper: "we … do not require its entries to be distinct", and
-    /// `j* = min{j in [N] : t_j = pk}`.
-    ///
-    /// This tree rejected duplicates in the paper, which said
-    /// `Eval` used "the unique index" while the preliminaries admitted any
-    /// tuple.  The revision resolves it the other way, so a duplicated
-    /// ring must now prove and verify end to end, not merely parse.
+    /// Duplicate entries are admissible and `j*` is the first matching
+    /// position, so a duplicated ring must prove and verify end to end.
     #[test]
     fn a_duplicated_ring_is_admissible_and_uses_the_first_occurrence() {
         let par = RIVER_TOY;

@@ -71,9 +71,8 @@ make -C parameters table-check  # deterministic parameter/table checks
 
 For the complete parameter-artifact run, including the bundled estimators
 and expanded finite-grid diagnostic, use `make -C parameters check`. The
-diagnostic currently finds seven smaller passing rows and therefore returns
-nonzero; [parameters/README.md](parameters/README.md) explains the scope and
-the author decision still required. Generated tables under `parameters/data/`
+published rows pass the explicit finite grid; [parameters/README.md](parameters/README.md)
+documents its scope and the acceptance tests. Generated tables under `parameters/data/`
 and `parameters/report/` are shipped outputs and are preserved by `make clean`.
 
 ## Reproducing the paper's claims
@@ -86,7 +85,7 @@ statement in the paper.
 |---|---|---|
 | the parameter table | `make -C parameters table-check` | re-derives the selected rows, bounds, repetition accounting, and generated tables |
 | public-key and proof sizes | `make bench-sizes` | measured against the paper's size model, both shown side by side |
-| exact-proof size `\|pi_ex\| = 13.5 KB` | `make bench-sizes` | the candidate LANES exact layer measures **13.88–13.89 KB** at every profile |
+| exact-proof entropy estimate `\|pi_ex\| = 13.5 KB` | `make bench-sizes` | the concrete candidate LANES encoding measures **13.88–13.89 KB** at every profile |
 | the two implementations agree | `make check-vectors` | all four shipped cases re-derived from seeds in both languages and diffed |
 | the primitives agree | `make kat` | XOF, samplers, thresholds and codec, field by field |
 
@@ -118,8 +117,8 @@ Public keys and one deterministic proof per profile:
 | RiVeR-N8 | 8 | 8448 | 1728 | 20.245 | 13.890 | 34.143 |
 | RiVeR-N16 | 16 | 7872 | 1888 | 21.548 | 13.883 | 35.438 |
 | RiVeR-N64 | 64 | 8448 | 1728 | 25.729 | 13.887 | 39.623 |
-| RiVeR-N128 | 128 | 8640 | 1728 | 29.366 | 13.893 | 43.267 |
-| RiVeR-N256 | 256 | 8064 | 1888 | 36.487 | 13.888 | 50.383 |
+| RiVeR-N128 | 128 | 8640 | 1728 | 29.224 | 13.886 | 43.117 |
+| RiVeR-N256 | 256 | 8064 | 1888 | 36.315 | 13.888 | 50.211 |
 
 Exact layer under the witness-hiding `lanes-experimental` backend; `wire`
 includes two 4-byte length prefixes. Proof length is data-dependent — entropy coding moves the
@@ -135,15 +134,15 @@ attempts abort at different points and do not cost the same:
 
 | profile | Eval per attempt | attempts sampled | Verify | decode |
 |---|---:|---:|---:|---:|
-| RiVeR-N8 | 24.6 ms | 26 | 4.52 ms | 130 µs |
-| RiVeR-N16 | 29.1 ms | 11 | 5.56 ms | 134 µs |
-| RiVeR-N64 | 38.7 ms | 35 | 12.0 ms | 154 µs |
-| RiVeR-N128 | 62.9 ms | 77 | 20.5 ms | 177 µs |
-| RiVeR-N256 | 110.9 ms | 67 | 36.2 ms | 232 µs |
+| RiVeR-N8 | 25.6 ms | 26 | 4.77 ms | 138 µs |
+| RiVeR-N16 | 30.6 ms | 11 | 5.84 ms | 141 µs |
+| RiVeR-N64 | 40.4 ms | 35 | 16.0 ms | 161 µs |
+| RiVeR-N128 | 65.7 ms | 59 | 21.4 ms | 182 µs |
+| RiVeR-N256 | 118.6 ms | 32 | 37.3 ms | 241 µs |
 
 **Total time per proof is deliberately not tabulated.** It is the
 per-attempt cost times a geometric attempt count, and 5 seeds is far too few
-to pin that count — the samples above span 11 to 77 attempts. The benchmark
+to pin that count — the samples above span 11 to 59 attempts. The benchmark
 prints a mean proof time, but treat it as one observation, not an estimate.
 A converged figure needs a proper sweep.
 
@@ -198,25 +197,23 @@ behind an interface with two selectable implementations:
 | backend | witness | size | what it is |
 |---|---|---|---|
 | `opening` | **transmitted** | ~9.3 KB | a deliberate mock: it reveals the witness, so it is *not* zero-knowledge and its size is not comparable to the paper's 13.5 KB. Useful for exercising everything above it. |
-| `lanes-experimental` | **not transmitted** | ~13.9 KB | the candidate LANES exact layer at the paper's own parameters: it does not transmit the witness, and it is the one to compare against 13.5 KB. |
+| `lanes-experimental` | **not transmitted** | ~13.9 KB | the candidate LANES exact layer at the paper's parameters: it does not transmit the witness, and its encoded size is shown beside the 13.5 KB entropy estimate. |
 
 `opening` is labelled a mock everywhere it appears, including in the
 benchmark output, because its 9.3 KB would otherwise read as a smaller proof
 rather than as the cost of a leak.
 
-`lanes-experimental` is a **candidate** instantiation, not a settled one.
-Its response compression and recovery rules are this implementation's,
-needed to make an under-specified part executable, and are labelled
-**Repair** in the source. Byte interoperability and algebraic correctness
-are tested; there is no reduction for that composition here.
+`lanes-experimental` is a **candidate** concrete instantiation. The paper
+treats LANES as a black-box exact layer; its response compression, recovery
+rules, codec and transcript encoding are fixed by this artifact and labelled
+**Derived** or **Repair** in the manifest. Byte interoperability and algebraic
+correctness are tested; the artifact does not supply a reduction for that
+exact composition.
 
-A third name, `lanes`, is the same code under the production name and is
-**gated**: it refuses to construct. The gate is on security evidence rather
-than on the implementation — the published `delta_MLWE` does not follow from
-what the paper supplies, and `river-py/lanes_security.json` records an
-independent estimator run whose figure is a lower bound under deliberately
-worst-case assumptions, so it shows the question is open rather than
-settling it.
+A third name, `lanes`, is the same code under a reserved production alias and
+refuses to construct. The candidate remains available as
+`lanes-experimental`; `river-py/lanes_security.json` records a reproducible
+diagnostic, not an authoritative security verdict for the paper.
 
 ## Layout
 
@@ -228,7 +225,7 @@ Makefile     dispatches to implementations and recursively cleans components
 ```
 
 Each component has its own README with the detail: `river-py/README.md` for
-the algorithms and where the paper is open, `river-rs/README.md` for the
+the algorithms and implementation choices, `river-rs/README.md` for the
 performance work and what byte compatibility costs, and
 `parameters/README.md` for parameter reproduction and its documented limits.
 

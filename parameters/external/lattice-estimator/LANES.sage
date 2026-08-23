@@ -70,7 +70,7 @@ The conservative theorem-as-written dense variant
 
     B_MSIS_dense = 8*d_hat*beta_BDLOP'
 
-is kept in the code for local debugging, but the reviewer-facing default run
+is kept in the code for local debugging, but the default artifact run
 checks only the sparse challenge bound used by the selected LANES profile.
 
 IMPORTANT:
@@ -1144,7 +1144,7 @@ def scan_D(base, start_D=None):
 
 print("\nLANES / KLSS23 convention-corrected cross-check")
 print("================================================")
-print("This reviewer-facing run checks only the selected admissible LANES profile.")
+print("This artifact run checks only the selected admissible LANES profile.")
 print("KLSS sigma is a lattice-Gaussian parameter.")
 print("LaV s0 is the corresponding per-coordinate standard deviation.")
 print("Conversion: s0 = sigma_KLSS / sqrt(2*pi).")

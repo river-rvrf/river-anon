@@ -190,9 +190,9 @@
               "bound": 2199023255552,
               "coder": "signed",
               "cols": 32,
-              "count": 1600,
+              "count": 1568,
               "ring_modulus": null,
-              "rows": 50,
+              "rows": 49,
               "width": 43
             },
             "f1": {
@@ -245,8 +245,8 @@
               "rows": 99
             }
           },
-          "max_bytes": 37488,
-          "min_bytes": 28368,
+          "max_bytes": 37316,
+          "min_bytes": 28196,
           "order": [
             "B",
             "x",
@@ -257,10 +257,10 @@
           ]
         }
       },
-      "oom_max_bytes": 37488,
+      "oom_max_bytes": 37316,
       "profile": "RiVeR-N128",
       "rows": {
-        "B": 50,
+        "B": 49,
         "f1": 127,
         "zb": 51,
         "zm": 1,
@@ -708,9 +708,9 @@
               "bound": 4398046511104,
               "coder": "signed",
               "cols": 32,
-              "count": 1568,
+              "count": 1536,
               "ring_modulus": null,
-              "rows": 49,
+              "rows": 48,
               "width": 44
             },
             "f1": {
@@ -763,8 +763,8 @@
               "rows": 101
             }
           },
-          "max_bytes": 48512,
-          "min_bytes": 34808,
+          "max_bytes": 48336,
+          "min_bytes": 34632,
           "order": [
             "B",
             "x",
@@ -775,10 +775,10 @@
           ]
         }
       },
-      "oom_max_bytes": 48512,
+      "oom_max_bytes": 48336,
       "profile": "RiVeR-N256",
       "rows": {
-        "B": 49,
+        "B": 48,
         "f1": 255,
         "zb": 52,
         "zm": 1,

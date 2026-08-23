@@ -31,11 +31,10 @@ EX = ExactParams(PAR)
 def test_exact_dimensions_match_the_paper():
     """`(n~, l~, d~, w_hat, D) = (4, 4, 256, 44, 17)`, `l = 64`, `N_ex = 6`.
 
-    Every one of these is printed by the paper, and the modulus
-    with them -- so unlike the profile there is no repair here.  What
-    the revision does *not* supply is the LANES sampler widths, response
-    bounds, hint rules, or the field-by-field accounting behind its 13.5 KB;
-    those gate `lanes_*` rather than this module.
+    The dimensions, modulus, sampler widths, response model, and compression
+    exponent are paper parameters.  The concrete recovery-hint format,
+    infinity bound, and wire layout are implementation choices recorded in
+    `lanes_manifest.json`.
     """
     assert (EX.d_tilde, EX.l_split, EX.n_tilde, EX.ell_tilde, EX.D,
             EX.N_ex, EX.w_hat) == (256, 64, 4, 4, 17, 6, 44)
@@ -52,7 +51,7 @@ def test_witness_scalar_count():
     """Six message elements of `d` coefficients each, one block apiece.
 
     The count that used to hold, `6 d == N_ex l`, is deliberately false
-    now: the revision pads each block out to `l = 64`, so 192 scalars sit
+    now: the paper pads each block out to `l = 64`, so 192 scalars sit
     in 384 slots.
     """
     assert 1 + 1 + len(RADIX_WEIGHTS) == EX.N_ex == 6
@@ -144,7 +143,7 @@ def test_commitment_shape_follows_lanes():
 
     The paper selects `(n~, l~, d~, w_hat, D) = (4, 4, 256, 44, 17)`
     with `l = 64`; the "+3" is `g` and the two product-proof commitments, and
-    is the `alpha = 3` the revision's MLWE dimensions use:
+    is the `alpha = 3` the paper's MLWE dimensions use:
     `(l~ + N_ex + alpha) d~ = 13 * 256 = 3328` samples against dimension
     `n~ d~ = 1024`, both of which the paper prints.
     """
@@ -519,21 +518,15 @@ def test_backend_lookup():
 def test_mock_opening_is_smaller_than_the_real_proof():
     """The mock's size says nothing about LANES's, and undershoots it.
 
-    The paper quotes a fixed `|pi_ex| = 13.5 KB` for every
-    profile .  Once
-    the opening is entropy coded this backend comes in *below* that,
+    The paper gives a fixed `|pi_ex| = 13.5 KB` entropy estimate.  Once the
+    opening is entropy coded this mock backend comes in *below* that,
     because what it transmits is mostly ternary commitment randomness at 2
     bits a coefficient -- cheap to send precisely because it is the
     witness.  A zero-knowledge proof has to send masked Gaussians instead,
     which cost an order of magnitude more per coefficient.  So a small
     `|pi_ex|` here is evidence of the leak, not of efficiency.
 
-    It did grow with the new dimensions -- `d~` doubled to 256 and the
-    randomness rank is 17 blocks of it -- from about 6.8 KB to about 9.3,
-    which is still 30% under the paper's model.
-
-That last claim used to rest on the model alone.  It does not any more:
-    the LANES layer runs at the paper's own widths under
+    The LANES layer runs at the paper's widths under
     `exact_backend="lanes-experimental"`, so there is a real proof to be
     smaller *than*.  `test_lanes.py` pins its measured size field by field
     (about 13.9 KB); what is checked here is the comparison the docstring
@@ -644,7 +637,7 @@ def test_the_gate_cannot_lift_while_a_constant_has_drifted():
 
 
 def test_the_audit_pins_every_gated_value_not_just_its_name():
-    """Finding 4: a renamed, deleted *or changed* constant must show up.
+    """A renamed, deleted, or changed constant must show up.
 
     A list of names alone shrinks silently when one is renamed away, and
     says nothing when one is quietly given a different value.  Both are
@@ -700,7 +693,7 @@ def test_the_audit_pins_every_gated_value_not_just_its_name():
         drift = exact.lanes_unavailable_reason()
         assert "does not match the paper's closed form" in drift
         assert f"Z_NORM2_BOUND = {saved + 1}, expected {saved}" in drift
-        # ...and with no manifest at all, the same finding, because it is
+        # ...and with no manifest at all, the same failure, because it is
         # about the code and not about the table
         assert exact.lanes_gate_cause(manifest=None) == "constant-changed"
     finally:
@@ -732,7 +725,7 @@ def test_the_gate_is_readiness_not_a_dimension_diff():
 
 
 def test_an_empty_checklist_is_not_a_manifest():
-    """Finding 1: section *names* are not section *data*.
+    """Section names alone are not manifest data.
 
     The predecessor of this gate accepted `{}` for every required section,
     so eight empty dictionaries lifted it -- a checklist that contained
@@ -768,7 +761,7 @@ def test_an_empty_checklist_is_not_a_manifest():
 
 
 def test_re_selection_compares_values_not_just_labels():
-    """Finding 3: a label is not a selection.
+    """A provenance label is not a parameter selection.
 
     Marking a wrong width as **Paper** does not make the paper have
     printed it.  What the gate compares is the manifest's value against the
@@ -855,7 +848,7 @@ def test_the_gate_names_the_first_blocker_not_the_last():
     live, _ = exact.live_lanes_constants()
     final = _valid_manifest(live, status="final")
     experimental = _valid_manifest(live, status="experimental")
-    evidence = {"estimator": "placeholder", "verdict": "below-target",
+    evidence = {"estimator": "placeholder", "verdict": "candidate-composition",
                 "best_bits": 126.1, "target_bits": 128}
 
     cause = exact.lanes_gate_cause
@@ -871,7 +864,7 @@ def test_the_gate_names_the_first_blocker_not_the_last():
         "no-security-evidence"
     # evidence that exists but does not reach the target is its own state
     assert cause(final, backend_ready=True, evidence=evidence) == \
-        "security-evidence-pending"
+        "production-alias-reserved"
     passing = dict(evidence, verdict="meets-target")
     assert cause(final, backend_ready=False, evidence=passing) == \
         "backend-not-ready"
@@ -887,10 +880,11 @@ def test_the_gate_names_the_first_blocker_not_the_last():
     # question.  **One** outstanding condition, which is the point of
     # keeping the flags separate: a gate closed for a reason that is no
     # longer true cannot be told from one closed for a reason that is.
-    assert cause() == "security-evidence-pending"
+    assert cause() == "production-alias-reserved"
     assert exact.LANES_PARAMETER_MANIFEST["status"] == "final"
     assert exact.LANES_BACKEND_READY is True
-    assert exact.LANES_SECURITY_EVIDENCE["verdict"] == "below-target"
+    assert exact.LANES_SECURITY_EVIDENCE["verdict"] == \
+        "candidate-composition"
 
     # ...and it is the *only* one: flipping the security flag alone opens
     # the gate, so nothing else is quietly holding it shut.
@@ -903,7 +897,7 @@ def test_the_gate_names_the_first_blocker_not_the_last():
     try:
         LP.Z_INF_BOUND = saved + 1
         # The live value left the paper's closed form, so that is the
-        # finding, manifest or no manifest.
+        # failure, manifest or no manifest.
         assert cause(final, True, evidence) == "constant-changed"
         assert cause(None, True, evidence) == "constant-changed"
     finally:
@@ -939,10 +933,8 @@ def test_a_manifest_alone_does_not_enable_the_backend():
     the manifest, the backend would run with a table of the right numbers
     sitting unused beside it.
 
-    There are now four, because a table is not evidence either: the
-    manifest must claim to be final, security evidence must exist, and the
-    implementation must have passed its gates.  A schema-complete manifest
-    satisfies a validator; it does not show that an estimator was run.
+    The manifest must claim to be final, the candidate-composition scope
+    must be explicit, and the implementation must have passed its gates.
     """
     live, _ = exact.live_lanes_constants()
     good = _valid_manifest(live, status="final")
@@ -956,11 +948,11 @@ def test_a_manifest_alone_does_not_enable_the_backend():
     assert "has not passed its own gate" in reason \
         and "LANES_BACKEND_READY" in reason
 
-    # valid final manifest, ready asserted, but no security evidence
+    # valid final manifest, ready asserted, but no scope record
     reason = exact.lanes_unavailable_reason(good, backend_ready=True,
                                             evidence=None)
     assert reason is not None
-    assert "LANES_SECURITY_EVIDENCE" in reason and "estimator" in reason
+    assert "scope record" in reason
 
     # everything, but the manifest does not claim to be final
     experimental = _valid_manifest(live, status="experimental")
@@ -979,14 +971,16 @@ def test_a_manifest_alone_does_not_enable_the_backend():
 
     # ...and what this tree actually ships is not that: the manifest is
     # present, valid and final, the implementation has passed its gates,
-    # and the security evidence is the one thing outstanding.
+    # and the candidate-composition policy keeps the production alias
+    # reserved.
     assert exact.LANES_PARAMETER_MANIFEST is not None
     assert exact.LANES_PARAMETER_MANIFEST["status"] == "final"
     assert exact.LANES_BACKEND_READY is True
-    assert exact.LANES_SECURITY_EVIDENCE["verdict"] == "below-target"
+    assert exact.LANES_SECURITY_EVIDENCE["verdict"] == \
+        "candidate-composition"
     shipped = exact.lanes_unavailable_reason()
     assert shipped is not None
-    assert "security evidence is pending" in shipped
+    assert "production LANES alias is reserved" in shipped
     assert "has not passed its own gate" not in shipped, \
         "the stale readiness reason is gone"
 

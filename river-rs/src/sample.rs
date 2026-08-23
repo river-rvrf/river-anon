@@ -924,7 +924,7 @@ mod tests {
         assert!(check_probability_width(PROB_BITS, GAUSSIAN_TAILCUT).is_ok());
     }
 
-    /// The revision requires an unreachable declared cut to be an error,
+    /// An unreachable declared cut is an error,
     /// not a silently unchanged distribution.  The integer check and the
     /// float one have to agree about where the boundary is.
     #[test]

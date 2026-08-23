@@ -1,18 +1,10 @@
 """
 test_lanes_ring.py -- The LANES ring algebra, checked in the test suite.
 
-**Not gated.**  Every property here follows from `(q~, d~, l)` alone, all
-three of which the revision supplies; none of it needs the sampler widths,
-response bounds or hint rules that were once withheld.  Since the paper
-publishes those in closed form the rest of the port constructs too, so
-`test_lanes.py`'s module-level skip guard no longer fires -- but the guard
-is still there, and this file is the part that must run whether it fires or
-not.
-
-It exists because the gate hid a real defect.  `lanes_ring.py`'s
-`__main__` already asserted `mul == mul_schoolbook`, which fails instantly
-on a wrong twiddle tree; when the whole module was gated, that assertion went with it, and the tree was wrong for exactly
-as long.  A self-check that only runs under `make selftest` is one gate
+Every property here follows from `(q~, d~, l)` alone. The independent
+schoolbook product and factorisation identity ensure that the NTT is the
+required ring isomorphism rather than merely an internally consistent
+transform. A self-check that only runs under `make selftest` is one gate
 away from silence, so the same algebra is asserted here too.
 
 What made the defect survivable is worth stating, because it will recur:
@@ -142,9 +134,7 @@ def test_ntt_product_agrees_with_schoolbook():
 def test_the_algebraic_laws_do_not_detect_a_wrong_tree():
     """The trap, stated as a property and measured.
 
-    Reintroducing the old hard-coded tree and re-running this file, 5 of
-    its 10 tests fail.  The five that **pass** are worth naming, because
-    they are the ones a reviewer reaches for first:
+    Several familiar algebraic checks are insufficient on their own:
 
       * `intt(ntt(a)) == a` -- the inverse repeats whatever the forward
         transform did, wrong or not;

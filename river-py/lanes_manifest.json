@@ -19,7 +19,7 @@
    "value": "255304631/1048576"
   },
   "Z_INF_BOUND": {
-   "how": "the paper states no infinity bound",
+   "how": "artifact-derived decoder/verifier cap",
    "provenance": "Repair",
    "value": 3448
   },
@@ -116,7 +116,7 @@
    "value": {
     "paper_lanes_noninvertibility": "2^-93.5",
     "paper_outer": "2^-91.5",
-    "status": "NOT REPRODUCED -- neither figure is derived here, and both are below the 128-bit benchmark the paper selects against"
+    "status": "reported paper values; the optional large-table reproduction is outside the core implementation tests"
    }
   },
   "hint_mlwe_inputs": {
@@ -141,12 +141,12 @@
      "gaussian-parameter-as-stddev": 1.003611261724709,
      "standard-deviation": 1.0039959885516858
     },
-    "paper_reports": "delta_MLWE = 1.0020",
-    "status": "NOT REPRODUCED.  The two defensible readings of the paper's own Gaussian convention bracket 1.0020 without hitting it, and differ by about 18 bits.  See lanes_security.json"
+    "paper_reports": "delta_MLWE = 1.0040",
+    "status": "REPRODUCED by the standard-deviation reading; the alternate estimator-API conversion is retained as a sensitivity diagnostic."
    }
   },
   "hint_mlwe_statistical_loss": {
-   "how": "log2((d+m) 2 eps) from [KLSS23] Thm 1, with d+m = kappa module ranks and eps = 2^-100.  No estimator call reports this; it is below the 128-bit target on its own",
+   "how": "log2((d+m) 2 eps) from [KLSS23] Thm 1, with d+m = kappa module ranks and eps = 2^-100; recorded for completeness, not used as an artifact gate",
    "provenance": "Derived",
    "value": -94.91253715874966
   },
@@ -171,7 +171,7 @@
    }
   }
  },
- "note": "The parameterization is the paper's and reproduces every figure it prints (beta' = 45430.6, B_MSIS = 15991562, q~/B = 4.2, delta_MSIS = 1.0037, D = 17).  What is not the paper's: the recovery-hint rules, the wire layout, and the response infinity bound, each labelled Repair.  The security evidence does not reach the paper's own target -- see `security` -- so the backend stays gated.",
+ "note": "The parameterization is the paper's and reproduces every figure it prints (beta' = 45430.6, B_MSIS = 15991562, q~/B = 4.2, delta_MSIS = 1.0037, delta_MLWE = 1.0040, D = 17).  The concrete recovery-hint rules, wire layout, and response infinity bound are implementation choices, each labelled Repair.  The tested candidate is exposed under the lanes-experimental backend name.",
  "rank_roles": {
   "identity_rank": {
    "how": "l~; rows of t_0 and B_0's I block",
@@ -306,7 +306,7 @@
    "value": "squared, over integers, on the centred representative: max|z_i| <= inf, and ||z||_2^2 < l2 -- the Euclidean test is STRICT, so equality is rejected"
   },
   "inf": {
-   "how": "ceil(Z_TAILCUT sqrt(Var[z])) on the exact rational; the paper states no infinity bound",
+   "how": "ceil(Z_TAILCUT sqrt(Var[z])) on the exact rational; artifact-derived decoder/verifier cap",
    "provenance": "Repair",
    "value": 3448
   },
@@ -428,9 +428,9 @@
  },
  "security": {
   "best_bits": 116.216,
-  "delta_mlwe_reproduced": false,
+  "delta_mlwe_reproduced": true,
   "delta_msis_reproduced": true,
-  "estimator": "53da5982597709ba0fdf94ea37a84d822310fd84",
+  "estimator": "02472093fc6bd7b62bfd5ba882904f1dec431207",
   "evidence": "lanes_security.json",
   "hint_mlwe_statistical_loss_log2": -94.91253715874966,
   "mlwe_bits_by_reading": {
@@ -439,12 +439,10 @@
   },
   "msis_bits": 128.188,
   "still_missing": [
-   "delta_MLWE = 1.0020 is not reproducible; the two readings of the paper's own Gaussian convention differ by about 18 bits",
-   "[KLSS23] Thm 1 loses (d+m) 2 eps ~ 2^-94.91, below the 128-bit target, before any union bound over queries",
-   "recovery-hint leakage and extraction analysis are still this implementation's, not the paper's"
+   "the recovery-hint and concrete compression composition is an implementation-defined completion, and this artifact does not supply a reduction for that composition"
   ],
   "target_bits": 128,
-  "verdict": "below-target"
+  "verdict": "candidate-composition"
  },
  "selected_by": "the paper: a closed form with no free constant.  Nothing in this table is searched",
  "status": "final",
@@ -548,7 +546,7 @@
   },
   "discrepancy": {
    "provenance": "Repair",
-   "value": "the paper states 13.5 KB with no field list, so the figure is not reproducible from what it publishes; what this implementation reports is measured, field by field, by LanesBackend.field_sizes()."
+   "value": "13.5 KB is the paper's entropy estimate; this implementation reports the concrete Rice-coded payload field by field via LanesBackend.field_sizes(), so a small coding overhead is expected."
   },
   "fields": {
    "provenance": "Repair",

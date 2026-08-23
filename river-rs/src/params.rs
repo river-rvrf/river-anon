@@ -19,7 +19,7 @@
 //! * **Repair** — an implementation choice needed to make an ambiguous or
 //!   inconsistent part of the paper executable.
 //!
-//! One thing the paper leaves open, and it is **Derived**:
+//! One artifact-level value is **Derived** rather than printed:
 //!
 //! * **Concrete moduli.**  The paper reports only bit lengths for `p`
 //!   and `q_hat`.  We take the largest prime below `2^bits` congruent to
@@ -37,12 +37,9 @@
 //!
 //! ## Response structure
 //!
-//! `r' = 1`, and `beta_SIS,2` is taken over the response the protocol
-//! actually transmits, so the model/protocol split that
-//! recorded — two `B_rs`, two `beta_SIS,2` — is gone.  `phi_b` is now a
-//! `BoundGen` output rather than a symbol the algorithms used and the
-//! parameter generator never produced, and the single outer
-//! response width is replaced by the split `(sigma_s, sigma_m)`.
+//! `r' = 1`, and `beta_SIS,2` is taken over the transmitted response.
+//! `phi_b` is a `BoundGen` output, and the outer response uses the split
+//! widths `(sigma_s, sigma_m)`.
 //!
 //! ## Exact accept/reject bounds
 //!
@@ -503,23 +500,11 @@ impl RiVeRParams {
     //
     // Each bound below is one entry of BoundGen's output tuple.
     //
-    // DISCREPANCY.  The paper gives that tuple in two incompatible
-    // orders.  `BoundGen` returns
-    //   (r', s_c, phi_a, phi_s, phi_b, phi_m, tau_g0, tau_g1, ...)
-    // while all three OOM algorithms parse
-    //   (r', s_c, phi_a, phi_b, phi_s, phi_m, tau_g0, tau_g1, ...)
-    // — positions 4 and 5 swapped.  That is not cosmetic: `phi_s` is 22
-    // to 32 and `phi_b` is 2, so a positional implementation would sample
-    // and test the two responses at each other's widths.
-    //
-    // One re-render was editorial — abstract wording, the
-    // supported ring sizes, and citations for the `delta ~ 1.0045`
-    // target — and did **not** reconcile these two lines.  So the
-    // contradiction stands in the source, and what keeps it out of the
-    // arithmetic is that nothing here is positional: every value is a
-    // named field, and the meaning follows the authors' clarification
-    // (`z_s` answers `r_0 = s` at `sigma_s = phi_s B_s`; `z_m` answers
-    // `r_1 = (e_key, e_eval)` at `sigma_m = phi_m eta_m`).
+    // `BoundGen` and the OOM algorithms use
+    //   (r', s_c, phi_a, phi_b, phi_s, phi_m, tau_g0, tau_g1, ...).
+    // The implementation stores every value as a named field: `z_s`
+    // answers `r_0 = s` at `sigma_s = phi_s B_s`, while `z_m` answers
+    // `r_1 = (e_key, e_eval)` at `sigma_m = phi_m eta_m`.
 
     /// `floor(q_0 / 2)`; bounds the **centred** rounding error.
     ///
@@ -1735,7 +1720,7 @@ pub const RIVER_N128: RiVeRParams = published(
     45,
     54,
     P_44,
-    50,
+    49,
     51,
     QHAT_48,
     (309, 358),
@@ -1748,7 +1733,7 @@ pub const RIVER_N256: RiVeRParams = published(
     42,
     59,
     P_48,
-    49,
+    48,
     52,
     QHAT_49,
     (306, 384),
@@ -1853,8 +1838,8 @@ mod tests {
             ),
             (16, 40, 22, 41, 59, 48, 43, 49, 46),
             (64, 34, 24, 44, 54, 44, 50, 51, 48),
-            (128, 24, 34, 45, 54, 44, 50, 51, 48),
-            (256, 22, 40, 42, 59, 48, 49, 52, 49),
+            (128, 24, 34, 45, 54, 44, 49, 51, 48),
+            (256, 22, 40, 42, 59, 48, 48, 52, 49),
         ];
         for (row, p) in table.into_iter().zip(PUBLISHED) {
             let (N, phi_a, phi_s, n, ell, lp, n_hat, k_hat, lqh) = row;
@@ -1916,7 +1901,7 @@ mod tests {
     /// The paper's shared constants: `phi_m`, `phi_b` and
     /// `r' = 1` are the same at every profile.
     #[test]
-    fn revision_constants_are_shared_by_every_profile() {
+    fn shared_constants_are_shared_by_every_profile() {
         for p in PROFILES {
             assert_eq!(p.phi_m, 32, "{} phi_m", p.name);
             assert_eq!(p.phi_b, 2, "{} phi_b", p.name);
@@ -1927,12 +1912,8 @@ mod tests {
         }
     }
 
-    /// **closed in the paper**: `BoundGen` and all three OOM
-    /// algorithms now return and parse `(phi_a, phi_b, phi_s, phi_m)`.
-    ///
-    /// Nothing here was ever positional, so no code path could pick
-    /// wrong — this records the size of the gap the naming closed, and
-    /// keeps it recorded now that the paper has one order.
+    /// `BoundGen` and all three OOM algorithms use
+    /// `(phi_a, phi_b, phi_s, phi_m)`.
     #[test]
     fn named_fields_make_the_boundgen_order_unreachable() {
         for p in PUBLISHED {
@@ -2163,8 +2144,8 @@ mod tests {
             ("RiVeR-N8", 39u32, 20.1, 33.6),
             ("RiVeR-N16", 41, 21.4, 34.9),
             ("RiVeR-N64", 43, 25.5, 39.0),
-            ("RiVeR-N128", 43, 29.1, 42.6),
-            ("RiVeR-N256", 44, 36.2, 49.7),
+            ("RiVeR-N128", 43, 29.0, 42.5),
+            ("RiVeR-N256", 44, 36.0, 49.5),
         ];
         for (name, b_b, oom, total) in table {
             let p = get(name).unwrap();
@@ -2282,15 +2263,9 @@ mod tests {
         }
     }
 
-    /// **closed in the paper**, and pinned as a closure.
+    /// The component product reproduces the printed repeat-bound column.
     ///
-    /// Under the table the appendix's own denominator did not
-    /// reproduce its printed "Repeat bound" column, and this tree carried
-    /// a per-profile `c_pub_model` backsolved from that column.  Against
-    /// the paper table the components multiply out to the printed
-    /// value at every profile, so the backsolve is gone.
-    ///
-    /// The assertion is on the *printed column*, not on an internal
+    /// The assertion is on the printed column, not on an internal
     /// identity: `mu_river` is defined as the component product, so
     /// comparing it to itself would pass no matter what.
     #[test]
@@ -2338,13 +2313,9 @@ mod tests {
     /// Displayed one-decimal `tau` does not reproduce the table's own
     /// `B_g0` column at `N = 256`; the two-decimal values do.
     ///
-    /// **Closed in the paper**, which prints two decimals and adds a
-    /// table note saying why ("reported to two decimal places to make the
-    /// corresponding bounds reproducible from the table").  All ten values
-    /// this tree recovered under the one-decimal table match the
-    /// published pairs exactly.  The test is kept, and kept in the
-    /// direction that can fail: the one-decimal rendering still does not
-    /// reproduce `N = 256`, which is what made the recovery necessary.
+    /// The table prints two decimals and notes that they are required to
+    /// reproduce the corresponding bounds.  The test checks the direction
+    /// that can fail: a one-decimal rendering does not reproduce `N = 256`.
     #[test]
     fn tau_one_decimal_fails_to_reproduce_its_own_b_g0_column() {
         // The printed `B_g0` column at N = 256.
