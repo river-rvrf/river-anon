@@ -120,8 +120,7 @@ def test_kat_exp_threshold():
 
 def test_kat_rej1():
     x = XOF(b"KAT", b"r1")
-    tau = TOY_PARAMS.REJ_TAU
-    assert [rej1(x, [1, 2, 3], [1, 0, -1], 20, 1000, 1, tau)
+    assert [rej1(x, [1, 2, 3], [1, 0, -1], 20, 1000, 1)
             for _ in range(10)] == \
         [1, 0, 0, 0, 1, 1, 1, 1, 0, 0]
 

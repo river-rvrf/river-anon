@@ -243,35 +243,25 @@ def test_challenge_from_hash_is_deterministic():
 
 # ---- rejection sampling --------------------------------------------------
 
-def _rej_rate(fn, phi, T, dim=16, trials=2500, seed=b"r", tau=None):
-    """Measured acceptance rate.  `tau` is passed only to `Rej_1`."""
+def _rej_rate(fn, phi, T, dim=16, trials=2500, seed=b"r"):
+    """Measured acceptance rate for one concrete sampler."""
     x = XOF(b"t", seed)
     accepted = 0
-    extra = () if tau is None else (tau,)
     for _ in range(trials):
         v = [gaussian_int(x, 30) for _ in range(dim)]
         norm = math.sqrt(sum(c * c for c in v)) or 1.0
         v = [int(c * T / norm) for c in v]
         z = [gaussian_int(x, phi * T) + v[j] for j in range(dim)]
-        accepted += 1 - fn(x, z, v, phi, phi * T, 1, *extra)
+        accepted += 1 - fn(x, z, v, phi, phi * T, 1)
     return accepted / trials
 
 
 def test_rej1_acceptance_matches_1_over_M1():
-    """The *measured* acceptance rate is `1/M_1`, at the `tau_rej` the
-    sampler is handed -- which is the half the repetition report cannot
-    check about itself.
-
-    Driven at two values of `tau_rej`, not just the shipped 12: with one
-    value a sampler that ignored the argument entirely would still pass,
-    since 12 is also the constant it would otherwise hard-code.
-    """
-    for tau in (12, 8):
-        for phi in (6, 10):
-            rate = _rej_rate(rej1, phi, 80, seed=b"r1-%d-%d" % (tau, phi),
-                             tau=tau)
-            expected = 1 / math.exp(tau / phi + 1 / (2 * phi ** 2))
-            assert abs(rate - expected) < 0.04, (tau, phi, rate, expected)
+    """The measured acceptance rate uses the fixed concrete constant 12."""
+    for phi in (6, 10):
+        rate = _rej_rate(rej1, phi, 80, seed=b"r1-%d" % phi)
+        expected = 1 / math.exp(12 / phi + 1 / (2 * phi ** 2))
+        assert abs(rate - expected) < 0.04, (phi, rate, expected)
 
 
 def test_rej2_acceptance_matches_1_over_2M2():
@@ -297,7 +287,7 @@ def test_rej_rejects_oversized_z():
     x = XOF(b"t", b"big")
     v = [0] * 8
     z = [10 ** 9] + [0] * 7           # way beyond 6 sigma
-    assert rej1(x, z, v, 10, 1000, 1, TOY_PARAMS.REJ_TAU) == 1
+    assert rej1(x, z, v, 10, 1000, 1) == 1
     assert rej2(x, z, v, 10, 1000, 1) == 1
 
 

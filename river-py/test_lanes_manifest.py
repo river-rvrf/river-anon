@@ -303,6 +303,13 @@ def test_the_wire_section_matches_the_serializer():
     assert "13.5 KB" in detail and "entropy estimate" in detail
 
 
+def test_the_challenge_cell_matches_the_reported_parameter_set():
+    """The required challenge cell cannot drift as unchecked prose."""
+    challenge = _value("estimator", "challenge")
+    assert challenge["paper_lanes_noninvertibility"] == "2^-90.5"
+    assert challenge["paper_outer"] == "2^-91.5"
+
+
 def test_the_generated_kat_records_this_trees_gate():
     """The withheld record in `sampler_kat.json` is *ours*, and current.
 

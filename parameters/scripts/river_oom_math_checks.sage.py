@@ -49,20 +49,19 @@ EMBEDDED_KEY_RANK = ZZ(1)
 PHI_M = ZZ(32)
 PHI_M_CONSTRAINT_BITS = ZZ(26)
 Q_TILDE = ZZ(GLOBAL_CONSTANTS["q_tilde"])
-TAU_REJ = ZZ(GLOBAL_CONSTANTS["tau_rej"])
+REJ1_CONSTANT = ZZ(GLOBAL_CONSTANTS["rej1_constant"])
 K_B = ZZ(5)
 K_A = ZZ(28)
 S_C = ZZ(GLOBAL_CONSTANTS["s_c"])
 TAIL_FACTOR = ZZ(6)
 HP = RealField(256)
-EUCLIDEAN_TAIL_RATIO = HP("1.19")
 
 
 FINAL_ROWS = [
     {
         "N": 8,
         "oom_kb": 20.133209060562596,
-        "repeat_bound": 8.34430735637057,
+        "repeat_bound": 8.344281793569932,
         "n": 44,
         "ell": 54,
         "p_bits": 44,
@@ -86,13 +85,13 @@ FINAL_ROWS = [
         "selector_asis_delta": 1.0046671909922382,
         "tau_g0": 3.14,
         "tau_g1": 2.68,
-        "epsilon_g_upper": 0.0079564543,
+        "epsilon_g_upper": 0.007953415163498056,
         "epsilon_cmp_modelled": 0.07876605629624323,
     },
     {
         "N": 16,
         "oom_kb": 21.409119640954838,
-        "repeat_bound": 8.435196176201655,
+        "repeat_bound": 8.435178948967808,
         "n": 41,
         "ell": 59,
         "p_bits": 48,
@@ -116,13 +115,13 @@ FINAL_ROWS = [
         "selector_asis_delta": 1.004677097419558,
         "tau_g0": 3.09,
         "tau_g1": 3.08,
-        "epsilon_g_upper": 0.007793341355707927,
+        "epsilon_g_upper": 0.00779131496406446,
         "epsilon_cmp_modelled": 0.08056203688975627,
     },
     {
         "N": 64,
         "oom_kb": 25.535994066823953,
-        "repeat_bound": 8.626610904273274,
+        "repeat_bound": 8.625685740071251,
         "n": 44,
         "ell": 54,
         "p_bits": 44,
@@ -146,13 +145,13 @@ FINAL_ROWS = [
         "selector_asis_delta": 1.0046280354292965,
         "tau_g0": 3.05,
         "tau_g1": 3.33,
-        "epsilon_g_upper": 0.0090602037,
+        "epsilon_g_upper": 0.008953918582094841,
         "epsilon_cmp_modelled": 0.09304766034013878,
     },
     {
         "N": 128,
         "oom_kb": 28.95220911190496,
-        "repeat_bound": 8.599820475055308,
+        "repeat_bound": 8.5986174635252,
         "n": 45,
         "ell": 54,
         "p_bits": 44,
@@ -176,13 +175,13 @@ FINAL_ROWS = [
         "selector_asis_delta": 1.0046870515700201,
         "tau_g0": 3.09,
         "tau_g1": 3.58,
-        "epsilon_g_upper": 0.0078500789,
+        "epsilon_g_upper": 0.007711269632144487,
         "epsilon_cmp_modelled": 0.09127437216317247,
     },
     {
         "N": 256,
         "oom_kb": 36.04099899348253,
-        "repeat_bound": 8.526923940593298,
+        "repeat_bound": 8.526235986557575,
         "n": 42,
         "ell": 59,
         "p_bits": 48,
@@ -206,7 +205,7 @@ FINAL_ROWS = [
         "selector_asis_delta": 1.0046573319311118,
         "tau_g0": 3.06,
         "tau_g1": 3.84,
-        "epsilon_g_upper": 0.0085985639,
+        "epsilon_g_upper": 0.00851857096759001,
         "epsilon_cmp_modelled": 0.08949753540374028,
     },
 ]
@@ -440,6 +439,16 @@ def compression_stability_model(row):
     }
 
 
+def euclidean_tail_ratio(row, bounds=None):
+    """The profile-specific ``t_2`` used by the joint response bound."""
+    if bounds is None:
+        bounds = response_bounds(row)
+    response_rank = HP(row["ell"] + row["n"])
+    width_ratio_sq = (HP(bounds["sigma_m"]) / HP(bounds["sigma_s"])) ** 2
+    return HP("1.2") * ((response_rank + width_ratio_sq)
+                        / (response_rank + HP(EMBEDDED_KEY_RANK))).sqrt()
+
+
 def repeat_accounting(row):
     N = RR(row["N"])
     ell = RR(row["ell"])
@@ -450,19 +459,21 @@ def repeat_accounting(row):
     phi_b = RR(row["phi_b"])
     phi_m = RR(response_bounds(row)["phi_m"])
 
-    mu_a = exp(RR(TAU_REJ) / phi_a + RR(1) / (RR(2) * phi_a ** 2))
-    mu_s = exp(RR(TAU_REJ) / phi_s + RR(1) / (RR(2) * phi_s ** 2))
-    mu_m = exp(RR(TAU_REJ) / phi_m + RR(1) / (RR(2) * phi_m ** 2))
+    mu_a = exp(RR(REJ1_CONSTANT) / phi_a + RR(1) / (RR(2) * phi_a ** 2))
+    mu_s = exp(RR(REJ1_CONSTANT) / phi_s + RR(1) / (RR(2) * phi_s ** 2))
+    mu_m = exp(RR(REJ1_CONSTANT) / phi_m + RR(1) / (RR(2) * phi_m ** 2))
     mu_b = RR(2) * exp(RR(1) / (RR(2) * phi_b ** 2))
 
     epsilon_a_tail = RR(2) * RR(D_OUT) * (N - RR(1)) * exp(RR(-18))
     epsilon_b_tail = RR(2) * RR(D_OUT) * hat_k * exp(RR(-18))
     epsilon_s_tail = RR(2) * RR(D_OUT) * (n + ell) * exp(RR(-18))
     epsilon_m_tail = RR(2) * RR(D_OUT) * exp(RR(-18))
+    bounds = response_bounds(row)
+    tail_ratio = euclidean_tail_ratio(row, bounds)
     euclidean_dimension = HP(D_OUT) * HP(row["ell"] + row["n"] + int(EMBEDDED_KEY_RANK))
     epsilon_2_log = euclidean_dimension * (
-        EUCLIDEAN_TAIL_RATIO.log()
-        + (HP(1) - EUCLIDEAN_TAIL_RATIO ** 2) / HP(2)
+        tail_ratio.log()
+        + (HP(1) - tail_ratio ** 2) / HP(2)
     )
     epsilon_2 = epsilon_2_log.exp()
     epsilon_g = RR(row["epsilon_g_upper"])
@@ -495,7 +506,7 @@ def repeat_accounting(row):
         "epsilon_2": float(epsilon_2),
         "epsilon_2_log2": float(epsilon_2_log / HP(2).log()),
         "epsilon_2_dimension": int(euclidean_dimension),
-        "epsilon_2_tail_ratio": float(EUCLIDEAN_TAIL_RATIO),
+        "epsilon_2_tail_ratio": float(tail_ratio),
         "joint_response_success": float(joint_response_success),
         "epsilon_g_upper": float(epsilon_g),
         "epsilon_cmp_modelled": float(epsilon_cmp),
@@ -626,13 +637,14 @@ def main():
         selector_bounds = selector_asis_bounds(row)
         size = oom_size_bits(row, hat_q)
         repeat = repeat_accounting(row)
-        euclidean_threshold_lhs = RR("1.2") * sqrt(
-            bounds["sigma_s"] ** 2 * RR(D_OUT) * (RR(row["ell"]) + RR(row["n"]))
-            + bounds["sigma_m"] ** 2 * RR(D_OUT)
-        )
-        euclidean_threshold_rhs = RR("1.19") * bounds["sigma_s"] * sqrt(
-            RR(D_OUT) * (RR(row["ell"]) + RR(row["n"]) + RR(EMBEDDED_KEY_RANK))
-        )
+        tail_ratio = euclidean_tail_ratio(row, bounds)
+        euclidean_threshold_lhs = HP("1.2") * (
+            HP(bounds["sigma_s"]) ** 2 * HP(D_OUT) * HP(row["ell"] + row["n"])
+            + HP(bounds["sigma_m"]) ** 2 * HP(D_OUT)
+        ).sqrt()
+        euclidean_threshold_rhs = tail_ratio * HP(bounds["sigma_s"]) * (
+            HP(D_OUT) * HP(row["ell"] + row["n"] + int(EMBEDDED_KEY_RANK))
+        ).sqrt()
         lhs, rhs = msis_mr09_l2(q, row["n"], bounds["beta_sis"])
         lhs2, rhs2 = msis_mr09_l2(q, ZZ(row["n"]) + EMBEDDED_KEY_RANK, bounds["beta_sis_2"])
         delta_req2 = msis_mr09_required_delta(q, ZZ(row["n"]) + EMBEDDED_KEY_RANK, bounds["beta_sis_2"])
@@ -656,7 +668,9 @@ def main():
             "repeat_bound_matches_formula": binary64_equal(repeat["mu_oom"], row["repeat_bound"]),
             "epsilon_cmp_model_matches_table": binary64_equal(repeat["epsilon_cmp_modelled"], row["epsilon_cmp_modelled"]),
             "euclidean_sigma_m_at_most_sigma_s": bounds["sigma_m"] <= bounds["sigma_s"],
-            "euclidean_tail_threshold_condition": euclidean_threshold_lhs >= euclidean_threshold_rhs,
+            "euclidean_tail_threshold_identity": abs(
+                euclidean_threshold_lhs - euclidean_threshold_rhs
+            ) <= euclidean_threshold_lhs * HP(2) ** -200,
             "phi_m_is_max_for_eta": ZZ(row["phi_m"]) == max_phi_m(),
             "phi_m_constraint_strict": phi_m_constraint_holds(row["phi_m"]),
             "K_a_matches_boundgen": K_A == k_a_boundgen(row),
@@ -704,8 +718,12 @@ def main():
                     "threshold_lhs": float(euclidean_threshold_lhs),
                     "threshold_rhs": float(euclidean_threshold_rhs),
                     "sigma_m_at_most_sigma_s": bool(bounds["sigma_m"] <= bounds["sigma_s"]),
-                    "threshold_condition_pass": bool(euclidean_threshold_lhs >= euclidean_threshold_rhs),
-                    "tail_bound_formula": "1.19^(d*(ell+n+1))*exp(d*(ell+n+1)*(1-1.19^2)/2)",
+                    "threshold_identity_pass": bool(abs(
+                        euclidean_threshold_lhs - euclidean_threshold_rhs
+                    ) <= euclidean_threshold_lhs * HP(2) ** -200),
+                    "tail_ratio": float(tail_ratio),
+                    "tail_ratio_formula": "1.2*sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1))",
+                    "tail_bound_formula": "t2^(d*(ell+n+1))*exp(d*(ell+n+1)*(1-t2^2)/2)",
                 },
                 "selector_asis_bounds": selector_bounds,
                 "checked_instances": checked_instances(row, p, q, hat_q),
@@ -727,7 +745,7 @@ def main():
             "phi_m_constraint_bits": int(PHI_M_CONSTRAINT_BITS),
             "q_tilde": int(Q_TILDE),
             "phi_m_selection": "largest integer phi_m satisfying q_tilde > 24*phi_m*eta_m",
-            "tau_rej": int(TAU_REJ),
+            "rej1_constant": int(REJ1_CONSTANT),
             "K_b": int(K_B),
             "K_a": int(K_A),
             "s_c": int(S_C),
@@ -782,17 +800,18 @@ def main():
                 "K_a": "K_b + ceil(log2(w*gamma*hat_n*d)) + s_c",
             },
             "repeat_accounting": {
-                "mu_a": "exp(tau_rej/phi_a + 1/(2*phi_a^2))",
+                "mu_a": "exp(12/phi_a + 1/(2*phi_a^2))",
                 "mu_b": "2*exp(1/(2*phi_b^2))",
-                "mu_s": "exp(tau_rej/phi_s + 1/(2*phi_s^2))",
-                "mu_m": "exp(tau_rej/phi_m + 1/(2*phi_m^2))",
+                "mu_s": "exp(12/phi_s + 1/(2*phi_s^2))",
+                "mu_m": "exp(12/phi_m + 1/(2*phi_m^2))",
                 "tail_epsilons": [
                     "epsilon_a_tail = 2*d*(N-1)*exp(-18)",
                     "epsilon_b_tail = 2*d*hat_k*exp(-18)",
                     "epsilon_s_tail = 2*d*(n+ell)*exp(-18)",
                     "epsilon_m_tail = 2*d*exp(-18)",
                 ],
-                "euclidean_tail": "epsilon_2 <= 1.19^(d*(ell+n+1))*exp(d*(ell+n+1)*(1-1.19^2)/2)",
+                "euclidean_tail_ratio": "t2 = 1.2*sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1))",
+                "euclidean_tail": "epsilon_2 <= t2^(d*(ell+n+1))*exp(d*(ell+n+1)*(1-t2^2)/2)",
                 "joint_response_success": "(1-epsilon_s_tail)*(1-epsilon_m_tail) - epsilon_2",
                 "mu_oom": "mu_a*mu_b*mu_s*mu_m / ((1-epsilon_a_tail)*(1-epsilon_b_tail)*((1-epsilon_s_tail)*(1-epsilon_m_tail)-epsilon_2)*(1-epsilon_g_upper)*(1-epsilon_cmp_modelled))",
                 "scale_note": "The communication and tail bounds follow the current response split: (z_s,z_key) has d*(n+ell) released coefficients at sigma_s, and z_eval has d released coefficients at sigma_m. The infinity checks are sequential conditional events, so their success probabilities multiply without an independence assumption; the joint Euclidean-tail loss is then subtracted. The product-check thresholds B_g_0 and B_g_1 are recorded per row. epsilon_g_upper is checked from the included product-threshold validation CSV. Within the independent-uniform coefficient model, epsilon_cmp_modelled is recomputed by exactly counting residues satisfying both compression predicates.",

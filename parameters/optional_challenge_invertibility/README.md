@@ -7,9 +7,10 @@ The large generated `STable_*.csv` files are intentionally not included in this 
 The bundled d=256 scripts are configured for the current LANES modulus
 `q_hat=67107713`, with `d=256`, `L=64`, `q_hat mod 256 = 129`, and `w=11`.
 `d256_current_q_result.txt` records the current-modulus postcompute result
-`logp=-90.5`. This value is not covered by the top-level one-command checks:
-reproducing it requires regenerating the omitted large `STable` intermediate,
-and no checksum ties the recorded result to that generated intermediate.
+`logp=-90.5`. The fast table check pins that recorded value and modulus, but
+does not rederive them: reproduction requires regenerating the omitted large
+`STable` intermediate, and no checksum ties the recorded result to that
+generated intermediate.
 
 ## Scripts
 

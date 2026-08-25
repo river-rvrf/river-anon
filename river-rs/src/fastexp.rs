@@ -36,9 +36,8 @@
 //!
 //! ## Why not FACCT or a CDT
 //!
-//! Both siblings sample large-σ Gaussians with a FACCT-style
-//! decomposition (`../../lotrs-dev/lotrs-facct-sampler.md`) or a CDT.
-//! Those are faster still, and this implementation would use one if it
+//! FACCT-style decompositions and CDTs can sample large-σ Gaussians
+//! faster still, and this implementation would use one if it
 //! could — but they are *different samplers*, not different arithmetic:
 //!
 //! * FACCT splits `exp(-u)` into `Ber(2^-k)` and `Ber(exp(-r))`, drawing

@@ -54,6 +54,12 @@ pub const VERIFIER_TAILCUT: u64 = 6;
 /// below `2^-128`.
 pub const GAUSSIAN_TAILCUT: u64 = 14;
 
+/// Fixed concrete constant in `M_1 = exp(12/phi + 1/(2 phi^2))`.
+///
+/// This belongs to the concrete [`rej1`] definition rather than to an
+/// individual parameter profile or transcript.
+pub const REJ1_CONSTANT: u64 = 12;
+
 /// Denominator [`rational_sigma`] pins Gaussian widths to.
 pub const SIGMA_SCALE: u64 = 1 << 20;
 
@@ -695,20 +701,20 @@ fn tail_reject(z: &[i64], sigma_num: u64, sigma_den: u64) -> bool {
     inf_norm(z) * sigma_den as i128 > VERIFIER_TAILCUT as i128 * sigma_num as i128
 }
 
-/// `2 tau_rej phi + 1`, the `Rej_1` exponent numerator, or a panic.
+/// `24 phi + 1`, the concrete `Rej_1` exponent numerator, or a panic.
 ///
 /// Split out so both the value and its failure are stated once.  The
 /// result is asserted to fit `i128` because the caller negates it into
 /// [`Int::from_i128`].
-fn checked_exponent_num(tau_rej: u64, phi: u64) -> u128 {
+fn checked_exponent_num(phi: u64) -> u128 {
     let n = 2u128
-        .checked_mul(tau_rej as u128)
+        .checked_mul(REJ1_CONSTANT as u128)
         .and_then(|x| x.checked_mul(phi as u128))
         .and_then(|x| x.checked_add(1))
         .filter(|&x| x <= i128::MAX as u128);
     match n {
         Some(x) => x,
-        None => panic!("rej1: 2 tau_rej phi + 1 overflows (tau_rej={tau_rej}, phi={phi})"),
+        None => panic!("rej1: 24 phi + 1 overflows (phi={phi})"),
     }
 }
 
@@ -724,18 +730,13 @@ fn checked_two_phi_squared(phi: u64) -> u128 {
     }
 }
 
-/// `Rej_1(z, v, phi, T, tau_rej)` with `sigma = phi · T` as a rational.
+/// `Rej_1(z, v, phi, T)` with `sigma = phi · T` as a rational.
 ///
 /// `z` and `v` are flat slices of *centred* integer coefficients.
 ///
-/// `tau_rej` is the fifth argument the paper gives
-/// this procedure, and it is **required** rather than defaulted.  The
-/// constant it replaced was written here as the literal `24 phi + 1`,
-/// which is `2 tau phi + 1` at `tau = 12`; a default would have left the
-/// sampler and [`crate::params::RiVeRParams::mu_a`] able to disagree about
-/// the repetition constant while both looked parameterised.  `oom.rs`
-/// passes `par.REJ_TAU`, so the rejection rate the sampler achieves is the
-/// one the reported estimate assumes.
+/// The concrete rejection constant is fixed internally at 12.  The sampler
+/// and [`crate::params::RiVeRParams::mu_a`] therefore share
+/// [`REJ1_CONSTANT`] rather than exposing a per-profile argument.
 ///
 /// # Panics
 ///
@@ -745,25 +746,14 @@ fn checked_two_phi_squared(phi: u64) -> u128 {
 /// [`crate::params::RiVeRParams::check`] rejects all of these long before
 /// here; the contract is for a caller that bypassed it.
 ///
-/// * `tau_rej == 0` — a repetition constant of zero is not a parameter
-///   anyone could mean, and `M_1` would collapse.
 /// * `phi == 0` — `2 phi^2` is then a zero denominator.
-/// * `2 tau_rej phi + 1` or `2 phi^2` not representable in `u128`.
+/// * `24 phi + 1` or `2 phi^2` not representable in the checked arithmetic.
 /// * `sigma_num == 0`, or `z` and `v` of differing length.
-pub fn rej1(
-    xof: &mut Xof,
-    z: &[i64],
-    v: &[i64],
-    phi: u64,
-    sigma_num: u64,
-    sigma_den: u64,
-    tau_rej: u64,
-) -> bool {
-    assert!(tau_rej > 0, "tau_rej must be positive");
+pub fn rej1(xof: &mut Xof, z: &[i64], v: &[i64], phi: u64, sigma_num: u64, sigma_den: u64) -> bool {
     assert!(sigma_num > 0, "sigma_num must be positive");
     let (inner_zv, norm_v_sq) = inner_and_norm(z, v);
-    // M = exp(tau/phi + 1/(2 phi^2)); over the common denominator
-    // `2 phi^2` that exponent is `-(2 tau phi + 1)`.  Fold 1/M into the
+    // M = exp(12/phi + 1/(2 phi^2)); over the common denominator
+    // `2 phi^2` that exponent is `-(24 phi + 1)`.  Fold 1/M into the
     // threshold scale.
     //
     // Formed in `u128` with checked arithmetic: at `u64` width both
@@ -771,7 +761,7 @@ pub fn rej1(
     // would wrap rather than trap — turning an invalid parameter into a
     // plausible-looking threshold for a different `M`.
     let m_scale = exp_threshold(
-        &Int::from_i128(-(checked_exponent_num(tau_rej, phi) as i128)),
+        &Int::from_i128(-(checked_exponent_num(phi) as i128)),
         &Nat::from_u128(checked_two_phi_squared(phi)),
         &Nat::pow2(PROB_BITS),
     );
@@ -1103,28 +1093,31 @@ mod tests {
 
     #[test]
     fn the_rejection_exponent_is_exact_where_u64_would_have_wrapped() {
-        // At every shipped profile the exponent is small and both forms
-        // agree — `tau_rej = 12` against `phi_s` in the 22..40 band.
-        assert_eq!(checked_exponent_num(12, 22), 529);
+        // At every shipped profile the exponent is small.
+        assert_eq!(checked_exponent_num(22), 529);
         assert_eq!(checked_two_phi_squared(22), 968);
 
-        // The point of the check is off that band.  `2 tau phi + 1` at
-        // `tau = 2^10, phi = 2^60` is `2^71 + 1`, which needs 72 bits; the
-        // narrower `u64` form wraps it to 1, an exponent for a
-        // completely different `M` that no assertion would have caught.
-        let (tau, phi) = (1u64 << 10, 1u64 << 60);
-        assert_eq!(checked_exponent_num(tau, phi), (1u128 << 71) + 1);
+        // The fixed constant still has to be widened before multiplication:
+        // at the largest admitted argument the mathematical value fits u128,
+        // while a u64 implementation wraps.
+        let phi = u64::MAX;
+        assert_eq!(checked_exponent_num(phi), 24u128 * phi as u128 + 1);
         assert_eq!(
-            (2u64.wrapping_mul(tau).wrapping_mul(phi)).wrapping_add(1),
-            1,
+            24u64.wrapping_mul(phi).wrapping_add(1),
+            u64::MAX - 22,
             "the u64 form really did wrap here"
         );
     }
 
     #[test]
-    #[should_panic(expected = "overflows")]
-    fn the_rejection_exponent_traps_rather_than_wrapping() {
-        checked_exponent_num(u64::MAX, u64::MAX);
+    fn rej1_uses_the_single_fixed_concrete_constant() {
+        assert_eq!(REJ1_CONSTANT, 12);
+        for phi in [22, 24, 26, 32, 34, 40] {
+            assert_eq!(
+                checked_exponent_num(phi),
+                2 * REJ1_CONSTANT as u128 * phi as u128 + 1
+            );
+        }
     }
 
     #[test]
@@ -1163,24 +1156,12 @@ mod tests {
         assert_ne!(consumed.read(64), after);
     }
 
-    /// The *measured* acceptance rate is `1/M_1`, at the `tau_rej` the
-    /// sampler is handed.
-    ///
-    /// Driven at two values, not just the shipped 12: with one value a
-    /// sampler that ignored the argument entirely would still pass, since
-    /// 12 is also the constant it used to hard-code.  That is the half the
-    /// repetition report cannot check about itself.
+    /// The measured acceptance rate is `1/M_1` for the fixed constant 12.
     #[test]
     fn rej1_acceptance_tracks_one_over_m() {
-        for tau in [12u64, 8] {
-            rej1_rate_at(tau);
-        }
-    }
-
-    fn rej1_rate_at(tau: u64) {
         let phi = 8u64;
         let t = 100i64;
-        let mut x = Xof::new(b"t", &[Part::Bytes(b"r"), Part::Bytes(&tau.to_le_bytes())]);
+        let mut x = Xof::new(b"t", &[Part::Bytes(b"r")]);
         let trials = 400;
         let mut accepted = 0;
         for _ in 0..trials {
@@ -1197,15 +1178,13 @@ mod tests {
             let z: Vec<i64> = (0..16)
                 .map(|j| gaussian_int(&mut x, phi * t as u64, 1, GAUSSIAN_TAILCUT) + v[j])
                 .collect();
-            if !rej1(&mut x, &z, &v, phi, phi * t as u64, 1, tau) {
+            if !rej1(&mut x, &z, &v, phi, phi * t as u64, 1) {
                 accepted += 1;
             }
         }
         let rate = accepted as f64 / trials as f64;
-        let expected = (-(tau as f64 / phi as f64 + 1.0 / (2.0 * (phi * phi) as f64))).exp();
-        assert!(
-            (rate - expected).abs() < 0.08,
-            "tau {tau}: rate {rate} vs {expected}"
-        );
+        let expected =
+            (-(REJ1_CONSTANT as f64 / phi as f64 + 1.0 / (2.0 * (phi * phi) as f64))).exp();
+        assert!((rate - expected).abs() < 0.08, "rate {rate} vs {expected}");
     }
 }

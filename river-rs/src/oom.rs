@@ -281,7 +281,7 @@ pub struct OomProof {
     pub x: Vec<i64>,
     pub f1: Vec<Vec<i64>>,
     pub zb: Vec<Vec<i64>>,
-    /// `z = (z_s, z_m)`, whole.  It is split only on the wire — see
+    /// `z = ((z_s, z_key), z_eval)`, whole. It is split only on the wire — see
     /// [`crate::codec::RiVeRCodec::oom_field_values`] — because the
     /// protocol and the verifier's Euclidean check operate on all of it.
     pub z: PolyVec,
@@ -307,10 +307,10 @@ pub struct Oom {
     gp_ntt: Option<CrtNttMat>,
     sigma_a: (u64, u64),
     sigma_b: (u64, u64),
-    /// The paper splits the outer response.  `z_s` answers
-    /// `r_0 = s` at width `sigma_s = phi_s B_s`; `z_m` answers
-    /// `r_1 = (e_key, e_eval)` at `sigma_m = phi_m eta_m`.  They are two
-    /// different Gaussians drawn from one XOF stream, in this order.
+    /// The paper splits the outer response. `(z_s, z_key)` answers
+    /// `r_0 = (s, e_key)` at width `sigma_s = phi_s B_s`; `z_eval` answers
+    /// `r_1 = e_eval` at `sigma_m = phi_m eta_m`. They are two different
+    /// Gaussians drawn from one XOF stream, in this order.
     sigma_s: (u64, u64),
     sigma_m: (u64, u64),
     /// `[[.]]_K` on the *centred* representative leaves high bits in
@@ -671,7 +671,6 @@ impl Oom {
             par.phi_a,
             self.sigma_a.0,
             self.sigma_a.1,
-            RiVeRParams::REJ_TAU,
         ) {
             return None;
         }
@@ -704,8 +703,8 @@ impl Oom {
 
         // The figure's disjunction, left to right and short-circuiting, so
         // the XOF is consumed in exactly that order:
-        //   Rej_1((z_s, z_key), x r_0, phi_s, B_s, tau_rej)
-        //   Rej_1(z_eval,        x r_1, phi_m, eta_m, tau_rej)
+        //   Rej_1((z_s, z_key), x r_0, phi_s, B_s)
+        //   Rej_1(z_eval,        x r_1, phi_m, eta_m)
         //   Rej_2(z_b,           x r_b, phi_b, B)
         if rej1(
             xof,
@@ -714,7 +713,6 @@ impl Oom {
             par.phi_s,
             self.sigma_s.0,
             self.sigma_s.1,
-            RiVeRParams::REJ_TAU,
         ) {
             return None;
         }
@@ -725,7 +723,6 @@ impl Oom {
             par.phi_m,
             self.sigma_m.0,
             self.sigma_m.1,
-            RiVeRParams::REJ_TAU,
         ) {
             return None;
         }
@@ -1013,9 +1010,9 @@ fn inf_vec(v: &[Vec<i64>]) -> i128 {
 ///
 /// * `||f_1||_inf <= 6 phi_a B_a`
 /// * `||z_b||_inf <= 6 phi_b B`
-/// * `||z_s||_inf <= 6 sigma_s`
-/// * `||(z_key, z_eval)||_inf <= 6 sigma_m`
-/// * `||z||_2 <= 1.2 sqrt(sigma_s^2 d ell + sigma_m^2 d (n+1))`
+/// * `||(z_s, z_key)||_inf <= 6 sigma_s`
+/// * `||z_eval||_inf <= 6 sigma_m`
+/// * `||z||_2 <= 1.2 sqrt(sigma_s^2 d (ell+n) + sigma_m^2 d)`
 ///
 /// The first four have the shape `K sqrt(M)`, so the exact form squares
 /// the *norm* against a squared bound; the Euclidean one is already a

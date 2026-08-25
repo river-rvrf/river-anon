@@ -74,6 +74,9 @@ and expanded finite-grid diagnostic, use `make -C parameters check`. The
 published rows pass the explicit finite grid; [parameters/README.md](parameters/README.md)
 documents its scope and the acceptance tests. Generated tables under `parameters/data/`
 and `parameters/report/` are shipped outputs and are preserved by `make clean`.
+The five-million-trial product-threshold replay is intentionally separate:
+`make -C parameters product-check` regenerates it without writing and compares
+the resulting aggregate counts with the shipped CSV.
 
 ## Reproducing the paper's claims
 
@@ -120,7 +123,8 @@ Public keys and one deterministic proof per profile:
 | RiVeR-N128 | 128 | 8640 | 1728 | 29.224 | 13.886 | 43.117 |
 | RiVeR-N256 | 256 | 8064 | 1888 | 36.315 | 13.888 | 50.211 |
 
-Exact layer under the witness-hiding `lanes-experimental` backend; `wire`
+Exact layer under `lanes-experimental`, which does not transmit the witness;
+`wire`
 includes two 4-byte length prefixes. Proof length is data-dependent — entropy coding moves the
 last few bytes between proofs.
 
@@ -128,7 +132,8 @@ last few bytes between proofs.
 geometric variable; the per-attempt figure is the stable one. The paper's
 model puts the mean attempt count at 8.3–8.6.
 
-Backend `lanes-experimental` (the witness-hiding one) throughout. `Eval` is
+Backend `lanes-experimental` (the candidate that does not transmit the
+witness) throughout. `Eval` is
 aggregated over 5 independent seeds — total time over total attempts, since
 attempts abort at different points and do not cost the same:
 
@@ -238,7 +243,7 @@ make kat             # primitives only, ~1 s
 make check-vectors   # cross-language byte equality
 ```
 
-`river-py` carries 369 tests, `river-rs` 290 (260 library, 26 primitive KAT,
+`river-py` carries 370 tests, `river-rs` 290 (260 library, 26 primitive KAT,
 and 4 vector tests). They include the negative
 cases: every malformed public input must be rejected rather than crash —
 truncation, non-canonical residues, runaway unary runs, nonzero padding,

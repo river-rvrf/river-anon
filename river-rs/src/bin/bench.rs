@@ -11,8 +11,8 @@
 //! layer appears twice, once per backend — `opening` is the cheap
 //! witness-revealing mock and `lanes-experimental` is the candidate LANES
 //! prover, which does not transmit the witness, so the gap between their
-//! two `pi_ex` lines is what hiding it costs here.  The per-primitive
-//! numbers above are what explain the ones below.
+//! two `pi_ex` lines is the cost of this candidate non-opening encoding.
+//! The per-primitive numbers above are what explain the ones below.
 
 use std::{env, process, time::Instant};
 

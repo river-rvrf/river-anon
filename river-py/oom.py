@@ -289,7 +289,7 @@ class OOM:
         if j_star >= 1:
             shift[j_star - 1] = list(x)
         if rej1(xof, _flatten(f1), _flatten(shift), par.phi_a,
-                self.sigma_a[0], self.sigma_a[1], par.REJ_TAU):
+                self.sigma_a[0], self.sigma_a[1]):
             return None
 
         # z_b = r_a + x r_b,   z_s = y_s + x r_0,   z_m = y_m + x r_1
@@ -316,10 +316,10 @@ class OOM:
         #   Rej_1(z_eval,          x r_1, phi_m, eta_m)
         #   Rej_2(z_b, x r_b, phi_b, B)
         if rej1(xof, _flatten(z_s_c), _flatten(x_r0_c), par.phi_s,
-                self.sigma_s[0], self.sigma_s[1], par.REJ_TAU):
+                self.sigma_s[0], self.sigma_s[1]):
             return None
         if rej1(xof, _flatten(z_m_c), _flatten(x_r1_c), par.phi_m,
-                self.sigma_m[0], self.sigma_m[1], par.REJ_TAU):
+                self.sigma_m[0], self.sigma_m[1]):
             return None
         if rej2(xof, _flatten(z_b), _flatten(x_r_b), par.phi_b,
                 self.sigma_b[0], self.sigma_b[1]):

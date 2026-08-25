@@ -212,13 +212,13 @@ def enrich_candidate(row: dict[str, object]):
     lhs, rhs = oom.msis_mr09_l2(q, int(row["n"]), bounds["beta_sis"])
     lhs2, rhs2 = oom.msis_mr09_l2(q, ZZ(row["n"]) + oom.EMBEDDED_KEY_RANK, bounds["beta_sis_2"])
     delta_req2 = oom.msis_mr09_required_delta(q, ZZ(row["n"]) + oom.EMBEDDED_KEY_RANK, bounds["beta_sis_2"])
-    euclidean_lhs = RR("1.2") * sqrt(
-        bounds["sigma_s"] ** 2 * RR(oom.D_OUT) * (RR(row["ell"]) + RR(row["n"]))
-        + bounds["sigma_m"] ** 2 * RR(oom.D_OUT)
-    )
-    euclidean_rhs = RR("1.19") * bounds["sigma_s"] * sqrt(
-        RR(oom.D_OUT) * (RR(row["ell"]) + RR(row["n"]) + RR(oom.EMBEDDED_KEY_RANK))
-    )
+    euclidean_lhs = oom.HP("1.2") * (
+        oom.HP(bounds["sigma_s"]) ** 2 * oom.HP(oom.D_OUT) * oom.HP(row["ell"] + row["n"])
+        + oom.HP(bounds["sigma_m"]) ** 2 * oom.HP(oom.D_OUT)
+    ).sqrt()
+    euclidean_rhs = oom.euclidean_tail_ratio(row, bounds) * oom.HP(bounds["sigma_s"]) * (
+        oom.HP(oom.D_OUT) * oom.HP(row["ell"] + row["n"] + int(oom.EMBEDDED_KEY_RANK))
+    ).sqrt()
     checks = {
         "p_split_factor_is_2": oom.split_factor_count(oom.D_OUT, p) == 2,
         "p_congruent_5_mod_8": p % ZZ(8) == ZZ(5),
@@ -234,7 +234,8 @@ def enrich_candidate(row: dict[str, object]):
         "repeat_bound_at_or_below_10": RR(repeat["mu_oom"]) <= RR(10),
         "product_bound_below_0p01": RR(row["epsilon_g_upper"]) <= RR("0.01"),
         "euclidean_sigma_m_at_most_sigma_s": bounds["sigma_m"] <= bounds["sigma_s"],
-        "euclidean_tail_threshold_condition": euclidean_lhs >= euclidean_rhs,
+        "euclidean_tail_threshold_identity": abs(euclidean_lhs - euclidean_rhs)
+        <= euclidean_lhs * oom.HP(2) ** -200,
         "phi_m_is_max_for_eta": ZZ(row["phi_m"]) == oom.max_phi_m(),
         "phi_m_constraint_strict": oom.phi_m_constraint_holds(row["phi_m"]),
         "K_a_matches_boundgen": oom.K_A == oom.k_a_boundgen(row),
@@ -297,7 +298,7 @@ def main() -> None:
         "K_b": int(oom.K_B),
         "K_a": int(oom.K_A),
         "s_c": int(oom.S_C),
-        "tau_rej": int(oom.TAU_REJ),
+        "rej1_constant": int(oom.REJ1_CONSTANT),
         "q_tilde": int(oom.Q_TILDE),
     }
     caches = {"outer_mlwr": {}, "outer_hiding": {}, "selector_hiding": {}, "selector_binding_asis": {}}

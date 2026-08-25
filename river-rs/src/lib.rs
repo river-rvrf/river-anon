@@ -41,8 +41,7 @@
 //!
 //! ## Status
 //!
-//! Targeting the published paper.
-//! the protocol and wire format are unchanged.
+//! Targeting the published paper and the shipped cross-language wire format.
 //!
 //! | layer | module | state |
 //! |---|---|---|
@@ -54,7 +53,7 @@
 //! | CRT-NTT matrix backend | [`aux_ntt`] | complete |
 //! | XOF and samplers | [`sample`] | complete |
 //! | bit codec, transcript | [`codec`] | complete |
-//! | relaxed one-out-of-many proof | [`oom`] | complete — split `z_s`/`z_m`, four rejection samplers, matched attempt-by-attempt against the reference |
+//! | relaxed one-out-of-many proof | [`oom`] | complete — split `(z_s,z_key)`/`z_eval`, four rejection samplers, matched attempt-by-attempt against the reference |
 //! | exact layer `Pi_ex` | [`exact`] | complete against `opening` and `lanes-experimental` |
 //! | `Setup` / `KeyGen` / `Eval` / `Verify` | [`river`] | complete — byte-exact against `vectors.json` |
 //! | interop against `vectors.json` | `tests/vectors.rs` | all four shipped cases; two production `lanes` cases withheld |

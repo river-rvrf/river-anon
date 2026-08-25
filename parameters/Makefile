@@ -11,7 +11,7 @@ define run_sage
 $(SAGE) -c "import runpy, sys; sys.argv = ['$(1)']; runpy.run_path('$(1)', run_name='__main__')"
 endef
 
-.PHONY: all table-check check clean distclean
+.PHONY: all table-check check product-selftest product-check product-regenerate clean distclean
 
 all: table-check
 
@@ -27,6 +27,17 @@ table-check:
 # finite-grid diagnostic. See README.md for the diagnostic's current status.
 check:
 	bash scripts/run_all_checks.sh
+
+# The deterministic aggregate replay is deliberately separate from `check`:
+# its defaults run five one-million-trial experiments.
+product-selftest:
+	$(SAGE) -c "import runpy, sys; sys.argv = ['scripts/estimate_public_restart_bounds.sage.py', '--self-test-only']; runpy.run_path(sys.argv[0], run_name='__main__')"
+
+product-check:
+	$(SAGE) -c "import runpy, sys; sys.argv = ['scripts/estimate_public_restart_bounds.sage.py', '--check']; runpy.run_path(sys.argv[0], run_name='__main__')"
+
+product-regenerate:
+	$(call run_sage,scripts/estimate_public_restart_bounds.sage.py)
 
 clean:
 	find . -type d \( -name __pycache__ -o -name .sage \) -prune -exec rm -rf -- {} +

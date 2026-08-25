@@ -46,9 +46,10 @@
 //! the size.  Read `|pi_ex|` from this module as the cost of *this*
 //! opening, not as a concrete encoding of the paper's entropy estimate.
 //!
-//! [`crate::lanes::backend::LanesBackend`] is the zero-knowledge
-//! instantiation, and it is **gated** at these parameters — see
-//! [`lanes_unavailable_reason`].
+//! [`crate::lanes::backend::LanesBackend`] is the candidate LANES
+//! instantiation. It runs under the `lanes-experimental` name; the
+//! production alias is reserved because this artifact does not supply a
+//! reduction for its concrete composition — see [`lanes_unavailable_reason`].
 //!
 //! ## The modulus condition and centred representation
 //!
@@ -1126,11 +1127,10 @@ pub struct EstimatorSpec {
     pub msis_outputs: &'static str,
     /// The challenge section: what reproduces the paper's own figures.
     ///
-    /// `5.Parameter.tex`'s footnote gives the LANES challenge-difference
-    /// noninvertibility probability as `2^-93.5` under the re-optimized
-    /// parameters (`2^-70` under the original), and the outer RVRF figure
-    /// as `2^-91.5`.  Those are the only published quantities that
-    /// separate these LANES parameters from any other
+    /// The parameter section gives the LANES challenge-difference
+    /// noninvertibility probability as `2^-90.5` and the outer RVRF figure
+    /// as `2^-91.5`.  These are the published quantities that separate
+    /// these LANES parameters from any other
     /// ones, so a manifest that does not reproduce them has not shown it
     /// describes the re-optimized set.  Neither reaches 128 bits.
     pub challenge: &'static str,
@@ -2393,8 +2393,7 @@ mod tests {
     fn check_rejects_a_bad_modulus() {
         // `q~ - 512`: still `129 mod 256`, still 26 bits, still above the
         // no-wrap bound — and divisible by 3, which only the primality
-        // test catches.  That test was missing until review pointed it
-        // out.
+        // test catches.
         let mut ex = ExactParams::unchecked(RIVER_TOY);
         ex.q_tilde = 67_107_713 - 512;
         assert_eq!(ex.q_tilde % 256, 129);

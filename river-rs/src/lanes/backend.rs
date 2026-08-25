@@ -1,8 +1,10 @@
 //! LANES as an exact backend for RiVeR's `Pi_ex` — port of
 //! `river-py/lanes_backend.py`.
 //!
-//! The zero-knowledge alternative to [`crate::exact::OpeningBackend`],
-//! which is complete and binding but transmits its witness.
+//! The candidate alternative to [`crate::exact::OpeningBackend`]. It does
+//! not transmit the witness, whereas the opening backend does. This artifact
+//! does not supply a reduction for the candidate's concrete
+//! compression/recovery and wire-format composition.
 //!
 //! ## Mapping RiVeR's relation onto LANES
 //!
@@ -35,8 +37,8 @@
 //!   for the same reason — the product proof cannot certify `{0,1,2}`
 //!   directly.
 //!
-//!   The *direction* of that shift is where the paper contradicts itself;
-//!   this follows the relation, `e_eval = sum_j g_j d_j`.
+//!   This is the centred form of the paper's relation
+//!   `e_eval + 30 = sum_j g_j d_j`.
 //!
 //! * The link is proved **modulo `q~`**, because that is the only modulus
 //!   LANES has.  `q~` is sized against the response
@@ -215,9 +217,9 @@ impl LanesBackend {
     /// artifact reconstruct something that refuses to exist.
     pub const EXPERIMENTAL_NAME: &'static str = "lanes-experimental";
 
-    /// **Gated.**  `Err` while [`crate::exact::lanes_unavailable_reason`]
-    /// gives a reason — currently the security evidence, not the
-    /// parameters, which are the paper's.
+    /// **Gated.** `Err` while [`crate::exact::lanes_unavailable_reason`]
+    /// gives a reason — currently the artifact's concrete-composition
+    /// policy, not the parameters, which are the paper's.
     ///
     /// [`LanesBackend::experimental`] is the way past it, under a
     /// different name.
@@ -230,11 +232,10 @@ impl LanesBackend {
 
     /// The same backend under the experimental name, ungated.
     ///
-    /// It runs at the paper's own parameters; what it does not have is the
-    /// security evidence the production name requires.  Use it for
-    /// benchmarks and for coverage behind the gate — the alternative, no
-    /// coverage at all, is how an unconstrained message-block padding
-    /// survived to be found by inspection instead of by a test.
+    /// It runs at the paper's own parameters; the production alias remains
+    /// reserved because this artifact does not supply a reduction for the
+    /// concrete composition. Use the experimental name for benchmarks and
+    /// for complete implementation coverage behind the gate.
     pub fn experimental(par: RiVeRParams, seed: &[u8]) -> Result<Self, String> {
         Self::build(par, seed, Self::EXPERIMENTAL_NAME)
     }
@@ -582,8 +583,9 @@ mod tests {
     // They used to *skip*: `LanesBackend::new` refused, so each returned
     // early and printed why.  the layer runs at the
     // paper's own parameters and is byte-exact against `river-py`, so
-    // nothing is skipped.  Only the production name is gated, on security
-    // evidence, and `the_production_name_is_still_gated` asserts that.
+    // nothing is skipped. Only the production name is reserved by the
+    // composition policy, and `the_production_name_is_still_gated` asserts
+    // that.
     //
     // A test that skips while the code demonstrably works is one gate away
     // from silence — which is how `lanes::ring`'s twiddle tree stayed

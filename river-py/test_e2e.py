@@ -127,7 +127,7 @@ def test_proof_length_smoke_test_shows_no_signer_dependence():
     `lanes`'s is the larger; the shipped vectors have one signer per case and
     so cannot cover this at all.
     """
-    # The production `lanes` name is gated on security evidence, so
+    # The production `lanes` name is reserved by artifact policy, so
     # `AVAILABLE_BACKENDS` carries `lanes-experimental` instead -- the same
     # code under the name an artifact can honestly record.
     for backend in AVAILABLE_BACKENDS:

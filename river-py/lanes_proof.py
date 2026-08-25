@@ -478,9 +478,9 @@ def verify(ck, com_pub, proof, ulp, alpha_lo, alpha_hi, challenges=None):
 
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Gated on security evidence, not on parameters: the widths are the
-    # paper's.  See `exact.lanes_unavailable_reason`,
-    # `river-py/lanes_security.json`.
+    # The parameters are the paper's. The production alias is reserved by
+    # the artifact's concrete-composition policy; see
+    # `exact.lanes_unavailable_reason`.
     from exact import skip_if_lanes_unavailable
     skip_if_lanes_unavailable("lanes_proof.py")
 

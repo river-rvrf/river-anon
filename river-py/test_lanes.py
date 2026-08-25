@@ -193,7 +193,7 @@ def test_every_published_lanes_figure_is_reproduced():
 
 
 def test_the_widths_land_on_the_smoothing_parameter_by_construction():
-    """`sigma_MLWE = s_0` exactly -- the design principle behind the widths.
+    """`sigma_MLWE = s_0` before rounding -- the width design principle.
 
     The paper does not state this, but it is why `s_1 = 2 s_0` and
     `s_2 = 2 w_hat s_0` rather than any other pair with the same ratio:

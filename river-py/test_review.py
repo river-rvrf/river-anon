@@ -13,7 +13,7 @@ from fractions import Fraction
 import ring
 from exact import ExactParams
 from params import get, PROFILES
-from sample import GAUSSIAN_TAILCUT, VERIFIER_TAILCUT
+from sample import GAUSSIAN_TAILCUT, REJ1_CONSTANT, VERIFIER_TAILCUT
 from dgs import tail_exact
 
 PUBLISHED = ("RiVeR-N8", "RiVeR-N16", "RiVeR-N64", "RiVeR-N128", "RiVeR-N256")
@@ -257,7 +257,7 @@ def test_the_expected_rejection_call_count_is_reproduced():
         per_attempt = 3
         expected_calls = per_attempt * par.mu_river
         assert 24 < expected_calls < 27, (name, expected_calls)
-        assert par.REJ_TAU == 12
+        assert REJ1_CONSTANT == 12
 
 # --------------------------------------------------------------------------
 if __name__ == "__main__":

@@ -200,7 +200,7 @@ impl ExactSigma {
 impl ExactBackend {
     /// `Err` names why the backend cannot be built at this profile.
     ///
-    /// [`BackendKind::Lanes`] is **gated** on security evidence
+    /// [`BackendKind::Lanes`] is a reserved production alias
     /// — see [`crate::exact::lanes_unavailable_reason`] — so this is where
     /// selecting it fails, rather than three layers down in a proof that
     /// verifies against itself.
@@ -492,8 +492,8 @@ impl RiVeR {
 
     /// [`RiVeR::try_new_with`] with the reason kept.
     ///
-    /// `Err` is either `BoundGen`'s abort, the exact layer's, or — for
-    /// [`BackendKind::Lanes`] on security evidence — the gate in
+    /// `Err` is either `BoundGen`'s abort, the exact layer's, or — for the
+    /// reserved [`BackendKind::Lanes`] alias — the gate in
     /// [`crate::exact::lanes_unavailable_reason`].
     pub fn build(par: RiVeRParams, backend: BackendKind) -> Result<Self, String> {
         let domains = par.check_domains();
@@ -1496,7 +1496,7 @@ mod tests {
             .is_ok());
     }
 
-    /// The whole scheme runs on the zero-knowledge backend too.
+    /// The whole scheme runs on the candidate LANES backend too.
     ///
     /// `tests/vectors.rs` pins the *bytes* against the reference; this
     /// checks the properties the bytes cannot show — that the proof still
@@ -1923,7 +1923,7 @@ mod tests {
     /// under the experimental name.
     ///
     /// This is the coverage the gate would otherwise cost: `BackendKind::Lanes`
-    /// refuses to construct while the security evidence falls short, and a
+    /// is reserved while `LanesExperimental` runs the same implementation, and a
     /// proof layer with no test at all is how an unconstrained message-block
     /// padding survived to be found by inspection.
     ///

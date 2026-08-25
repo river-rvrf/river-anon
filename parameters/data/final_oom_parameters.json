@@ -11,7 +11,8 @@
     "beta_sis_1": "2.4*sqrt(sigma_s^2*(ell+n)*d)",
     "beta_sis_2": "2.4*sqrt(d*(ell+n)*sigma_s^2 + d*sigma_m^2)",
     "beta_sis_2_q_requirement": "q > max(beta_sis_2, 12*sigma_s, 12*sigma_m)",
-    "epsilon_2": "1.19^(d*(ell+n+1))*exp(d*(ell+n+1)*(1-1.19^2)/2)",
+    "epsilon_2": "t2^(d*(ell+n+1))*exp(d*(ell+n+1)*(1-t2^2)/2)",
+    "epsilon_2_tail_ratio": "1.2*sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1))",
     "eta_m": "w*gamma*B_e*sqrt(d)",
     "hat_q_lower_bound": "max(2*(2*gamma+12*phi_a*B_a)^2, 2*N^2, 2^(K_a+1))",
     "joint_response_success": "(1-epsilon_s)*(1-epsilon_m)-epsilon_2",
@@ -34,11 +35,11 @@
     "phi_m": 32,
     "phi_m_constraint_bits": 26,
     "q_tilde": 67107713,
+    "rej1_constant": 12,
     "repeat_target": 10.0,
     "s_c": 3,
     "secret_bound": 1,
-    "selector_tail_factor": 6,
-    "tau_rej": 12
+    "selector_tail_factor": 6
   },
   "rows": [
     {
@@ -64,9 +65,8 @@
       "profile": "m3_pa32_ps26_pb2",
       "q": 1073123348676497,
       "q_tilde": 67107713,
-      "repeat_bound": 8.34430735637057,
-      "s_c": 3,
-      "tau_rej": 12
+      "repeat_bound": 8.344281793569932,
+      "s_c": 3
     },
     {
       "B_response": 563546.1917820047,
@@ -91,9 +91,8 @@
       "profile": "m3_pa40_ps22_pb2",
       "q": 17169973579346417,
       "q_tilde": 67107713,
-      "repeat_bound": 8.435196176201655,
-      "s_c": 3,
-      "tau_rej": 12
+      "repeat_bound": 8.435178948967808,
+      "s_c": 3
     },
     {
       "B_response": 583259.4695605036,
@@ -118,9 +117,8 @@
       "profile": "m3_pa34_ps24_pb2",
       "q": 1073123348676497,
       "q_tilde": 67107713,
-      "repeat_bound": 8.626610904273274,
-      "s_c": 3,
-      "tau_rej": 12
+      "repeat_bound": 8.625685740071251,
+      "s_c": 3
     },
     {
       "B_response": 589695.9861080962,
@@ -145,9 +143,8 @@
       "profile": "m3_pa24_ps34_pb2",
       "q": 1073123348676497,
       "q_tilde": 67107713,
-      "repeat_bound": 8.599820475055308,
-      "s_c": 3,
-      "tau_rej": 12
+      "repeat_bound": 8.5986174635252,
+      "s_c": 3
     },
     {
       "B_response": 570205.2766083457,
@@ -172,9 +169,8 @@
       "profile": "m3_pa22_ps40_pb2",
       "q": 17169973579346417,
       "q_tilde": 67107713,
-      "repeat_bound": 8.526923940593298,
-      "s_c": 3,
-      "tau_rej": 12
+      "repeat_bound": 8.526235986557575,
+      "s_c": 3
     }
   ]
 }

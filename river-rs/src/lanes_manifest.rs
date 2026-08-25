@@ -249,7 +249,7 @@ pub static CONSTANTS: [ManifestConstant; 6] = [
 
 /// The frozen table itself.
 pub static LANES_MANIFEST: LanesManifest = LanesManifest {
-    source_sha256: "6ed4dd7959e427d83c54dbb208eb1948417191afa34cc4b9c522462a075eb407",
+    source_sha256: "64856e7e459faa74243547bb613e6d88cc17f9dc9131b59c83813cd7a52ba388",
     dimensions: DimensionSpec {
         d_tilde: 256,
         l_split: 64,
@@ -315,11 +315,11 @@ pub static LANES_MANIFEST: LanesManifest = LanesManifest {
         discrepancy: Some("13.5 KB is the paper's entropy estimate; this implementation reports the concrete Rice-coded payload field by field via LanesBackend.field_sizes(), so a small coding overhead is expected."),
     },
     estimator: EstimatorSpec {
-        hint_mlwe_inputs: "{\"identity\": \"equals s_0^2: the widths are chosen so the hint reduction returns the smoothing parameter\", \"m\": 3328, \"n\": 1024, \"q\": 67107713, \"reduction\": \"1/sigma_MLWE^2 = 2(1/s_1^2 + w_hat^2/s_2^2)  [KLSS23]\", \"sigma_mlwe_sq\": \"548617212868547486114556975081/71666668028181948762926612480\"}",
+        hint_mlwe_inputs: "{\"identity\": \"equals s_0^2 before the independent 2^-20 rounding of s_1 and s_2; the stored rational is derived from the rounded widths\", \"m\": 3328, \"n\": 1024, \"q\": 67107713, \"reduction\": \"1/sigma_MLWE^2 = 2(1/s_1^2 + w_hat^2/s_2^2)  [KLSS23]\", \"sigma_mlwe_sq\": \"548617212868547486114556975081/71666668028181948762926612480\"}",
         hint_mlwe_outputs: "{\"bits_by_reading\": {\"gaussian-parameter-as-stddev\": 134.32, \"standard-deviation\": 116.216}, \"delta_by_reading\": {\"gaussian-parameter-as-stddev\": 1.003611261724709, \"standard-deviation\": 1.0039959885516858}, \"paper_reports\": \"delta_MLWE = 1.0040\", \"status\": \"REPRODUCED by the standard-deviation reading; the alternate estimator-API conversion is retained as a sensitivity diagnostic.\"}",
         msis_inputs: "{\"length_bound\": \"B_MSIS = 8 w_hat beta'\", \"m\": 4352, \"q\": 67107713, \"rank\": 1024}",
         msis_outputs: "{\"B_MSIS\": \"15991561.7451824826921161023461938787121515276134079965128786\", \"bits\": 128.188, \"delta_closed_form\": 1.0037343664586467, \"paper_reports\": \"delta_MSIS = 1.0037\", \"published_B_MSIS_bits\": 128.188, \"status\": \"REPRODUCED, both by the closed form and by the estimator run\"}",
-        challenge: "{\"paper_lanes_noninvertibility\": \"2^-93.5\", \"paper_outer\": \"2^-91.5\", \"status\": \"reported paper values; the optional large-table reproduction is outside the core implementation tests\"}",
+        challenge: "{\"paper_lanes_noninvertibility\": \"2^-90.5\", \"paper_outer\": \"2^-91.5\", \"status\": \"reported paper values; the optional large-table reproduction is outside the core implementation tests\"}",
     },
     constants: &CONSTANTS,
 };

@@ -3,9 +3,9 @@
 
 The OOM math checker recomputes the final product thresholds B_g,0 and B_g,1
 from the final phi_a values.  The empirical input is scale-free: each row fixes
-tau_g0 and tau_g1 and records a fresh one-million-trial product-norm
-validation run.  This script checks that the final parameter rows use exactly
-those tau values and epsilon_g upper confidence bounds.
+tau_g0 and tau_g1 and records a one-million-trial product-norm validation run.
+This script checks that the final parameter rows use exactly those tau values,
+run labels, and epsilon_g upper confidence bounds.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ def clopper_pearson_upper(failures: int, trials: int, alpha: float) -> float:
     return float(beta_distribution.ppf(1.0 - alpha, failures + 1, trials - failures))
 
 
-def close(a: float, b: float, tolerance: float = 5e-10) -> bool:
+def close(a: float, b: float, tolerance: float = 5e-15) -> bool:
     return abs(a - b) <= tolerance * max(1.0, abs(a), abs(b))
 
 
@@ -56,11 +56,36 @@ def main() -> None:
         raise SystemExit("unexpected product-tau validation trial count in metadata")
     if not close(float(metadata["alpha_cell"]), 0.01):
         raise SystemExit("unexpected product-tau alpha_cell in metadata")
+    if metadata.get("source_script") != "scripts/estimate_public_restart_bounds.sage.py":
+        raise SystemExit("unexpected product-threshold generator in metadata")
+    if metadata.get("source_code_included") is not True:
+        raise SystemExit("product-threshold metadata does not mark the source as included")
+    if int(metadata.get("chunk_size", 0)) != 20_000:
+        raise SystemExit("unexpected product-threshold chunk size in metadata")
+    if int(metadata.get("product_block_size", 0)) != 8:
+        raise SystemExit("unexpected product-threshold block size in metadata")
+    if metadata.get("multiplication") != "fft":
+        raise SystemExit("unexpected product-threshold multiplication mode in metadata")
+    if int(metadata["default_seed_hex"], 16) != int(metadata["default_seed_decimal"]):
+        raise SystemExit("product-threshold seed encodings disagree")
     metadata_N = set()
+    source_by_n = {}
     for run in metadata["validation_runs"]:
-        metadata_N.update(int(value) for value in run["row_order"])
+        row_order = [int(value) for value in run["row_order"]]
+        metadata_N.update(row_order)
+        for index, n_value in enumerate(row_order):
+            expected_seed = int(metadata["default_seed_decimal"]) + 1_000_003 + 32_452_843 * index
+            if int(run["seeds"][str(n_value)]) != expected_seed:
+                raise SystemExit(f"N={n_value}: product-threshold seed rule mismatch")
+            source_by_n[n_value] = run["name"]
     if metadata_N != EXPECTED_N:
         raise SystemExit(f"unexpected product-tau metadata N set: {sorted(metadata_N)}")
+    if metadata["validation_runs"][0]["seeds"]["8"] != metadata["validation_runs"][1]["seeds"]["16"]:
+        raise SystemExit("the recorded N=8/N=16 shared seed is not reflected in metadata")
+    if "share the same initial seed" not in metadata.get("cross_run_seed_note", ""):
+        raise SystemExit("product-threshold metadata does not disclose the cross-run seed reuse")
+    if "16 sigma" not in metadata.get("sampler_model", "") or "6-sigma" not in metadata.get("sampler_model", ""):
+        raise SystemExit("product-threshold metadata does not state its sampling/conditioning model")
 
     checked = []
     for n_value in sorted(EXPECTED_N):
@@ -81,6 +106,7 @@ def main() -> None:
             "upper_bound_matches_final": close(recorded_upper, float(final["epsilon_g_upper"])),
             "trial_count_is_one_million": trials == 1_000_000,
             "alpha_cell_is_0p01": close(alpha_cell, 0.01),
+            "count_source_matches_run": tau["count_source"] == source_by_n[n_value],
         }
         if not all(checks.values()):
             failed = [key for key, ok in checks.items() if not ok]

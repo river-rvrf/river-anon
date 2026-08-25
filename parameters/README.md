@@ -68,6 +68,7 @@ not produce top-level `PASS`.
 | `scripts/reproduce_final_table.py` | Regenerates compact final rows and compact report. |
 | `scripts/river_oom_math_checks.sage.py` | Recomputes deterministic formulas and writes `data/final_oom_security.json`. |
 | `scripts/validate_product_tau_inputs.py` | Checks `tau_g0/tau_g1`, failures/trials, and Clopper-Pearson upper bounds from `data/product_tau_validation.csv`. |
+| `scripts/estimate_public_restart_bounds.sage.py` | Deterministically regenerates the product-threshold aggregates from the recorded seed rule; its default five-million-trial run is intentionally separate from the fast checks. |
 | `scripts/run_final_oom_estimators.sage.py` | Reruns MLWR/MLWE and selector A-MSIS estimator checks. |
 | `scripts/verify_oom_search_minimality.sage.py` | Enumerates the finite OOM search grid and checks that no strictly smaller row passes all checks. |
 | `scripts/make_all_parameters_table.py` | Builds `data/final_oom_all_parameters.tsv` and `report/final_oom_all_parameters.md`. |
@@ -93,15 +94,17 @@ and redistribution licenses for both bundled estimator components.
 The retained OOM ring-count values are `N in {8,16,64,128,256}`. `N=32` is intentionally excluded.
 The table below contains the parameter values that are used by the final OOM rows; longer diagnostic fields are in `data/final_oom_all_parameters.tsv`.
 
-| N | d | w | gamma | q0 | B_e | beta | r' | n | ell | hat n | hat k | K_b | K_a | s_c | tau_rej | phi_a | phi_s | phi_m | phi_b | tau_g0 | tau_g1 | OOM KiB | mu_RiVeR |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 8 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 44 | 54 | 42 | 46 | 5 | 28 | 3 | 12 | 32 | 26 | 32 | 2 | 3.14 | 2.68 | 20.133209 | 8.344307 |
-| 16 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 41 | 59 | 43 | 49 | 5 | 28 | 3 | 12 | 40 | 22 | 32 | 2 | 3.09 | 3.08 | 21.409120 | 8.435196 |
-| 64 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 44 | 54 | 50 | 51 | 5 | 28 | 3 | 12 | 34 | 24 | 32 | 2 | 3.05 | 3.33 | 25.535994 | 8.626611 |
-| 128 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 45 | 54 | 49 | 51 | 5 | 28 | 3 | 12 | 24 | 34 | 32 | 2 | 3.09 | 3.58 | 28.952209 | 8.599820 |
-| 256 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 42 | 59 | 48 | 52 | 5 | 28 | 3 | 12 | 22 | 40 | 32 | 2 | 3.06 | 3.84 | 36.040999 | 8.526924 |
+| N | d | w | gamma | q0 | B_e | beta | r' | n | ell | hat n | hat k | K_b | K_a | s_c | phi_a | phi_s | phi_m | phi_b | tau_g0 | tau_g1 | OOM KiB | mu_RiVeR |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 8 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 44 | 54 | 42 | 46 | 5 | 28 | 3 | 32 | 26 | 32 | 2 | 3.14 | 2.68 | 20.133209 | 8.344282 |
+| 16 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 41 | 59 | 43 | 49 | 5 | 28 | 3 | 40 | 22 | 32 | 2 | 3.09 | 3.08 | 21.409120 | 8.435179 |
+| 64 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 44 | 54 | 50 | 51 | 5 | 28 | 3 | 34 | 24 | 32 | 2 | 3.05 | 3.33 | 25.535994 | 8.625686 |
+| 128 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 45 | 54 | 49 | 51 | 5 | 28 | 3 | 24 | 34 | 32 | 2 | 3.09 | 3.58 | 28.952209 | 8.598617 |
+| 256 | 32 | 32 | 16 | 61 | 30 | 1 | 1 | 42 | 59 | 48 | 52 | 5 | 28 | 3 | 22 | 40 | 32 | 2 | 3.06 | 3.84 | 36.040999 | 8.526236 |
 
-In this artifact, the exact-layer repetition factor is `1`, so `mu_RiVeR = mu_OOM`.
+The concrete Rej1 definition fixes its internal constant to `12` globally.
+In this artifact, the exact-layer repetition factor is `1`, so
+`mu_RiVeR = mu_OOM`.
 
 ## Selected Moduli
 
@@ -205,7 +208,8 @@ epsilon_m_tail = 2 d exp(-18).
 The joint Euclidean response check contributes:
 
 ```text
-epsilon_2 <= 1.19^(d(ell+n+1)) exp(d(ell+n+1)(1-1.19^2)/2).
+t2 = 1.2 sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1)),
+epsilon_2 <= t2^(d(ell+n+1)) exp(d(ell+n+1)(1-t2^2)/2).
 ```
 
 The response checks are applied sequentially, with each failure probability
@@ -215,7 +219,7 @@ therefore multiply without an independence assumption. The checker also verifies
 
 ```text
 1.2 sqrt(sigma_s^2 d(ell+n) + sigma_m^2 d)
-  >= 1.19 sigma_s sqrt(d(ell+n+1)).
+  = t2 sigma_s sqrt(d(ell+n+1)).
 ```
 
 The product-threshold term `epsilon_g^U` is not hand-filled: it is checked from
@@ -224,10 +228,20 @@ The script recomputes the Clopper-Pearson upper bound from the recorded failures
 matches the final `epsilon_g^U`.  The final artifact uses the scale-free `tau_g0/tau_g1` values and recomputes
 `B_g,0/B_g,1` from the final `phi_a`.
 The companion file `data/product_tau_validation_metadata.json` records the source-script name,
-default seed, per-row seed rule, validation grouping, and confidence-bound convention. The source
-script and raw sample vectors are not included. Consequently, the package checks the recorded
-aggregate counts and independently recomputes their Clopper--Pearson confidence bounds, but it does
-not rerun the Monte Carlo experiment that produced those counts.
+default seed, per-row seed rule, validation grouping, chunk size, product block size, and
+confidence-bound convention. The supplied N=8 and N=16 runs restart their row index and therefore
+share an initial seed and challenge prefix; their streams diverge after Gaussian sampling, and no
+cross-profile independence is used in the per-row confidence bounds. Each run is named explicitly
+in the CSV rather than hidden behind one generic source label.
+
+The supplied experiment samples from a centered Gaussian cut at `16 sigma` without conditioning on
+the protocol's preceding `6 sigma` infinity check. It is therefore reproduced as an unconditioned,
+wider-support proxy, not asserted to equal the conditional probability in the protocol analysis.
+Raw sample vectors are not stored. The fast checks validate the recorded aggregates and independently
+recompute their Clopper--Pearson bounds; the full experiment can be replayed explicitly with
+`make product-check` (five million trials, so it is not part of `make check`). Integer failure counts
+must match exactly. The floating quantile is compared within `5e-15`, since different
+numerical-library builds can differ in its last few digits.
 
 The compression-stability term `epsilon_cmp^U` is deterministic/modelled, not a Monte Carlo input.
 It is recomputed by exactly counting residues that simultaneously satisfy the
@@ -278,11 +292,11 @@ The JSON payloads keep the exact estimator inputs under `checked_instances`. The
 
 | N | mu_a | mu_b | mu_s | mu_m | epsilon_g^U | epsilon_cmp^U | log2 epsilon_2 | response success | success denominator | mu_RiVeR | OOM KiB | pass |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|:---:|
-| 8 | 1.455702 | 2.266297 | 1.587687 | 1.455702 | 0.007956454 | 0.078766056 | -155.837499 | 0.999903503 | 0.913769 | 8.344307 | 20.133209 | yes |
-| 16 | 1.350281 | 2.266297 | 1.727176 | 1.455702 | 0.007793341 | 0.080562037 | -158.985731 | 0.999901554 | 0.912126 | 8.435196 | 21.409120 | yes |
-| 64 | 1.423863 | 2.266297 | 1.650153 | 1.455702 | 0.009060204 | 0.093047660 | -155.837499 | 0.999903503 | 0.898549 | 8.626611 | 25.535994 | yes |
-| 128 | 1.650153 | 2.266297 | 1.423863 | 1.455702 | 0.007850079 | 0.091274372 | -157.411615 | 0.999902528 | 0.901348 | 8.599820 | 28.952209 | yes |
-| 256 | 1.727176 | 2.266297 | 1.350281 | 1.455702 | 0.008598564 | 0.089497535 | -160.559847 | 0.999900579 | 0.902314 | 8.526924 | 36.040999 | yes |
+| 8 | 1.455702 | 2.266297 | 1.587687 | 1.455702 | 0.007953415 | 0.078766056 | -162.321916 | 0.999903503 | 0.913772 | 8.344282 | 20.133209 | yes |
+| 16 | 1.350281 | 2.266297 | 1.727176 | 1.455702 | 0.007791315 | 0.080562037 | -165.855193 | 0.999901554 | 0.912128 | 8.435179 | 21.409120 | yes |
+| 64 | 1.423863 | 2.266297 | 1.650153 | 1.455702 | 0.008953919 | 0.093047660 | -162.348550 | 0.999903503 | 0.898645 | 8.625686 | 25.535994 | yes |
+| 128 | 1.650153 | 2.266297 | 1.423863 | 1.455702 | 0.007711270 | 0.091274372 | -163.995628 | 0.999902528 | 0.901474 | 8.598617 | 28.952209 | yes |
+| 256 | 1.727176 | 2.266297 | 1.350281 | 1.455702 | 0.008518571 | 0.089497535 | -167.446394 | 0.999900579 | 0.902386 | 8.526236 | 36.040999 | yes |
 
 ## LANES Size Cross-Check
 
@@ -317,6 +331,6 @@ parameter table above.  The large precomputed `STable_*.csv` files are intention
 artifact because they are hundreds of megabytes and can be regenerated by the precompute scripts.
 The bundled d=256 scripts are configured for the current LANES modulus `q_hat=67107713`.
 For `d=256`, `L=64`, and `w=11`, `d256_current_q_result.txt` records
-`logp=-90.5`. This is not part of the one-command check: independently
-reproducing it requires regenerating the omitted large S-table, and the
-recorded text is not checksum-linked to that generated intermediate.
+`logp=-90.5`. The fast one-command check pins the recorded modulus and
+value; independently re-deriving the value requires regenerating the
+omitted large S-table.

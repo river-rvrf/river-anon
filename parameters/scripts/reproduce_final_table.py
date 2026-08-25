@@ -33,7 +33,7 @@ GLOBAL_CONSTANTS = {
     "phi_m_constraint_bits": 26,
     "q_tilde": 67107713,
     "selector_tail_factor": 6,
-    "tau_rej": 12,
+    "rej1_constant": 12,
     "K_b": 5,
     "K_a": 28,
     "s_c": 3,
@@ -44,7 +44,7 @@ ROWS = [
     {
         "N": 8,
         "oom_kb": 20.133209060562596,
-        "repeat_bound": 8.34430735637057,
+        "repeat_bound": 8.344281793569932,
         "n": 44,
         "ell": 54,
         "p": 17592186043877,
@@ -66,7 +66,7 @@ ROWS = [
     {
         "N": 16,
         "oom_kb": 21.409119640954838,
-        "repeat_bound": 8.435196176201655,
+        "repeat_bound": 8.435178948967808,
         "n": 41,
         "ell": 59,
         "p": 281474976710597,
@@ -88,7 +88,7 @@ ROWS = [
     {
         "N": 64,
         "oom_kb": 25.535994066823953,
-        "repeat_bound": 8.626610904273274,
+        "repeat_bound": 8.625685740071251,
         "n": 44,
         "ell": 54,
         "p": 17592186043877,
@@ -110,7 +110,7 @@ ROWS = [
     {
         "N": 128,
         "oom_kb": 28.95220911190496,
-        "repeat_bound": 8.599820475055308,
+        "repeat_bound": 8.5986174635252,
         "n": 45,
         "ell": 54,
         "p": 17592186043877,
@@ -132,7 +132,7 @@ ROWS = [
     {
         "N": 256,
         "oom_kb": 36.04099899348253,
-        "repeat_bound": 8.526923940593298,
+        "repeat_bound": 8.526235986557575,
         "n": 42,
         "ell": 59,
         "p": 281474976710597,
@@ -169,7 +169,6 @@ FIELDNAMES = [
     "K_b",
     "K_a",
     "s_c",
-    "tau_rej",
     "q_tilde",
     "profile",
     "phi_a",
@@ -189,7 +188,6 @@ def rows_with_constants() -> list[dict[str, object]]:
         out["K_b"] = GLOBAL_CONSTANTS["K_b"]
         out["K_a"] = GLOBAL_CONSTANTS["K_a"]
         out["s_c"] = GLOBAL_CONSTANTS["s_c"]
-        out["tau_rej"] = GLOBAL_CONSTANTS["tau_rej"]
         out["q_tilde"] = GLOBAL_CONSTANTS["q_tilde"]
         out["phi_m"] = GLOBAL_CONSTANTS["phi_m"]
         rows.append(out)
@@ -236,7 +234,8 @@ def write_json(rows: list[dict[str, object]]) -> Path:
             "beta_sis": "max(4*w*gamma*beta_sis_1, beta_sis_1 + 2*B_response)",
             "beta_sis_2": "2.4*sqrt(d*(ell+n)*sigma_s^2 + d*sigma_m^2)",
             "beta_sis_2_q_requirement": "q > max(beta_sis_2, 12*sigma_s, 12*sigma_m)",
-            "epsilon_2": "1.19^(d*(ell+n+1))*exp(d*(ell+n+1)*(1-1.19^2)/2)",
+            "epsilon_2_tail_ratio": "1.2*sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1))",
+            "epsilon_2": "t2^(d*(ell+n+1))*exp(d*(ell+n+1)*(1-t2^2)/2)",
             "joint_response_success": "(1-epsilon_s)*(1-epsilon_m)-epsilon_2",
             "B_g_0": "tau_g0*(d*(N-1)/3)*(phi_a*B_a)^2",
             "B_g_1": "tau_g1*(d/2)*(phi_a*B_a)^2",
@@ -279,7 +278,7 @@ def write_report(rows: list[dict[str, object]]) -> Path:
             "- `beta_sis = max(4 w gamma beta_sis_1, beta_sis_1 + 2 B_response)`.",
             "- `beta_sis_2 = 2.4 sqrt(d(ell+n) sigma_s^2 + d sigma_m^2)`.",
             "- Auxiliary MSIS2 checks require `q > max(beta_sis_2, 12 sigma_s, 12 sigma_m)` and `delta <= 1.004690`.",
-            "- The joint Euclidean response check contributes `epsilon_2 <= 1.19^(d(ell+n+1)) exp(d(ell+n+1)(1-1.19^2)/2)` to repeat accounting.",
+            "- With `t2 = 1.2 sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1))`, the joint Euclidean response check contributes `epsilon_2 <= t2^(d(ell+n+1)) exp(d(ell+n+1)(1-t2^2)/2)`.",
             "- The sequential response-block success term is `(1-epsilon_s)(1-epsilon_m)-epsilon_2`.",
             "- Selector A-MSIS beta-vector components and merged estimator widths are stored in `selector_asis_bounds`.",
             "- Repeat accounting is recomputed in `data/final_oom_security.json` and checked against `repeat_bound`.",
@@ -380,6 +379,7 @@ def check_package_shape() -> None:
         Path("scripts/reproduce_final_table.py"),
         Path("scripts/make_all_parameters_table.py"),
         Path("scripts/validate_product_tau_inputs.py"),
+        Path("scripts/estimate_public_restart_bounds.sage.py"),
         Path("scripts/run_all_checks.sh"),
         Path("external/lattice-estimator/LANES.sage"),
         Path("external/lattice-estimator/UPSTREAM.txt"),
@@ -413,6 +413,20 @@ def check_package_shape() -> None:
         missing = sorted(str(path) for path in missing)
         forbidden = sorted(str(path) for path in forbidden)
         raise SystemExit(f"unexpected package shape; missing={missing}; forbidden={forbidden}")
+
+    # The large S-table needed to reproduce this optional computation is not
+    # shipped, but the recorded result must at least stay tied to the exact
+    # LANES modulus and figure used by the implementation manifests.
+    result_path = ROOT / "optional_challenge_invertibility" / "d256_current_q_result.txt"
+    result_fields = {}
+    for line in result_path.read_text(encoding="utf-8").splitlines():
+        if "=" in line:
+            key, value = line.split("=", 1)
+            result_fields[key.strip()] = value.strip()
+    if result_fields.get("q") != "67107713" or result_fields.get("logp") != "-90.5":
+        raise SystemExit(
+            "recorded LANES invertibility result must use q=67107713 and logp=-90.5"
+        )
 
 
 def main() -> None:

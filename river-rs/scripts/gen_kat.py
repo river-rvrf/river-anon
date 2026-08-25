@@ -278,16 +278,12 @@ def rej_cases():
                   [50000, 40000, 30000], [512, 256, 128],
                   par.phi_b, num_b, den_b, 8))
 
-    # `tau_rej` is `Rej_1`'s fifth argument since the paper
-    # ; `Rej_2` has no such parameter.  It is recorded per case so
-    # the KAT pins the value the *sampler* used, not only the value the
-    # repetition report assumes -- those were able to disagree while both
-    # looked parameterised.
-    tau = P.RiVeRParams.REJ_TAU
+    # Rej_1's concrete constant 12 is internal to the sampler.  The KAT pins
+    # its effect through the decisions, not through a redundant case field.
     for kind, domain, parts, z, v, phi, num, den, count in specs:
         x = _xof(domain, parts)
         if kind == "rej1":
-            values = [S.rej1(x, z, v, phi, num, den, tau) for _ in range(count)]
+            values = [S.rej1(x, z, v, phi, num, den) for _ in range(count)]
         else:
             values = [S.rej2(x, z, v, phi, num, den) for _ in range(count)]
         case = {
@@ -302,8 +298,6 @@ def rej_cases():
             "count": count,
             "values": values,
         }
-        if kind == "rej1":
-            case["tau_rej"] = tau
         out.append(case)
     return out
 
@@ -677,9 +671,9 @@ def oom_layer_cases():
 
     The layers below this are pinned value-by-value; this one is pinned as a
     *trajectory*, because that is the thing that can drift.  Every attempt
-    consumes XOF bytes through three rejection samplers and can abort at one
-    of six places, so a port that draws one extra byte, tests the bounds in a
-    different order, or returns early from the wrong check produces a
+    consumes XOF bytes through four rejection samplers and can subsequently
+    abort at bound and reconstruction checks, so a port that draws one extra
+    byte, tests the bounds in a different order, or returns early from the wrong check produces a
     different sequence of aborts long before it produces a different proof.
     Pinning only a successful proof would hide all of that behind a retry.
 
@@ -1133,7 +1127,8 @@ def main():
     doc["lanes_proof"] = lanes_proof_cases()
 
     # What is still withheld is the *production* backend name, which is
-    # gated on security evidence rather than on parameters -- so the record
+    # reserved by the concrete-composition policy rather than by the
+    # parameters -- so the record
     # names no blocks, and exists to carry the cause across the two
     # implementations.
     doc["withheld"] = _withheld_record([])

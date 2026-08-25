@@ -1,8 +1,8 @@
 //! The LANES exact backend — port of `river-py/lanes_*.py`.
 //!
 //! **Optional.**  Nothing in core RiVeR imports this; it exists so the
-//! exact layer can be instantiated with a real zero-knowledge prover
-//! instead of [`crate::exact::OpeningBackend`], which reveals its witness.
+//! exact layer can be instantiated with the candidate LANES prover instead
+//! of [`crate::exact::OpeningBackend`], which reveals its witness.
 //!
 //! ## The six modules
 //!

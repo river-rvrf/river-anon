@@ -14,7 +14,7 @@ LANES backend is available as `lanes-experimental`; see "The exact layer".
 
 It is not a production or security-preserving RiVeR implementation.  The
 `opening` backend carries the protocol end to end but deliberately
-reveals its opening; the zero-knowledge `lanes` layer runs under
+reveals its opening; the candidate LANES exact layer runs under
 `exact_backend="lanes-experimental"`, with the production `"lanes"` name
 reserved pending a reduction for the concrete compression/recovery
 composition — see "The exact layer". What it is good
@@ -102,7 +102,7 @@ profiles reproduce every derived column of the final table — `B`, `B_s`,
 `B_g0`, `B_g1`, `beta_SIS,1`, `beta_SIS,2`, `beta_SIS`, `beta_sel,inf`, the
 repeat bound, `|pi_OOM|` and the total — to the two significant figures they
 are printed with), the outer MLWR key relation, exact-`N` ordered rings, the
-complete OOM layer with its split `(z_s, z_m)` response and all four
+complete OOM layer with its split `(z_s, z_key)` and `z_eval` responses and all four
 rejection samplers, the centred `[[.]]_K` of the Preliminaries, the exact
 relation `R^_ex` with its radix-3 range encoding and six padded `N_ex = 6`
 message blocks, the two-stage commit ordering that binds `W` into `rho'`
@@ -142,8 +142,10 @@ free constant, so nothing here is searched:
 `delta_MSIS = 1.0037`, `D = 17` — and `test_lanes.py` pins each against the
 printed digits. Two derived identities are pinned too:
 `s^2 = s_2^2 + w_hat^2 s_1^2`, so the published `s` is already
-the worst-case-`l1` response width; and `sigma_MLWE = s_0` exactly, which
-is *why* the widths are these.
+the worst-case-`l1` response width; and `sigma_MLWE = s_0` exactly on the
+unrounded widths. The sampler stores `s_1` and `s_2` after independent
+rounding to multiples of `2^-20`, so its derived rational `sigma_MLWE`
+differs from `s_0` only by that documented rounding.
 
 The published parameters are recorded in `lanes_manifest.json` and checked
 against the values consumed by the code. The same manifest is projected into
@@ -213,8 +215,8 @@ the three decimals shown.  The residue is the gap between Rice and true
 entropy, about half a bit per coefficient, so this is an independent check on
 the paper's `|pi_OOM|` accounting rather than a restatement of its formula.
 
-The exact-layer comparison uses the witness-hiding candidate LANES backend,
-not the opening test backend that transmits its witness:
+The exact-layer comparison uses the candidate LANES backend, which does not
+transmit the witness, rather than the opening test backend, which does:
 
     make -C ../river-rs bench      # backend `lanes-experimental`
 
@@ -227,7 +229,7 @@ from the entropy estimate.
 the sample; `Layout.max_bytes` is the worst case.
 
 The response blocks have separate Rice parameters because
-`sigma_m / sigma_s` runs from 3.9 to 5.7 across the published profiles.
+`sigma_s / sigma_m` runs from 6.9 to 12.6 across the published profiles.
 Encoded length is data-dependent and this artifact does not claim a
 length-hiding wire format; applications that require fixed-length messages can
 pad to `Layout.max_bytes`.

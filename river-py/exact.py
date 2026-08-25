@@ -800,10 +800,9 @@ LANES_MANIFEST_SECTIONS = {
                    "domain_separators", "order", "hashed_form"),
     "wire": ("fields", "order", "fixed_bits", "kb_convention"),
     # `challenge` is what reproduces the paper's own figures.
-    # `5.Parameter.tex`'s footnote gives the LANES challenge-difference
-    # noninvertibility probability as 2^-93.5 under the re-optimized
-    # parameters (2^-70 under the original) and the outer RVRF figure as
-    # 2^-91.5.  Those are the only published quantities separating the
+    # The parameter section gives the LANES challenge-difference
+    # noninvertibility probability as 2^-90.5 and the outer RVRF figure as
+    # 2^-91.5.  These are the published quantities separating the
     # LANES parameters from any other set, so a manifest
     # that does not reproduce them has not shown which set it describes.
     # Neither reaches 128 bits.

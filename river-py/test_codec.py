@@ -234,7 +234,8 @@ def _layouts():
     from exact import get_backend
     scheme, pp, ring, v, pi = _sample_proof()
     out = [("oom", scheme.codec.oom_layout, scheme.codec.oom_encode(pi["oom"]))]
-    # The production `lanes` name is gated on security evidence; see
+    # The production `lanes` name is reserved by the artifact's
+    # concrete-composition policy; see
     # `lanes_backend.LanesBackend.unavailable_reason`.
     for name in AVAILABLE_BACKENDS:
         backend = get_backend(name, PAR)

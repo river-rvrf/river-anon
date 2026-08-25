@@ -21,9 +21,12 @@
 //!
 //! Two derived identities are load-bearing:
 //! `s^2 = s_2^2 + w_hat^2 s_1^2` (so `s` is already the worst-case-`l1`
-//! response width), and `sigma_MLWE = s_0` exactly — the widths are chosen
-//! so the `[KLSS23]` hint reduction lands back on the smoothing parameter
-//! for `eps = 2^-100`, which is why `s_2 = w_hat s_1`.
+//! response width), and `sigma_MLWE = s_0` exactly on the unrounded widths —
+//! the widths are chosen so the `[KLSS23]` hint reduction lands back on the
+//! smoothing parameter for `eps = 2^-100`, which is why
+//! `s_2 = w_hat s_1`. The stored rational widths are independently rounded
+//! to multiples of `2^-20`, so the derived rational `sigma_MLWE` differs
+//! from `s_0` only by that documented rounding.
 //!
 //! The paper's `s` is the standard deviation and its `sigma` the `[KLSS23]`
 //! Gaussian parameter, `sigma = s sqrt(2 pi)`. This module works in standard

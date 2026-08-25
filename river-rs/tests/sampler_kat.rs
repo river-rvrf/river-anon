@@ -314,10 +314,10 @@ fn challenge_matches() {
 fn exp_threshold_matches_the_decimal_reference() {
     let k = kat();
     let cases = k["exp_threshold"].as_array().unwrap();
-    assert!(
-        cases.len() > 400,
-        "expected a broad sweep, got {}",
-        cases.len()
+    assert_eq!(
+        cases.len(),
+        555,
+        "the frozen threshold sweep changed; update its documented coverage deliberately"
     );
     for case in cases {
         let num_s = case["num"].as_str().unwrap();
@@ -360,25 +360,13 @@ fn rej_decisions_match() {
         let num = case["sigma_num"].as_u64().unwrap();
         let den = case["sigma_den"].as_u64().unwrap();
         let count = case["count"].as_u64().unwrap() as usize;
-        // `tau_rej` is recorded per `rej1` case and absent from `rej2`,
-        // which has no such parameter.  Read from the artifact rather than
-        // from this crate's constant: the point of the KAT is that the two
-        // implementations agree on what the *sampler* was handed, and
-        // taking it from `RiVeRParams::REJ_TAU` here would compare the
-        // constant with itself.
-        let tau = case["tau_rej"].as_u64();
-        assert_eq!(
-            tau.is_some(),
-            kind == "rej1",
-            "tau_rej belongs to rej1 and only rej1: {case}"
-        );
         let mut x = xof_of(case);
         // Python returns 1 to reject and 0 to accept; the port returns a
         // bool with `true` = reject.
         let got: Vec<i64> = (0..count)
             .map(|_| {
                 let rejected = match kind {
-                    "rej1" => rej1(&mut x, &z, &v, phi, num, den, tau.unwrap()),
+                    "rej1" => rej1(&mut x, &z, &v, phi, num, den),
                     "rej2" => rej2(&mut x, &z, &v, phi, num, den),
                     other => panic!("unknown rejection kind {other}"),
                 };

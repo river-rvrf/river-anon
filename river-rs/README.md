@@ -131,13 +131,10 @@ move.
   `BoundGen`'s abort, including the compression margin and modulus
   primality — a composite `q_hat` that happens to be `5 mod 8` is refused,
   not accepted.
-- **`Rej_1`'s repetition constant is an argument, not a literal.**  The
-  paper parameterises it as `tau_rej` and fixes `tau_rej = 12`.  Naming it
-  only in the parameter report would have been the wrong half.  `params::REJ_TAU` feeds `mu_a`/`mu_s`/`mu_m` *and* is
-  `sample::rej1`'s fifth argument, required rather than defaulted, so a
-  test over the reporting formula can no longer pass while the sampler
-  uses a different number.  `sampler_kat.json` records `tau_rej` per
-  `rej1` case and reads it from the artifact rather than from `REJ_TAU`.
+- **`Rej_1`'s concrete constant has one home.**  The concrete sampler fixes
+  the value 12 internally.  `sample::REJ1_CONSTANT` feeds both the sampler
+  threshold and `mu_a`/`mu_s`/`mu_m`; it is not a profile field, public API
+  argument, or redundant KAT datum.
 - **No division on secret data.**  Every modular reduction on a value
   derived from a key or a mask goes through Barrett or the auxiliary
   primes' pseudo-Mersenne identity, not `%` — in `R_q`, in the CRT
@@ -182,14 +179,14 @@ move.
 choices are unavailable.  Each of these is a deliberate deviation from what
 a from-scratch Rust implementation would do:
 
-- **The Gaussian sampler is a uniform-proposal rejection sampler.**  Both
-  sibling implementations use a CDT (`../../lotrs-dev`) or FACCT.  Neither
-  reproduces the reference's accept/reject decisions, and those decisions
+- **The Gaussian sampler is a uniform-proposal rejection sampler.**
+  Alternative CDT and FACCT samplers do not
+  reproduce the reference's accept/reject decisions, and those decisions
   are the transcript: FACCT draws extra XOF bits for its `Ber(2^-k)` test
   and finishes with an explicitly approximate polynomial, and a CDT
   consumes one uniform per *sample* rather than one per *proposal* and
   would need a `2.5·10^8`-entry table at `σ ≈ 1.8·10^7`.  Changing the
-  sampler is a specification change, not an optimisation — see
+  sampler is a specification change, not an optimisation.
 
   What *is* an optimisation is how the exact acceptance test is
   evaluated, and that was the whole cost: 40 µs per proposal through
@@ -207,29 +204,26 @@ a from-scratch Rust implementation would do:
   on the last ulp.  `src/fixed.rs` computes the mathematically exact floor
   in fixed point instead, escalating precision until the bracket pins one
   integer.  Agreement with the reference is *measured*, not assumed: the
-  KAT carries 519 thresholds spanning the reachable range, including the
-  exact exponents each published profile produces — all six of them.  It
-  covered three until a review pointed out that N16, N64 and N128 had
-  their widths pinned by the parameter table and their accept/reject
-  decisions pinned by nothing.
+  KAT carries 555 thresholds spanning the reachable range, including the
+  exact exponents each supported profile produces — the five published
+  profiles plus the toy profile.
 - **`Ring::mul` is schoolbook.**  At `d = 32` an isolated CRT-NTT multiply
   costs six transforms against 1024 multiply-accumulates and loses; the
   transform earns its keep only across a matrix product with a fixed
   matrix.  This follows the design note rather than reflexively
   transforming everything.
-- **`[[·]]_K` follows the canonical-representative convention** the OOM
-  layer uses.  Aligning
-  moves protocol bytes, so it waits for the reference to move first —
+- **`[[·]]_K` uses centred representatives.**  This convention is
+  wire-visible because the transmitted high parts are signed, so the KAT
+  pins its boundary and tie cases as well as complete proofs.
 - **The Rice parameter is computed in integers, and a proof is padded to a
   byte boundary exactly once.**  `k = floor(log2(sqrt(2 ln 2)·sigma))` is
   wire-visible: evaluated in `f64` it can differ by one between two
   implementations at a half-ulp, and one is a different encoding, not a
   rounding difference.  It is evaluated over the exact rational `sigma`
   instead — the same rational the sampler uses.  Padding is likewise a
-  format decision and not an obvious one: the sibling `lotrs-rs` aligns
-  after every polynomial, which is friendlier to a streaming decoder and
-  costs a few bytes per field.  `river-py` aligns once for the whole
-  layout, so this does too.
+  format decision and not an obvious one: aligning after every polynomial
+  would be friendlier to a streaming decoder but costs a few bytes per
+  field.  `river-py` aligns once for the whole layout, so this does too.
 
 ## The arithmetic backend
 
@@ -266,7 +260,7 @@ kind random tests miss:
 
 | layer | state |
 |---|---|
-| exact thresholds (`fixed`) | complete, cross-checked against 519 reference values |
+| exact thresholds (`fixed`) | complete, cross-checked against 555 reference values |
 | parameters, `BoundGen` (`params`) | complete, reproduces the paper's table and the reference's exact widths |
 | ring arithmetic, rounding, bit dropping (`ring`) | complete |
 | CRT-NTT matrix backend (`aux_ntt`) | complete, saturated-input tested |
@@ -281,13 +275,13 @@ kind random tests miss:
 In that order.  The OOM layer is the first one that *produces* the values
 the codec serializes, so it is the first that could be wrong in a way the
 codec tests could not see.  It is pinned as a **trajectory** rather than as
-one successful proof: each attempt draws from three rejection samplers and
-can abort at one of six places, so an extra XOF draw, a reordered bound
-check or an early return from the wrong test shows up as a different
-sequence of aborts long before it shows up as different proof bytes.  The
-KAT fixes eight consecutive attempts at the toy profile — six aborts and
-two accepted proofs, interleaved — and both implementations produce the
-same eight.
+one successful proof: each attempt passes through four rejection samplers
+and subsequent bound and reconstruction checks, so an extra XOF draw, a
+reordered check or an early return from the wrong test shows up as a
+different sequence of aborts long before it shows up as different proof
+bytes.  The KAT fixes eight consecutive attempts at the toy profile — four
+aborts and four accepted proofs, interleaved — and both implementations
+produce the same eight.
 
 The exact layer sits on top of it and is complete at the paper
 parameters for both backends -- `opening` and, under the experimental

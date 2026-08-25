@@ -47,6 +47,8 @@ import math
 from dataclasses import dataclass, field
 from fractions import Fraction
 
+from sample import REJ1_CONSTANT
+
 
 
 # ---- prime search --------------------------------------------------------
@@ -538,42 +540,22 @@ class RiVeRParams:
 
     # ---- repetition estimate (Appendix "Correctness") -------------------
 
-    #: `tau_rej`, the numerator of `Rej_1`'s repetition constant.
-    #:
-    #: **Paper.**  The paper parameterises what was a
-    #: hard-coded 12: `M_1 = exp(tau_rej/phi + 1/(2 phi^2))`, with
-    #: `eps_1` the statistical loss Lemma 3.3 of [DO07] gives for the
-    #: chosen `tau_rej`.  Asymptotically it is chosen so `eps_1` is
-    #: negligible while `M_1` is polynomial; concretely it is fixed at 12,
-    #: for which `eps_1 <= 2^-100`.
-    #:
-    #: Carried as a named constant rather than inlined so the parameter is
-    #: visible where it acts, and so a future parameter update would
-    #: move `mu_a`, `mu_s` and `mu_m` together rather than one at a time.
-    #: It is 12 today, which is why that rendering moved no bytes.
-    #:
-    #: The rendering gives `Rej_1` a fifth argument for it but does not
-    #: pass it at either call site.  Nothing here is
-    #: positional, so the arity question cannot reach the arithmetic --
-    #: the same reason a positional read of the tuple could not.
-    REJ_TAU = 12
-
     @property
     def mu_a(self):
-        """`exp(tau_rej/phi_a + 1/(2 phi_a^2))`, from Lemma grs(1)."""
-        return math.exp(self.REJ_TAU / self.phi_a
+        """`exp(12/phi_a + 1/(2 phi_a^2))`, from Lemma grs(1)."""
+        return math.exp(REJ1_CONSTANT / self.phi_a
                         + 1 / (2 * self.phi_a ** 2))
 
     @property
     def mu_s(self):
-        """`exp(tau_rej/phi_s + 1/(2 phi_s^2))`, from Lemma grs(1)."""
-        return math.exp(self.REJ_TAU / self.phi_s
+        """`exp(12/phi_s + 1/(2 phi_s^2))`, from Lemma grs(1)."""
+        return math.exp(REJ1_CONSTANT / self.phi_s
                         + 1 / (2 * self.phi_s ** 2))
 
     @property
     def mu_m(self):
-        """`exp(tau_rej/phi_m + 1/(2 phi_m^2))`, from Lemma grs(1)."""
-        return math.exp(self.REJ_TAU / self.phi_m
+        """`exp(12/phi_m + 1/(2 phi_m^2))`, from Lemma grs(1)."""
+        return math.exp(REJ1_CONSTANT / self.phi_m
                         + 1 / (2 * self.phi_m ** 2))
 
     @property
@@ -707,7 +689,7 @@ class RiVeRParams:
 
     # ---- size estimate ---------------------------------------------------
 
-    #: Paper: the exact proof contributes a fixed 13.5 KB to every profile.
+    #: Paper: the exact proof has a 13.5 KB entropy estimate at every profile.
     EXACT_PROOF_KB = 13.5
 
     @property
@@ -747,7 +729,7 @@ class RiVeRParams:
 
     @property
     def proof_size_total_kb(self):
-        """`|pi_RiVeR| = |pi_OOM| + |pi_ex|`, with the paper's fixed |pi_ex|."""
+        """Total using the paper's entropy estimate for `|pi_ex|`."""
         return self.proof_size_oom_kb + self.EXACT_PROOF_KB
 
     @property
@@ -762,27 +744,19 @@ class RiVeRParams:
     def r_dim(self):
         """Length of the OOM opening `r = (r_0, r_1) = ((s, e_key), e_eval)`.
 
-        The concatenation is unchanged -- `s`, then `e_key`, then `e_eval`,
-        `ell + n + 1` ring elements -- but the paper moved the split
-        between them, so `s_dim + m_dim` partitions it differently.
+        The concatenation is `s`, then `e_key`, then `e_eval`,
+        `ell + n + 1` ring elements, with `s_dim + m_dim = r_dim`.
         """
         return self.ell + self.n + 1
 
     @property
     def s_dim(self):
-        """Length of `r_0 = (s, e_key)`, responded to at width `sigma_s`.
-
-        The paper moved `e_key` across the split, from the `sigma_m` block
-        into this one; it was `ell` alone before.
-        """
+        """Length of `r_0 = (s, e_key)`, responded to at width `sigma_s`."""
         return self.ell + self.n
 
     @property
     def m_dim(self):
-        """Length of `r_1 = e_eval`, responded to at `sigma_m`.
-
-        One ring element; `n + 1` before it.
-        """
+        """Length of `r_1 = e_eval`, one ring element at `sigma_m`."""
         return 1
 
     @property
@@ -1124,11 +1098,11 @@ _TAU_PUBLISHED_2DP = {
 #: Nothing byte-visible depends on this: it enters only the reported
 #: attempt estimate, never the protocol.
 _EPSILON_G_U = {
-    8:   0.0079564543,
-    16:  0.007793341355707927,
-    64:  0.0090602037,
-    128: 0.0078500789,
-    256: 0.0085985639,
+    8:   0.007953415163498056,
+    16:  0.00779131496406446,
+    64:  0.008953918582094841,
+    128: 0.007711269632144487,
+    256: 0.00851857096759001,
 }
 
 

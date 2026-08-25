@@ -34,6 +34,7 @@ from fractions import Fraction
 from params import (BOUNDGEN_ORDER, PROFILES, TOY_PARAMS, _TAU,
                     _TAU_DISPLAYED, get, is_prime,
                     largest_prime_below, verify_moduli)
+from sample import REJ1_CONSTANT
 
 PUBLISHED = [8, 16, 64, 128, 256]
 
@@ -179,8 +180,8 @@ def test_challenge_entropy_and_noninvertibility_figures_are_distinct():
         assert math.log2(size) == 160.0
         assert round(par.challenge_entropy) == 160
 
-        # the footnote's figures, against what this parameter set gives
-        for stated in (93.5, 91.5, 70.0):
+        # The two reported concrete figures, kept distinct from entropy.
+        for stated in (90.5, 91.5):
             assert stated < 128, "a figure at or above 128 would settle this"
             assert stated != math.log2(size)
 
@@ -330,13 +331,13 @@ def test_repeat_bound_is_below_the_design_target():
 
 
 def test_epsilon_g_upper_bound_is_in_the_stated_range():
-    """The paper: "between 0.78% and 0.91%, and hence below the required 1%".
+    """The paper: "between 0.77% and 0.90%, and hence below the required 1%".
 
-    The exported values span 0.7793% to 0.9060%, which is that range to the
+    The exported values span 0.7711% to 0.8954%, which is that range to the
     two decimals it is quoted to.
     """
     pct = sorted(par.epsilon_g_u * 100 for _, par in published())
-    assert round(pct[0], 2) == 0.78 and round(pct[-1], 2) == 0.91
+    assert round(pct[0], 2) == 0.77 and round(pct[-1], 2) == 0.90
     for _, par in published():
         assert par.epsilon_g_u < 0.01
 
@@ -542,24 +543,16 @@ def test_the_repetition_denominator_is_the_product_of_its_components():
         assert not hasattr(par, "c_pub_model")
 
 
-def test_the_rejection_constant_is_the_hard_coded_twelve():
-    """`tau_rej` is an explicit parameter with concrete value 12.
-
-    The paper writes `M_1 = exp(tau_rej/phi + 1/(2 phi^2))`
-    and fixes `tau_rej = 12` for the concrete sets.  Pinned in the direction
-    that can fail: if a future parameter set moves it, every repetition factor
-    moves and this says so, rather than the change surfacing as a quietly
-    different "Repeat bound" column.
-    """
+def test_rej1_uses_the_fixed_concrete_constant_twelve():
+    """The concrete Rej1 definition fixes 12 internally, not per profile."""
+    assert REJ1_CONSTANT == 12
     for name, par in published():
-        assert par.REJ_TAU == 12, name
-        # The three `Rej_1` factors are all built from it...
         for phi, mu in ((par.phi_a, par.mu_a), (par.phi_s, par.mu_s),
                         (par.phi_m, par.mu_m)):
             assert math.isclose(
-                mu, math.exp(par.REJ_TAU / phi + 1 / (2 * phi ** 2)),
+                mu, math.exp(REJ1_CONSTANT / phi + 1 / (2 * phi ** 2)),
                 rel_tol=0, abs_tol=0)
-        # ...and `mu_b` is Lemma grs(2)'s, which has no `tau_rej`.
+        # `mu_b` is Lemma grs(2)'s and has no such constant.
         assert math.isclose(par.mu_b, 2 * math.exp(1 / (2 * par.phi_b ** 2)),
                             rel_tol=1e-15)
 

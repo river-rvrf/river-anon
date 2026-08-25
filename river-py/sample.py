@@ -81,30 +81,31 @@ VERIFIER_TAILCUT = 6
 #: That returns 14 for all five published profiles, landing at `2^-130.8`.
 #: `python dgs.py` prints the table and re-checks this constant against it.
 #:
-#: Why not the smaller cut the sibling implementations could justify: the
-#: HPRR19 Rényi route (`dgs.renyi_tailcut`, and what
-#: `../../lemur-dev/parameter/Lemur-DGS-Prec_TailCut.py` uses to land on 5)
+#: Why not the smaller cut available from the HPRR19 Rényi route
+#: (`dgs.renyi_tailcut`, which lands on 5): it
 #: needs the tail below `1/(8 Q)` rather than `2^-lambda`, and returns 6 here.
 #: It is sound for *search* problems -- unforgeability -- because that is
 #: where Rényi divergence has probability preservation.  The mask this sampler
 #: produces protects **anonymity**, a decision problem, so the statistical
-#: route is the defensible one.  `../../lotrs-dev` makes the same call for its
-#: masking widths, which sit in the same `10^6`-`10^7` range as `sigma_m`.
+#: route is the defensible one for these masking widths.
 #:
-#: The `2^-128` claim this used to be measured against is gone: Lemma 1
-#: stated it in the paper, states `2^-100` under the one,
-#: and states `eps_1` -- the loss Lemma 3.3 of [DO07] gives for the chosen
-#: `tau_rej` -- in the paper, with `tau_rej = 12`
-#: concretely.  So the protocol's `6 sigma` truncation no longer
+#: The protocol uses the concrete rejection constant 12 and states the
+#: corresponding statistical loss through the standard parameterised
+#: rejection-sampling argument.  The concrete `6 sigma` truncation therefore
+#: no longer
 #: contradicts a distance the lemma asserts.
 #:
 #: The reason for raising this cut is unchanged, and is local: the
 #: protocol truncates the *response* at `VERIFIER_TAILCUT` sigma, which
 #: costs `2^-14.2` per transcript however `y` is sampled.  Sampling the
 #: mask at the verifier's own cut would add a second, avoidable loss of the
-#: same order.  `test_review.py` pins both, and what remains open is a
-#: concrete-budget question about `eps_1`, not about this cut.
+#: same order. `test_review.py` pins both quantities independently.
 GAUSSIAN_TAILCUT = 14
+
+#: The fixed concrete constant in ``M_1 = exp(12/phi + 1/(2 phi^2))``.
+#: It is an internal part of the concrete Rej_1 definition, not a profile
+#: parameter or a transcript field.
+REJ1_CONSTANT = 12
 
 
 # ---- domain separators ---------------------------------------------------
@@ -485,28 +486,22 @@ def _p_acc(u, inner_zv, norm_v_sq, sigma_num, sigma_den, M_num, M_den):
     return exp_accept(u, exponent_num, exponent_den, scale)
 
 
-def rej1(xof, z_coeffs, v_coeffs, phi, sigma_num, sigma_den, tau_rej):
-    """`Rej_1(z, v, phi, T, tau_rej)`, sigma = phi * T as a rational.
+def rej1(xof, z_coeffs, v_coeffs, phi, sigma_num, sigma_den):
+    """`Rej_1(z, v, phi, T)`, sigma = phi * T as a rational.
 
     `z_coeffs` and `v_coeffs` are flat lists of *centred* integer
     coefficients.  Returns 1 to reject, 0 to accept.
 
-    `tau_rej` is the fifth argument the paper gives
-    this procedure, and it is **required** rather than defaulted.  The
-    constant it replaced was hard-coded here as the literal `24 phi + 1`,
-    which is `2 tau phi + 1` at `tau = 12`; a default would have left the
-    sampler and `params.mu_a`/`mu_s`/`mu_m` able to disagree about the
-    repetition constant while both looking parameterised.  `oom.py` passes
-    `par.REJ_TAU`, so there is one value and the rejection rate the sampler
-    achieves is the one the reported estimate assumes.
+    The concrete rejection constant is the internal fixed value 12.  Thus the
+    exponent numerator is `24 phi + 1`, and the sampler and repetition model
+    share [`REJ1_CONSTANT`] rather than exposing a per-profile argument.
     """
-    if not isinstance(tau_rej, int) or isinstance(tau_rej, bool) or tau_rej <= 0:
-        raise ValueError(f"tau_rej must be a positive int, got {tau_rej!r}")
     inner_zv = sum(a * b for a, b in zip(z_coeffs, v_coeffs))
     norm_v_sq = sum(b * b for b in v_coeffs)
-    # M = exp(tau/phi + 1/(2 phi^2)); over the common denominator `2 phi^2`
-    # that exponent is `-(2 tau phi + 1)`.  Fold 1/M into the threshold.
-    m_scale = exp_threshold(-(2 * tau_rej * phi + 1), 2 * phi * phi)   # = 1/M
+    # M = exp(12/phi + 1/(2 phi^2)); over the common denominator `2 phi^2`
+    # that exponent is `-(24 phi + 1)`.  Fold 1/M into the threshold.
+    m_scale = exp_threshold(-(2 * REJ1_CONSTANT * phi + 1),
+                            2 * phi * phi)                 # = 1/M
     if not _p_acc(xof.unit_fixed(), inner_zv, norm_v_sq, sigma_num, sigma_den,
                   PROB_ONE, m_scale):
         return 1

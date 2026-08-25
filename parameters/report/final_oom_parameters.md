@@ -15,7 +15,7 @@ The complete bound inventory and security-instance data are in `data/final_oom_s
 - `phi_m_constraint_bits`: `26`
 - `q_tilde`: `67107713`
 - `selector_tail_factor`: `6`
-- `tau_rej`: `12`
+- `rej1_constant`: `12`
 - `K_b`: `5`
 - `K_a`: `28`
 - `s_c`: `3`
@@ -33,7 +33,7 @@ The complete bound inventory and security-instance data are in `data/final_oom_s
 - `beta_sis = max(4 w gamma beta_sis_1, beta_sis_1 + 2 B_response)`.
 - `beta_sis_2 = 2.4 sqrt(d(ell+n) sigma_s^2 + d sigma_m^2)`.
 - Auxiliary MSIS2 checks require `q > max(beta_sis_2, 12 sigma_s, 12 sigma_m)` and `delta <= 1.004690`.
-- The joint Euclidean response check contributes `epsilon_2 <= 1.19^(d(ell+n+1)) exp(d(ell+n+1)(1-1.19^2)/2)` to repeat accounting.
+- With `t2 = 1.2 sqrt((ell+n+(sigma_m/sigma_s)^2)/(ell+n+1))`, the joint Euclidean response check contributes `epsilon_2 <= t2^(d(ell+n+1)) exp(d(ell+n+1)(1-t2^2)/2)`.
 - The sequential response-block success term is `(1-epsilon_s)(1-epsilon_m)-epsilon_2`.
 - Selector A-MSIS beta-vector components and merged estimator widths are stored in `selector_asis_bounds`.
 - Repeat accounting is recomputed in `data/final_oom_security.json` and checked against `repeat_bound`.
@@ -44,11 +44,11 @@ The complete bound inventory and security-instance data are in `data/final_oom_s
 
 | N | OOM KiB | repeat bound | n | ell | p | q | p bits | hat q | hat q bits | hat n | hat k | phi a | phi s | phi m | phi b |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 8 | 20.133209 | 8.344307 | 44 | 54 | 17592186043877 | 1073123348676497 | 44 | 8796093022237 | 44 | 42 | 46 | 32 | 26 | 32 | 2 |
-| 16 | 21.409120 | 8.435196 | 41 | 59 | 281474976710597 | 17169973579346417 | 48 | 35184372088997 | 46 | 43 | 49 | 40 | 22 | 32 | 2 |
-| 64 | 25.535994 | 8.626611 | 44 | 54 | 17592186043877 | 1073123348676497 | 44 | 140737488355333 | 48 | 50 | 51 | 34 | 24 | 32 | 2 |
-| 128 | 28.952209 | 8.599820 | 45 | 54 | 17592186043877 | 1073123348676497 | 44 | 140737488355333 | 48 | 49 | 51 | 24 | 34 | 32 | 2 |
-| 256 | 36.040999 | 8.526924 | 42 | 59 | 281474976710597 | 17169973579346417 | 48 | 281474976710677 | 49 | 48 | 52 | 22 | 40 | 32 | 2 |
+| 8 | 20.133209 | 8.344282 | 44 | 54 | 17592186043877 | 1073123348676497 | 44 | 8796093022237 | 44 | 42 | 46 | 32 | 26 | 32 | 2 |
+| 16 | 21.409120 | 8.435179 | 41 | 59 | 281474976710597 | 17169973579346417 | 48 | 35184372088997 | 46 | 43 | 49 | 40 | 22 | 32 | 2 |
+| 64 | 25.535994 | 8.625686 | 44 | 54 | 17592186043877 | 1073123348676497 | 44 | 140737488355333 | 48 | 50 | 51 | 34 | 24 | 32 | 2 |
+| 128 | 28.952209 | 8.598617 | 45 | 54 | 17592186043877 | 1073123348676497 | 44 | 140737488355333 | 48 | 49 | 51 | 24 | 34 | 32 | 2 |
+| 256 | 36.040999 | 8.526236 | 42 | 59 | 281474976710597 | 17169973579346417 | 48 | 281474976710677 | 49 | 48 | 52 | 22 | 40 | 32 | 2 |
 
 ## Checks
 

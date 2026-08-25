@@ -41,8 +41,8 @@ All of them raise `ValueError`, so a caller can treat any malformed proof
 uniformly.  `test_codec.py` fuzzes random and mutated byte strings against
 every layout to check that nothing else escapes.
 
-Bit order is least-significant-first within each byte, matching the
-convention in the sibling implementations.
+Bit order is least-significant-first within each byte, as pinned by the
+coder KATs and complete proof vectors.
 """
 
 import math
@@ -582,8 +582,7 @@ class RiVeRCodec:
         #: `z` is split on the wire.  The paper gives its two blocks
         #: different widths -- `(z_s, z_key)` at `sigma_s`, `z_eval` at
         #: `sigma_m`, and `sigma_s / sigma_m` is between 6.9 and 12.6 across
-        #: the profiles (it was `sigma_m / sigma_s` in 3.9-5.7 before
-        #: the paper regrouped the blocks and enlarged `B_s`) --
+        #: the profiles --
         #: so one Rice parameter for the whole vector would cost roughly a bit
         #: per coefficient on whichever block it did not fit.  They are two
         #: fields with their own parameters and their own bounds; `z` itself
@@ -676,7 +675,8 @@ class RiVeRCodec:
     # -- OOM proof ---------------------------------------------------------
     # `B`, `x`, `f_1` and `z_b` are carried as *integer* polynomials (the
     # selector layer needs their exact integer values), so they encode and
-    # decode as signed integers.  `z_s` and `z_m` are genuine R_q elements.
+    # decode as signed integers. `(z_s, z_key)` and `z_eval` are genuine
+    # R_q elements.
 
     def oom_encode(self, pi):
         """pi_OOM = (B, x, f_1, z_b, z), with `z` split for the wire."""

@@ -4,9 +4,7 @@ dgs.py -- discrete-Gaussian tail arithmetic for parameter selection.
 Everything here is exact `Decimal` arithmetic.  Nothing in this module calls
 `math.erfc`, `math.exp` or any other libm function on a value that reaches a
 decision: `river-py` is a test-vector generator, so a bound that shifts by one
-ulp between platforms is a bug, not a rounding detail.  This mirrors
-`../../lemur-dev/parameter/Lemur-DGS-Prec_TailCut.py`, which computes the same
-quantities the same way.
+ulp between platforms is a bug, not a rounding detail.
 
 Three separate things get called "the tail cut" and they are not the same:
 
@@ -19,19 +17,20 @@ Three separate things get called "the tail cut" and they are not the same:
 
 `tc_id` / reference cut
     A cut so far out that the truncated law stands in for the ideal one when
-    computing divergences against it.  20 sigma in the lemur script.
+    computing divergences against it.  The comparison calculation uses
+    20 sigma.
 
-Two defensible ways to size the second one, and the sibling implementations
-pick differently because their masks protect different things:
+Two defensible ways to size the second one protect different security
+properties:
 
-`renyi_tailcut` -- `../../lemur-dev`, tail cut 5
+`renyi_tailcut` -- tail cut 5
     HPRR19 (ePrint 2019/1411, Thm 7): keep `RD_{2 lambda + 1}` of the truncated
     law against the ideal below `1/(8 Q)` and the *unforgeability* loss is at
     most one bit.  The cut then scales with `log Q`, not with `lambda`, which
     is why 5 suffices there.  Rényi divergence has the probability-preservation
     property for **search** problems.
 
-`statistical_tailcut` -- `../../lotrs-dev`, tail cut 14
+`statistical_tailcut` -- tail cut 14
     Union-bound the per-coefficient tail mass over every Gaussian coefficient
     in a transcript and require the total below `2^-lambda`.  Costs a `sqrt`
     of a much smaller epsilon, so the cut lands near 14.
@@ -39,10 +38,9 @@ pick differently because their masks protect different things:
 `river-py` takes the second.  The mask that `gaussian_int` produces protects
 **anonymity** -- which ring member evaluated -- and that is a decision problem,
 where Rényi divergence does not give the clean bound it gives for search.
-LoTRS makes the same call for the same reason, and its masking widths sit in
-the same `10^6`-`10^7` range as `sigma_s` and `sigma_m`; lemur's cut of 5 is for a key-generation
-base sampler under unforgeability.  `renyi_tailcut` is kept here so the gap
-between the two routes is visible rather than asserted -- see `__main__`.
+The smaller cut is appropriate to a key-generation base sampler under
+unforgeability, not this anonymity mask. `renyi_tailcut` is kept here so the
+gap between the two routes is visible rather than asserted -- see `__main__`.
 
 The paper adopts this three-way split as a requirement, at the
 `(6, 14, 192)` used here, and requires the sampler to *reject* a declared cut

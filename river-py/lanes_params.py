@@ -207,9 +207,10 @@ T0_HIGH_MODULUS = t0_power2round(QTILDE - 1)[0] + 1
 #     *worst-case* l1 challenge bound `|c-hat| <= ||c||_1 = w_hat`, not the
 #     typical `w_hat sigma_r^2` one.  The paper's `s` is already the
 #     conservative one.
-#   * `sigma_MLWE = s_0`, exactly.  Feeding `s_1` and `s_2` into the
-#     [KLSS23] reduction `1/sigma^2 = 2(1/s_1^2 + w_hat^2/s_2^2)` returns
-#     `s_0` exactly.  The widths are chosen precisely so the hint
+#   * `sigma_MLWE = s_0`, exactly on the unrounded widths. Feeding `s_1`
+#     and `s_2` into the [KLSS23] reduction
+#     `1/sigma^2 = 2(1/s_1^2 + w_hat^2/s_2^2)` returns `s_0` exactly. The
+#     widths are chosen precisely so the hint
 #     reduction lands back on the smoothing parameter for `eps = 2^-100`.
 #     That is the design principle, and it is why `s_2 = w_hat s_1`.
 #
@@ -553,9 +554,9 @@ def challenge_l1_norm(poly):
 
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
-    # The parameterization below is the paper's; the
-    # backend above it is still gated on security evidence rather than on
-    # dimensions.  See `exact.lanes_gate_cause()`.
+    # The parameterization below is the paper's. The production backend
+    # alias is reserved by the artifact's composition policy, not by these
+    # dimensions. See `exact.lanes_gate_cause()`.
     print(f"lanes_params.py: paper widths  s_1={float(SIGMA_R):.6f}"
           f"  s_2={float(SIGMA_Y):.6f}  s={S_RESPONSE:.7f}")
     print(f"  beta'={BETA_PRIME_BDLOP:.4f}  B_MSIS={B_MSIS:.3f}"

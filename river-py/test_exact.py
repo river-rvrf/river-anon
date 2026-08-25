@@ -518,7 +518,7 @@ def test_backend_lookup():
 def test_mock_opening_is_smaller_than_the_real_proof():
     """The mock's size says nothing about LANES's, and undershoots it.
 
-    The paper gives a fixed `|pi_ex| = 13.5 KB` entropy estimate.  Once the
+    The paper gives a `|pi_ex| = 13.5 KB` entropy estimate.  Once the
     opening is entropy coded this mock backend comes in *below* that,
     because what it transmits is mostly ternary commitment randomness at 2
     bits a coefficient -- cheap to send precisely because it is the

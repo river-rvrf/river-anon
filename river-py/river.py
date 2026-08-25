@@ -396,10 +396,9 @@ class RiVeR:
                            collect_stats=False):
         """`eval` with the auxiliary randomness pinned, for test vectors.
 
-        Identical to `eval(..., seed=seed)`.  It exists as a separate name so
-        that reproducibility is something a caller asks for explicitly, rather
-        than the accident of having passed a positional argument -- the
-        distinction the review asked for, and the one that keeps a
+        Identical to `eval(..., seed=seed)`. It exists as a separate name so
+        that reproducibility is something a caller asks for explicitly rather
+        than the accident of having passed a positional argument. This keeps a
         deterministic path available without making it the default.
 
         Safe against seed reuse for the reason `eval` documents, but there is
@@ -491,9 +490,9 @@ class RiVeR:
         # validated every field, or straight from a caller's dictionary, which
         # has not.  Re-encoding is the cheapest way to apply exactly the same
         # checks to both: it rejects a wrong shape, a coefficient outside its
-        # declared range, and a non-canonical residue -- the review's point
-        # that `t_g + q~` or a shifted `z` coefficient must not verify just
-        # because it arrived as a dict rather than as bytes.
+        # declared range, and a non-canonical residue. Thus `t_g + q~` or a
+        # shifted `z` coefficient cannot verify merely because it arrived as
+        # a dict rather than as bytes.
         #
         # Any failure is `False`, never an exception: `Verify` returns a bit.
         try:

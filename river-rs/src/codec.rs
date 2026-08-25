@@ -32,8 +32,7 @@
 //!
 //! Bit order is least-significant-first within each byte, and the whole
 //! layout is padded to a byte boundary *once*, at the end — not after each
-//! polynomial, which is what the sibling `lotrs-rs` codec does.  Both are
-//! forced by `vectors.json`.
+//! polynomial. Both choices are forced by `vectors.json`.
 //!
 //! [`optimal_rice_k`] is evaluated in integers over the *exact rational*
 //! sigma, never in floating point.  `k` is wire-visible: a half-ulp
@@ -993,8 +992,9 @@ pub struct RiVeRCodec {
     /// through fixed width.
     ///
     /// `z` is split on the wire.  The paper gives its two blocks
-    /// different widths — `z_s` at `sigma_s`, `z_m` at `sigma_m`, and
-    /// `sigma_m / sigma_s` is between 3.9 and 5.7 across the profiles — so
+    /// different widths — `(z_s, z_key)` at `sigma_s`, `z_eval` at
+    /// `sigma_m`, and `sigma_s / sigma_m` is between 6.9 and 12.6 across
+    /// the profiles — so
     /// one Rice parameter for the whole vector would cost roughly a bit
     /// per coefficient on whichever block it did not fit.  They are two
     /// fields with their own parameters and their own bounds;
@@ -1166,7 +1166,7 @@ impl RiVeRCodec {
     }
 
     /// The six layout values for one OOM proof, splitting `z` into its
-    /// `z_s` and `z_m` blocks.
+    /// `(z_s, z_key)` and `z_eval` blocks.
     ///
     /// The split lives here rather than at the call sites so the wire
     /// order and the block boundary are stated once.  `Err` if `z` is not
@@ -1194,7 +1194,7 @@ impl RiVeRCodec {
         ])
     }
 
-    /// Reassemble `z` from the decoded `z_s` and `z_m` blocks.
+    /// Reassemble `z` from the decoded `(z_s, z_key)` and `z_eval` blocks.
     ///
     /// The protocol and the verifier's Euclidean check operate on the
     /// whole vector, so the two halves come back together immediately

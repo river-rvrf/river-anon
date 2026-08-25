@@ -502,9 +502,10 @@ impl RiVeRParams {
     //
     // `BoundGen` and the OOM algorithms use
     //   (r', s_c, phi_a, phi_b, phi_s, phi_m, tau_g0, tau_g1, ...).
-    // The implementation stores every value as a named field: `z_s`
-    // answers `r_0 = s` at `sigma_s = phi_s B_s`, while `z_m` answers
-    // `r_1 = (e_key, e_eval)` at `sigma_m = phi_m eta_m`.
+    // The implementation stores every value as a named field:
+    // `(z_s, z_key)` answers `r_0 = (s, e_key)` at
+    // `sigma_s = phi_s B_s`, while `z_eval` answers `r_1 = e_eval` at
+    // `sigma_m = phi_m eta_m`.
 
     /// `floor(q_0 / 2)`; bounds the **centred** rounding error.
     ///
@@ -915,40 +916,25 @@ impl RiVeRParams {
 
     // ---- repetition estimate --------------------------------------------
 
-    /// `tau_rej`, the numerator of `Rej_1`'s repetition constant.
-    ///
-    /// **Paper.**  The paper parameterises what was
-    /// a hard-coded 12: `M_1 = exp(tau_rej/phi + 1/(2 phi^2))`, with
-    /// `eps_1` the statistical loss Lemma 3.3 of [DO07] gives for the
-    /// chosen value.  Asymptotically it is chosen so `eps_1` is negligible
-    /// while `M_1` is polynomial; concretely it is fixed at 12.
-    ///
-    /// One constant, consumed by **both** the sampler
-    /// ([`crate::sample::rej1`], through `oom.rs`) and the three
-    /// repetition factors below.  They were separate literals, which meant
-    /// the reported estimate could assume a rejection rate the sampler did
-    /// not achieve.
-    pub const REJ_TAU: u64 = 12;
-
-    /// `exp(tau_rej/phi_a + 1/(2 phi_a^2))`, from Lemma grs(1).
+    /// `exp(12/phi_a + 1/(2 phi_a^2))`, from Lemma grs(1).
     pub fn mu_a(&self) -> f64 {
         self.mu_rej1(self.phi_a)
     }
 
-    /// `exp(tau_rej/phi_s + 1/(2 phi_s^2))`.
+    /// `exp(12/phi_s + 1/(2 phi_s^2))`.
     pub fn mu_s(&self) -> f64 {
         self.mu_rej1(self.phi_s)
     }
 
-    /// `exp(tau_rej/phi_m + 1/(2 phi_m^2))`.
+    /// `exp(12/phi_m + 1/(2 phi_m^2))`.
     pub fn mu_m(&self) -> f64 {
         self.mu_rej1(self.phi_m)
     }
 
-    /// `M_1` at one slack, from the shared `tau_rej`.
+    /// `M_1` at one slack, from the concrete Rej1 constant.
     fn mu_rej1(&self, phi: u64) -> f64 {
         let p = phi as f64;
-        (Self::REJ_TAU as f64 / p + 1.0 / (2.0 * p * p)).exp()
+        (crate::sample::REJ1_CONSTANT as f64 / p + 1.0 / (2.0 * p * p)).exp()
     }
 
     /// `2 exp(1/(2 phi_b^2))`, from Lemma grs(2).
@@ -1095,7 +1081,7 @@ impl RiVeRParams {
 
     // ---- size estimate ---------------------------------------------------
 
-    /// Paper: the exact proof contributes a fixed 13.5 KB to every
+    /// Paper: the exact proof has a 13.5 KB entropy estimate at every
     /// profile.
     pub const EXACT_PROOF_KB: f64 = 13.5;
 
@@ -1134,7 +1120,8 @@ impl RiVeRParams {
             / 8192.0
     }
 
-    /// `|pi_RiVeR| = |pi_OOM| + |pi_ex|`, with the paper's fixed `|pi_ex|`.
+    /// `|pi_RiVeR| = |pi_OOM| + |pi_ex|`, using the paper's entropy
+    /// estimate for `|pi_ex|`.
     pub fn proof_size_total_kb(&self) -> f64 {
         self.proof_size_oom_kb() + Self::EXACT_PROOF_KB
     }
@@ -1148,24 +1135,19 @@ impl RiVeRParams {
 
     /// Length of the OOM opening `r = (r_0, r_1) = ((s, e_key), e_eval)`.
     ///
-    /// The concatenation is unchanged — `s`, then `e_key`, then `e_eval` —
-    /// but the paper moved the split between them, so `s_dim + m_dim`
-    /// partitions it differently.
+    /// The concatenation is `s`, then `e_key`, then `e_eval`, with
+    /// `s_dim + m_dim = r_dim`.
     pub const fn r_dim(&self) -> usize {
         self.ell + self.n + 1
     }
 
     /// Length of `r_0 = (s, e_key)`, responded to at width `sigma_s`.
-    ///
-    /// the paper moved `e_key` across the split, from the `sigma_m`
-    /// block into this one; it was `ell` alone before.
     pub const fn s_dim(&self) -> usize {
         self.ell + self.n
     }
 
-    /// Length of `r_1 = e_eval`, responded to at `sigma_m`.
-    ///
-    /// One ring element; `n + 1` before it.
+    /// Length of `r_1 = e_eval`, responded to at `sigma_m`: one ring
+    /// element.
     pub const fn m_dim(&self) -> usize {
         1
     }
@@ -1685,7 +1667,7 @@ pub const RIVER_N8: RiVeRParams = published(
     46,
     QHAT_44,
     (314, 268),
-    0.0079564543,
+    0.007953415163498056,
 );
 pub const RIVER_N16: RiVeRParams = published(
     "RiVeR-N16",
@@ -1698,7 +1680,7 @@ pub const RIVER_N16: RiVeRParams = published(
     49,
     QHAT_46,
     (309, 308),
-    0.007793341355707927,
+    0.00779131496406446,
 );
 pub const RIVER_N64: RiVeRParams = published(
     "RiVeR-N64",
@@ -1711,7 +1693,7 @@ pub const RIVER_N64: RiVeRParams = published(
     51,
     QHAT_48,
     (305, 333),
-    0.0090602037,
+    0.008953918582094841,
 );
 pub const RIVER_N128: RiVeRParams = published(
     "RiVeR-N128",
@@ -1724,7 +1706,7 @@ pub const RIVER_N128: RiVeRParams = published(
     51,
     QHAT_48,
     (309, 358),
-    0.0078500789,
+    0.007711269632144487,
 );
 pub const RIVER_N256: RiVeRParams = published(
     "RiVeR-N256",
@@ -1737,7 +1719,7 @@ pub const RIVER_N256: RiVeRParams = published(
     52,
     QHAT_49,
     (306, 384),
-    0.0085985639,
+    0.00851857096759001,
 );
 
 /// `(tau_g0, tau_g1)` exactly as the table displays them, to one decimal

@@ -73,7 +73,7 @@
 //! `river-py/lanes_ring.py` implements the same ring, its KATs are active,
 //! and [`crate::exact`] commits over exactly this ring.
 //! The layers above it run at the paper's own widths; only the production
-//! `lanes` *name* is withheld, on security evidence — see
+//! `lanes` *name* is reserved by the artifact's composition policy — see
 //! [`crate::exact::lanes_unavailable_reason`].
 
 use crate::exact::ExactParams;

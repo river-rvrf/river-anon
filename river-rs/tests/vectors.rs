@@ -141,8 +141,9 @@ fn every_case_is_checked() {
         "the shipped cases must exercise exactly these backends"
     );
     assert_eq!(cases.len(), CASES);
-    // The two *production* `lanes` cases are withheld because that name is
-    // gated on security evidence.  Asserting the gate here is what keeps
+    // The two *production* `lanes` cases are withheld because that alias is
+    // reserved by the artifact's concrete-composition policy. Asserting the
+    // gate here is what keeps
     // this from silently becoming a permanently smaller coverage set: when
     // the evidence lands, this fails and says so.
     //
@@ -158,7 +159,7 @@ fn every_case_is_checked() {
     );
     println!(
         "river-rs: all {CASES} vector cases checked, backends {backends:?}; \
-         2 production lanes cases withheld (gated on security evidence)"
+         2 production lanes cases withheld (production alias reserved)"
     );
 }
 

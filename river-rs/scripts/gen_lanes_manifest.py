@@ -4,8 +4,8 @@
 The companion of `gen_manifest.py`, for the LANES parameter table.
 
 `river-py/lanes_manifest.py` produces the frozen table: every wire- and
-security-visible LANES value frozen with a Paper/Derived/Repair label and
-tied to the paper's SHA-256.  This script transcribes it into a Rust
+security-visible LANES value frozen with a Paper/Derived/Repair label. This
+script transcribes it into a Rust
 `LanesManifest` const so that
 
   * `exact::LANES_PARAMETER_MANIFEST` is `Some(&…)` here for the same
@@ -17,12 +17,10 @@ tied to the paper's SHA-256.  This script transcribes it into a Rust
     `lanes::params` actually consumes, so it cannot drift from *this* crate
     either.
 
-The gate is unaffected: possessing a table has never been permission to run
-the backend.  What changes is that the two implementations now agree on
-*which* condition is outstanding, which is the whole point of the shared
-`LANES_GATE_CAUSES` vocabulary -- before this, `river-py` reported the
-security cause while `river-rs` reported a missing manifest it had simply
-never been given.
+The gate is unaffected: possessing a table is not permission to use the
+reserved production alias. The two implementations validate the same table
+and report the same outstanding composition-policy condition through the
+shared `LANES_GATE_CAUSES` vocabulary.
 
 Deliberate act, like `make kat-regen`.  Run `make lanes-manifest-regen`.
 """

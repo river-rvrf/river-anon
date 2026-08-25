@@ -496,9 +496,10 @@ def manifest():
                           "sigma_mlwe_sq": _rat(lp.SIGMA_MLWE_SQ),
                           "reduction": "1/sigma_MLWE^2 = 2(1/s_1^2 + "
                                        "w_hat^2/s_2^2)  [KLSS23]",
-                          "identity": "equals s_0^2: the widths are chosen "
-                                      "so the hint reduction returns the "
-                                      "smoothing parameter"},
+                          "identity": "equals s_0^2 before the independent "
+                                      "2^-20 rounding of s_1 and s_2; the "
+                                      "stored rational is derived from the "
+                                      "rounded widths"},
                 "provenance": DERIVED},
             "hint_mlwe_outputs": {
                 "value": {
@@ -536,7 +537,7 @@ def manifest():
                               "the estimator run"},
                 "provenance": PAPER},
             "challenge": {
-                "value": {"paper_lanes_noninvertibility": "2^-93.5",
+                "value": {"paper_lanes_noninvertibility": "2^-90.5",
                           "paper_outer": "2^-91.5",
                           "status": "reported paper values; the optional "
                                     "large-table reproduction is outside "

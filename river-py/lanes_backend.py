@@ -193,8 +193,8 @@ class LanesBackend(ExactBackend):
         readiness is decided so that every `lanes_*` module can consult it
         without importing this one.  `ex` is accepted and ignored:
         readiness is a property of the frozen manifest, the recorded
-        security evidence and the audit of live constants, not of one
-        `ExactParams`.
+        composition policy, the implementation gate and the audit of live
+        constants, not of one `ExactParams`.
         """
         del ex
         from exact import lanes_unavailable_reason
@@ -495,9 +495,9 @@ class LanesBackend(ExactBackend):
 
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Gated on security evidence, not on parameters: the widths are the
-    # paper's.  See `exact.lanes_unavailable_reason`,
-    # `river-py/lanes_security.json`.
+    # The parameters are the paper's. The production alias is reserved
+    # because the artifact does not supply a reduction for the concrete
+    # compression/recovery composition; see `exact.lanes_unavailable_reason`.
     from exact import skip_if_lanes_unavailable
     skip_if_lanes_unavailable("lanes_backend.py")
 
